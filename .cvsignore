@@ -22,3 +22,4 @@ mkinstalldirs
 profile-manager.pot
 stamp-h
 stamp-h*
+Makefile.am.common
