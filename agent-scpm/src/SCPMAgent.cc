@@ -724,6 +724,7 @@ YCPValue SCPMAgent::Execute(const YCPPath &path, const YCPValue& value,
 	    else {
 		switch_info = frommap_sw(value->asMap());
 		pthread_create( &pt, NULL, (void*(*)(void*))&call_switch, this);
+		ret = YCPBoolean (true);
 	    }
 	}
 
@@ -737,12 +738,14 @@ YCPValue SCPMAgent::Execute(const YCPPath &path, const YCPValue& value,
 	    else {
 		switch_info = frommap_sw(value->asMap());
 		pthread_create( &pt, NULL, (void*(*)(void*))&call_save, this );
+		ret = YCPBoolean (true);
 	    }
 	}
 
    	if (PC(0) == "recover") {
         
 	    pthread_create (&pt, NULL, (void*(*)(void*))&call_recover, this);
+	    ret = YCPBoolean (true);
 	}
     }
     else if (path->length() == 2) {
@@ -766,12 +769,14 @@ YCPValue SCPMAgent::Execute(const YCPPath &path, const YCPValue& value,
 	    else {
 		profile = value->asString()->value();
 		pthread_create( &pt, NULL, (void*(*)(void*))&call_prepare,this);
+		ret = YCPBoolean (true);
 	    }
 	}
 
    	if ((PC(0) == "enable") && (PC(1) == "first")) {
         
 	    pthread_create( &pt, NULL, (void*(*)(void*))&call_enable, this );
+	    ret = YCPBoolean (true);
 	}
 		
 	if (PC(0) == "resources") {
@@ -795,6 +800,7 @@ YCPValue SCPMAgent::Execute(const YCPPath &path, const YCPValue& value,
 		    profile = value->asString()->value();
 		    auto_switch = arg->asBoolean()->value();
 		    pthread_create( &pt, NULL, (void*(*)(void*))&call_add,this);
+		    ret = YCPBoolean (true);
 		}
 	    }
       
@@ -824,6 +830,7 @@ YCPValue SCPMAgent::Execute(const YCPPath &path, const YCPValue& value,
 		    profile = value->asString()->value(); 
 		    dest_profile = arg->asString()->value(); 
 		    pthread_create(&pt, NULL, (void*(*)(void*))&call_copy,this);
+		    ret = YCPBoolean (true);
 		}
 	    }
 
