@@ -533,8 +533,8 @@ global define boolean ProgressPopup() ``{
 			// LogView label:
             `LogView(`id(`progress),_("Progress information"), 10, 0),
             `VSpacing(1),
-/*            `ProgressBar(`id(`pb), "", 100, 0),
-            `VSpacing(1),*/
+            `ProgressBar(`id(`pb), "", 100, 0),
+            `VSpacing(1),
 			// checkbox label:
             `CheckBox(`id(`close_ch), `opt(`notify),_("Close progress pop-ups &automatically (reenable it in SCPM Setup)"),close_popups),
             `VSpacing(1),
@@ -548,7 +548,6 @@ global define boolean ProgressPopup() ``{
         ));
 
     UI::ChangeWidget(`id(`close), `Enabled, false);
-//    UI::ChangeWidget(`id(`close_ch), `Enabled, false);
 
     string progresstext = "";
     integer hashmarks = 0;
@@ -557,16 +556,9 @@ global define boolean ProgressPopup() ``{
     UI::BusyCursor();
     do
     {
-        // this is strange:
-        if (UI::PollInput() == `close_ch) {
-            if (ProfileManager::close_popups)
-                ProfileManager::close_popups = false;
-            else ProfileManager::close_popups = true;
-        }
-
         hashmarks = ProfileManager::GetHashMarks();
         sleep(10);
-/*        UI::ChangeWidget(`id(`pb), `Value, hashmarks);*/
+        UI::ChangeWidget(`id(`pb), `Value, hashmarks);
 
         progresstext = ProfileManager::GetProgressText(false);
         if (progresstext != "") {
@@ -576,7 +568,7 @@ global define boolean ProgressPopup() ``{
     }
     while (hashmarks<100);
 
-    // read to the end of file?
+    // read to the end of file
     progresstext = ProfileManager::GetProgressText(true);
     if (progresstext != "") {
         string recoded = UI::Recode(Console::encoding,"UTF-8",progresstext);
@@ -591,13 +583,9 @@ global define boolean ProgressPopup() ``{
         while (ret != `close)
         {
             ret = UI::UserInput();
-            if (ret == `close_ch) {
-                if (ProfileManager::close_popups)
-                    ProfileManager::close_popups = false;
-                else ProfileManager::close_popups = true;
-            }
         }
     }
+    ProfileManager::close_popups = UI::QueryWidget(`id(`close_ch), `Value);
     UI::CloseDialog();
     return true;
 }
