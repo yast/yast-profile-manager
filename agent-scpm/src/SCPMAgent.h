@@ -17,8 +17,7 @@
 using namespace std;
 
 #include <iostream>
-#include "scpm.h"
-//#include <scpm_types.h>
+#include <scpm.h>
 
 #include <string>
 #include <vector>
@@ -40,6 +39,7 @@ private:
      */
     int options;
     SCPM *scpm;
+    ofstream output, hash;
     
 
 public:
