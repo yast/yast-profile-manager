@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Fri Sep 12 14:14:13 CEST 2003 - jsuchome@suse.cz
+
+- do not recode mesages from scpm (#30498)
+- 2.8.6
+
+-------------------------------------------------------------------
 Fri Sep  5 10:00:08 CEST 2003 - jsuchome@suse.cz
 
 - merged in proofread texts
