@@ -98,6 +98,7 @@ define any MainSequence (string switch_to) ``{
 
     if (switch_to != "")
     {
+//TODO do not show ReadDialog???
 	if (haskey (ProfileManager::profiles, switch_to))
 	{
 	    sequence["ws_start"]	= "switch";

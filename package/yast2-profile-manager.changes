@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Fri Aug 13 13:17:39 CEST 2004 - jsuchome@suse.cz
+
+- use Service instead of Runlevel
+- fixed build
+- 2.10.2
+
+-------------------------------------------------------------------
 Fri Jul 30 14:21:26 CEST 2004 - jsuchome@suse.cz
 
 - use Package module instead of Require
