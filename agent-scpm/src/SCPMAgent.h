@@ -148,7 +148,7 @@ public:
     /**
      * Provides SCR Write ().
      */
-    virtual YCPValue Write(const YCPPath &path,
+    virtual YCPBoolean Write(const YCPPath &path,
 			   const YCPValue& value,
 			   const YCPValue& arg = YCPNull());
 
@@ -163,7 +163,7 @@ public:
     /**
      * Provides SCR Dir ().
      */
-    virtual YCPValue Dir(const YCPPath& path);
+    virtual YCPList Dir(const YCPPath& path);
 
     /**
      * Used for mounting the agent.

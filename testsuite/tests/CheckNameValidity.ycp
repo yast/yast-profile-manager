@@ -4,7 +4,7 @@
 
     import "ProfileManager";
 
-    define TEST_It_Now (string name) ``{
+    define void TEST_It_Now (string name) ``{
 
         DUMP("name to check:");
         DUMP(name);

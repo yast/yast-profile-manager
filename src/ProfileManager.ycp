@@ -1400,7 +1400,7 @@ global define string ShowChanges() ``{
     else
     {
         list lines = splitstring (changes, "\n");
-        changes = mergestring (lines, "<br>");
+        changes = mergestring ((list<string>)lines, "<br>");
     }
     return changes;
 }

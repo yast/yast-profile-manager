@@ -12,7 +12,7 @@
 textdomain "profile-manager";
 
 import "ProfileManager";
-import "Console";
+import "Encoding";
 import "Runlevel";
 import "Report";
 import "Wizard";
@@ -74,7 +74,7 @@ global define boolean ProgressPopup(string position, integer start, integer end)
         progresstext = ProfileManager::GetProgressText(false);
         if (progresstext != "") {
 	    string recoded = (string)
-		UI::Recode(Console::encoding,"UTF-8",progresstext);
+		UI::Recode(Encoding::console,"UTF-8",progresstext);
             UI::ChangeWidget(`id(`progress), `LastLine, recoded);
         }
     }
@@ -88,7 +88,7 @@ global define boolean ProgressPopup(string position, integer start, integer end)
     progresstext = ProfileManager::GetProgressText(true);
     if (progresstext != "") {
 	string recoded = (string)
-	    UI::Recode(Console::encoding,"UTF-8",progresstext);
+	    UI::Recode(Encoding::console,"UTF-8",progresstext);
         UI::ChangeWidget(`id(`progress), `LastLine, recoded);
     }
     if (position == "first") // hack: missing newline
@@ -218,7 +218,7 @@ global define any ProfileSettingsDialog () ``{
 	ret = UI::UserInput ();
 	if (is (ret, string))
 	{
-	    symbol file_s = string2symbol [ret]:nil;
+	    symbol file_s = string2symbol [ret]:`nothing;
 	    if (file_s == nil)
 		continue;
 	    string file = (string) UI::QueryWidget(`id(file_s), `Value);
@@ -255,7 +255,7 @@ global define any ProfileSettingsDialog () ``{
 		// Popup text (file paths are wrong):
 		Popup::Error(sformat (_("These are not executable files:
 
-%1"), mergestring (files, "\n")));
+%1"), mergestring ((list<string>) files, "\n")));
 		continue;
 	    }
 
@@ -387,7 +387,7 @@ global define any ProfileSettingsDialog () ``{
 global define boolean ShowChangesPopup() ``{
 
     string changes = ProfileManager::ShowChanges();
-    string recoded = (string) UI::Recode(Console::encoding,"UTF-8", changes);
+    string recoded = (string) UI::Recode(Encoding::console,"UTF-8", changes);
 
     UI::OpenDialog(`opt(`decorated), `HBox(`HSpacing(1.5),
         `VSpacing(25),

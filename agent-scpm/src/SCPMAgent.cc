@@ -269,10 +269,10 @@ SCPMAgent::~SCPMAgent()
 /**
  * Dir
  */
-YCPValue SCPMAgent::Dir(const YCPPath& path)
+YCPList SCPMAgent::Dir(const YCPPath& path)
 {
     y2error("Wrong path '%s' in Dir().", path->toString().c_str());
-    return YCPVoid();
+    return YCPNull();
 }
 
 /**
@@ -487,11 +487,11 @@ YCPValue SCPMAgent::Read(const YCPPath &path, const YCPValue& arg, const YCPValu
 /**
  * Write(.scpm, nil) mast be run finally
  */
-YCPValue SCPMAgent::Write(const YCPPath &path, const YCPValue& value,
+YCPBoolean SCPMAgent::Write(const YCPPath &path, const YCPValue& value,
 			     const YCPValue& arg)
 {
     y2debug("Path in Write(): %s", path->toString().c_str());
-    YCPValue ret = YCPBoolean(false);
+    YCPBoolean ret = YCPBoolean(false);
 
     if (!initialized)
     {
@@ -672,7 +672,7 @@ YCPValue SCPMAgent::Write(const YCPPath &path, const YCPValue& value,
 YCPValue SCPMAgent::Execute(const YCPPath &path, const YCPValue& value,
 			     const YCPValue& arg)
 {
-    y2internal ("Path in Execute(): %s", path->toString().c_str());
+    y2debug ("Path in Execute(): %s", path->toString().c_str());
     YCPValue ret = YCPBoolean(false);
     
     if (path->length() == 0) {
