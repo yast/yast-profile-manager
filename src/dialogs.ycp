@@ -651,9 +651,9 @@ global define boolean ShowChangesPopup() ``{
     string changes = ProfileManager::ShowChanges();
 
     UI::OpenDialog(`opt(`decorated), `HBox(`HSpacing(1.5),
-        `VSpacing(15),
+        `VSpacing(25),
         `VBox(
-            `HSpacing(50),
+            `HSpacing(70),
             `VSpacing(1),
 			// Popup text
             `Label(_("Changes to the resource")),
