@@ -12,6 +12,7 @@
 textdomain "profile-manager";
 
 import "ProfileManager";
+import "Console";
 
 include "ui/common_popups.ycp";
 include "ui/common_messages.ycp";
@@ -480,7 +481,7 @@ global define boolean ProgressPopup() ``{
 /*            `ProgressBar(`id(`pb), "", 100, 0),
             `VSpacing(1),*/
 			// checkbox label:
-            `CheckBox(`id(`close_ch),_("Close progress pop-ups &automatically (reenable it in SCPM Setup)"),close_popups),
+            `CheckBox(`id(`close_ch), `opt(`notify),_("Close progress pop-ups &automatically (reenable it in SCPM Setup)"),close_popups),
             `VSpacing(1),
 	        `HBox(
 	            `Right(`PushButton(`id(`close), `opt(`default), CloseButtonLabel())),
@@ -491,29 +492,34 @@ global define boolean ProgressPopup() ``{
         ));
 
     UI::ChangeWidget(`id(`close), `Enabled, false);
-    UI::ChangeWidget(`id(`close_ch), `Enabled, false);
+//    UI::ChangeWidget(`id(`close_ch), `Enabled, false);
 
     string progresstext = "";
+    integer hashmarks = 0;
+
     ProfileManager::end_of_progress = false;
     ProfileManager::start_of_progress = ProfileManager::progress_size;
+    UI::BusyCursor();
     do
     {
-        UI::BusyCursor();
-        sleep(1);
-        progresstext = ProfileManager::GetProgressText();
-        if (progresstext != "")
-            UI::ChangeWidget(`id(`progress), `LastLine, progresstext);
-    }
-    while (!ProfileManager::end_of_progress);
+        // this is strange:
+        if (UI::PollInput() == `close_ch) {
+            if (close_popups) close_popups = false;
+            else close_popups = true;
+        }
 
-    /* disabled for now
-    integer steps = 0;
-    while (steps<100)
-    {
-        steps = steps + 1;
-        UI::ChangeWidget(`id(`pb), `Value, steps);
+        sleep(10);
+        hashmarks = ProfileManager::GetHashMarks();
+/*        UI::ChangeWidget(`id(`pb), `Value, hashmarks);*/
+
+        progresstext = ProfileManager::GetProgressText();
+        if (progresstext != "") {
+            string recoded = UI::Recode(Console::encoding,"UTF-8",progresstext);
+            UI::ChangeWidget(`id(`progress), `LastLine, recoded);
+        }
     }
-    */
+//    while (!ProfileManager::end_of_progress);
+    while (hashmarks<100);
 
     UI::NormalCursor();
     if (!close_popups)

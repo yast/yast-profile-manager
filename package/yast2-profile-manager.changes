@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Thu Aug 15 17:49:08 CEST 2002 - jsuchome@suse.cz
+
+- recoding texts from different encoding
+- temporary solution for finishing progress (ProgressPopup)
+- enabled checkbox in ProgressPopup
+
+-------------------------------------------------------------------
 Wed Aug 14 10:14:49 CEST 2002 - jsuchome@suse.cz
 
 - updated translation texts

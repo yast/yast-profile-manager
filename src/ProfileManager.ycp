@@ -437,6 +437,7 @@ define boolean Initialize() ``{
     hashpath = tmpdir + hashfile;
     changespath = tmpdir + changesfile;
     tmppath = tmpdir + tmpfile;
+    y2debug("progresspath=%1, hashpath=%2", progresspath, hashpath);
 
     boolean ret = SCR::Execute(.scpm, tmpdir);
 
@@ -686,9 +687,7 @@ global define boolean DropSwitchInfo() ``{
  */
 global define boolean Switch() ``{
 
-/*    boolean ret = SCR::Execute(.scpm.switch, switch_info);
-    if (ret == nil || ret == false)
-        return false;*/
+    y2milestone ("Switching from profile \"%1\" to profile \"%2\"...",active_profile,selected_profile);
     SCR::Execute(.scpm.switch, switch_info);
     return true;
 
@@ -941,6 +940,15 @@ global define boolean ModifiedSettings(map new_settings) ``{
     });
 
     return ret;
+}
+
+/**
+ * @return
+ */
+global define integer GetHashMarks() ``{
+
+    string all = SCR::Read(.target.string, hashpath);
+    return (size(all));
 }
 
 /**

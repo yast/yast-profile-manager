@@ -178,6 +178,7 @@ YCPValue SCPMAgent::Read(const YCPPath &path, const YCPValue& arg)
             ret = l;
         }
     }
+
     if (PC(0) == "exit_status" ) {
         int *retval;
         ret = YCPBoolean(false);
@@ -246,9 +247,7 @@ YCPValue SCPMAgent::Read(const YCPPath &path, const YCPValue& arg)
             ret = YCPString(set);
     }
     
-    
     } 
-    
     return ret;
 }
 
@@ -264,7 +263,7 @@ YCPValue SCPMAgent::Write(const YCPPath &path, const YCPValue& value,
 
     if (path->length() == 0) {
         y2debug("---------- destructing SCPM object");
-        hash.close();
+    //    hash.close();
         output.close();
         if (scpm) delete scpm;
         ret = YCPBoolean(true);
@@ -358,18 +357,19 @@ YCPValue SCPMAgent::Execute(const YCPPath &path, const YCPValue& value,
         string tmpdir = value->asString()->value();
         
         string outfile = tmpdir + "/scpm.progress";
-        string hashfile = tmpdir + "/scpm.hash";
+//        string 
+        hashfile = tmpdir + "/scpm.hash";
         changesfile = tmpdir + "/scpm.changes";
         tmpfile = tmpdir + "/scpm.tmp";
 
         const char *outf = outfile.c_str();
-        const char *hashf = hashfile.c_str();
+//        const char *hashf = hashfile.c_str();
     
         y2debug("----------- agent-scpm initialization");
-        y2debug("----------- output to: %s, %s", outf, hashf);
+//        y2debug("----------- output to: %s, %s", outf, hashf);
     	output.open (outf);
-    	hash.open (hashf);
-        scpm = new SCPM (options, output, hash);
+//    	hash.open (hashf);
+        scpm = new SCPM (options, output);//, hash);
         if (scpm)
             ret = YCPBoolean(true);
     }
@@ -463,10 +463,6 @@ YCPValue SCPMAgent::Execute(const YCPPath &path, const YCPValue& value,
             profile = value->asString()->value();
             auto_switch = arg->asBoolean()->value();
             pthread_create( &pt, NULL, (void*(*)(void*))&call_add, this );
-/*            if (!scpm->Add(profile, auto_switch))
-                y2error ( scpm_error );
-            else
-                ret = YCPBoolean(1);*/
         }
       }
       
@@ -562,6 +558,11 @@ void *SCPMAgent::call_prepare( SCPMAgent *ag )
   static int retval;
   YCPValue ret = YCPBoolean( true );
 
+  const char *hashf = ag->hashfile.c_str();
+  ofstream hash;
+
+  hash.open (hashf, ios::out | ios::trunc);
+
   if ( !ag->scpm->PrepareSwitch( ag->profile, ag->switch_info ) ) {
     y2error ( scpm_error );
     ret = YCPVoid();
@@ -577,6 +578,11 @@ void *SCPMAgent::call_prepare( SCPMAgent *ag )
   tmp.close();
   y2debug("switch_info: %s", ret->toString().c_str());
 
+  int i;
+  for (i=0; i<10; i++)
+    hash.write("##########", 10);
+  hash.close();
+  
   retval=0;
   pthread_exit((void*)&retval);
 }  
@@ -584,42 +590,84 @@ void *SCPMAgent::call_prepare( SCPMAgent *ag )
 void *SCPMAgent::call_switch( SCPMAgent *ag )
 {
   static int retval;
+
+  const char *hashf = ag->hashfile.c_str();
+  ofstream hash;
+
+  hash.open (hashf, ios::out | ios::trunc);
+
   if ( !ag->scpm->Switch( ag->switch_info ) ) {
     y2error( scpm_error );
     retval=1;
   }
   else 
     retval=0;
+
+  int i;
+  for (i=0; i<10; i++)
+    hash.write("##########", 10);
+  hash.close();
+
   pthread_exit((void*)&retval);
 }
 
 void *SCPMAgent::call_add( SCPMAgent *ag )
 {
   static int retval;
+
+  const char *hashf = ag->hashfile.c_str();
+  ofstream hash;
+
+  hash.open (hashf, ios::out | ios::trunc);
+
   if (!ag->scpm->Add(ag->profile, ag->auto_switch)) {
       y2error ( scpm_error );
       retval = 1;
   }
   else
       retval = 0;
+
+  int i;
+  for (i=0; i<10; i++)
+    hash.write("##########", 10);
+  hash.close();
+
   pthread_exit((void*)&retval);
 }
 
 void *SCPMAgent::call_copy( SCPMAgent *ag )
 {
   static int retval;
+
+  const char *hashf = ag->hashfile.c_str();
+  ofstream hash;
+
+  hash.open (hashf, ios::out | ios::trunc);
+
   if (!ag->scpm->Copy(ag->profile, ag->dest_profile)) {
       y2error ( scpm_error );
       retval = 1;
   }
   else
       retval = 0;
+
+  int i;
+  for (i=0; i<10; i++)
+    hash.write("##########", 10);
+  hash.close();
+
   pthread_exit((void*)&retval);
 }
 
 void *SCPMAgent::call_enable( SCPMAgent *ag )
 {
   static int retval;
+
+  const char *hashf = ag->hashfile.c_str();
+  ofstream hash;
+
+  hash.open (hashf, ios::out | ios::trunc);
+
   bool force = false;
   if (!ag->scpm->Enable(force)) {
       y2error ( scpm_error );
@@ -627,6 +675,12 @@ void *SCPMAgent::call_enable( SCPMAgent *ag )
   }
   else
       retval = 0;
+
+  int i;
+  for (i=0; i<10; i++)
+    hash.write("##########", 10);
+  hash.close();
+
   pthread_exit((void*)&retval);
 }
 

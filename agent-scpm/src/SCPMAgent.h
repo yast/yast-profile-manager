@@ -42,7 +42,7 @@ private:
     SCPM *scpm;
     int options;
     ofstream output, hash;
-    string changesfile, tmpfile;    
+    string changesfile, tmpfile, hashfile;    
     static void *call_prepare( SCPMAgent *);
     static void *call_switch( SCPMAgent *);
     static void *call_add( SCPMAgent *);
