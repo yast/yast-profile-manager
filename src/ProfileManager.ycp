@@ -16,10 +16,10 @@ module "ProfileManager";
 textdomain "profile-manager";
 
 import "Directory";
+import "Package";
+import "Popup";
 import "Progress";
 import "Report";
-import "Require";
-import "Popup";
 
 
 /**
@@ -763,7 +763,7 @@ global define list GetGroupsAsItems() ``{
 define boolean Initialize() ``{
 
     // popup label, %1 is required application
-    if (!Require::RequireAndConflict (["scpm"], [], _("<p>To use the profile manager, the package <b>%1</b> is required.<br>
+    if (!Package::InstallAllMsg (["scpm"], _("<p>To use the profile manager, the package <b>%1</b> is required.<br>
 Install it now?</p>
 ")))
          return false;
