@@ -121,9 +121,6 @@ global define any MainDialog () ``{
     Wizard::ReplaceBackButton (`HBox());
     Wizard::ReplaceAbortButton (`HBox());
 
-    if (ProfileManager::first_time && !enabled)
-        IntroductionPopup();
-
     UI::ChangeWidget(`id(`profiles), `Items, ProfileManager::GetProfilesAsItems());
 
     if (enabled) {
@@ -137,6 +134,8 @@ global define any MainDialog () ``{
     UI::ChangeWidget(`id(`delete_button), `Enabled, enabled);
     UI::ChangeWidget(`id(`switch_button), `Enabled, enabled);
 
+    if (ProfileManager::first_time && !enabled)
+        IntroductionPopup();
 
     any ret = nil;
     while (true)

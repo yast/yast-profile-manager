@@ -17,7 +17,7 @@ textdomain "profile-manager";
 
 import "Progress";
 import "Report";
-import "Summary";
+//import "Summary";
 
 include "profile-manager/routines.ycp";
 
@@ -437,7 +437,6 @@ define boolean Initialize() ``{
     hashpath = tmpdir + hashfile;
     changespath = tmpdir + changesfile;
     tmppath = tmpdir + tmpfile;
-    y2milestone ("progress = %1", progresspath);
 
     boolean ret = SCR::Execute(.scpm, tmpdir);
 
@@ -791,12 +790,13 @@ global define boolean CopyResourceSet(string set, string newset) ``{
 
 /**
  * Runs the Konqueror with an info page
- * @return true on success
+ * @return true
  */
-global define integer RunIntro() ``{
+global define boolean RunIntro() ``{
 
-    integer ret = SCR::Execute(.target.bash,"konqueror info:/scpm/introduction &");
-    return ret;
+    if (! SCR::Execute(.background.run,"konqueror info:/scpm/introduction") )
+        SCR::Execute(.background.run,"xterm -e info scpm");
+    return true;
 }
 
 /**
