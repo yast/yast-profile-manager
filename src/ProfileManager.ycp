@@ -20,7 +20,7 @@ import "Report";
 import "Require";
 import "Popup";
 
-include "profile-manager/routines.ycp";
+//include "profile-manager/routines.ycp";
 
 /**
  * Is the module runing for the first time?
@@ -191,7 +191,41 @@ global boolean write_only = false;
  * Abort function
  * return boolean return true if abort
  */
-global block AbortFunction = nil;
+global block<boolean> AbortFunction = nil;
+
+/**
+ * Abort function
+ * @return blah blah lahjk
+ */
+global define boolean Abort() ``{
+    if (AbortFunction != nil)
+	return eval (AbortFunction) == true;
+    return false;
+}
+
+/**
+ * This function is called when some scpm command failed.
+ * The error message is read and shown in Popup::Error.
+ */
+define void ShowError () ``{
+
+    string err = (string) SCR::Read (.scpm.error);
+    if (err != nil && err != "")
+        Popup::Error (err);
+}
+
+/**
+ * This function is called when some scpm command failed.
+ * The error message is read and stored in global variable scpm_error.
+ */
+define void SetError () ``{
+
+    string err = (string) SCR::Read (.scpm.error);
+    if (err != nil && err != "")
+        scpm_error = err;
+    else
+        scpm_error = "";
+}
 
 // --------------------------------------------------------------------------
 // ------- functions and variables for work with resource groups ------------
@@ -263,7 +297,7 @@ define boolean SetResourceGroup(string groupname, list resources, string descr) 
  */
 global define list GetResourceGroupResources(string groupname) ``{
 
-    list resource_group = SCR::Read(.scpm.rg.group, groupname);
+    list resource_group = (list) SCR::Read(.scpm.rg.group, groupname);
     if (resource_group == nil)
     {
 	SetError();
@@ -278,14 +312,14 @@ global define list GetResourceGroupResources(string groupname) ``{
  */
 global define boolean ReadResourceGroups() ``{
 
-    resource_groups = SCR::Read(.scpm.rg);
+    resource_groups = (map) SCR::Read(.scpm.rg);
     resource_groups_deleted = [];
     if (resource_groups == nil)
     {
 	SetError();
 	return false;
     }
-    foreach (`name, `group, resource_groups, ``{
+    foreach (string name, map group, resource_groups, ``{
 	group["resources"] = GetResourceGroupResources (name);
     });
 
@@ -294,7 +328,7 @@ global define boolean ReadResourceGroups() ``{
 
 global define map ReadResourceGroup(string groupname) ``{
 
-    map resource_group = SCR::Read(.scpm.rg.group_map, groupname);
+    map resource_group = (map) SCR::Read(.scpm.rg.group_map, groupname);
     if (resource_group == nil)
     {
 	SetError();
@@ -309,7 +343,7 @@ global define map ReadResourceGroup(string groupname) ``{
  */
 global define boolean ResetResourceGroups() ``{
 
-    boolean ret = SCR::Execute (.scpm.rg.reset);
+    boolean ret = (boolean) SCR::Execute (.scpm.rg.reset);
     if (!ret)
 	SetError();
     return ret;
@@ -321,7 +355,7 @@ global define boolean ResetResourceGroups() ``{
  */
 global define boolean ResetResourceGroup (string groupname) ``{
 
-    boolean ret = SCR::Execute (.scpm.rg.group.reset, groupname);
+    boolean ret = (boolean) SCR::Execute (.scpm.rg.group.reset, groupname);
     if (!ret)
 	SetError();
     return ret;
@@ -364,7 +398,7 @@ global define boolean GroupnameExists (string groupname) ``{
  */
 global define map GetGroup (string groupname) ``{
 
-    return eval (resource_groups [groupname]:$[]);
+    return (map) eval (resource_groups [groupname]:$[]);
 }
 
 /**
@@ -431,7 +465,7 @@ global define boolean SaveResourceGroups () ``{
 
     // deletion must be done in first cycle
     // (because some new group can have the name of deleted one)
-    foreach (`name, resource_groups_deleted, ``{
+    foreach (string name, resource_groups_deleted, ``{
 
 	y2milestone ("deleting group %1", name);
 	if (!SCR::Write (.scpm.rg.group.delete, name))
@@ -442,7 +476,7 @@ global define boolean SaveResourceGroups () ``{
     });
     // renaming must be done in second cycle
     // (because some new group can have the old name of renamed one)
-    foreach (`name, `group, resource_groups, ``{
+    foreach (string name, map group, resource_groups, ``{
 	if (group["what"]:"" == "renamed")
 	{
 	    y2milestone ("renaming group %1 to %2", group["org_name"]:"", name);
@@ -454,7 +488,7 @@ global define boolean SaveResourceGroups () ``{
 	error = AllErrorMessages (error);
     });
     // rest of modifications
-    foreach (`name, `group, resource_groups, ``{
+    foreach (string name, map group, resource_groups, ``{
 	string what = group["what"]:"";
 
 	if (what == "added" || what == "edited")
@@ -491,9 +525,9 @@ global define boolean ReadConfigFile () ``{
 	return false;
 
     scpm_conf = $[
-	"verbose":	SCR::Read(.sysconfig.scpm.VERBOSE) == "yes",
-	"switch_mode":	SCR::Read(.sysconfig.scpm.SWITCH_MODE),
-	"boot_mode":	SCR::Read(.sysconfig.scpm.BOOT_MODE)
+	"verbose":	((string) SCR::Read(.sysconfig.scpm.VERBOSE) == "yes"),
+	"switch_mode":	(string) SCR::Read(.sysconfig.scpm.SWITCH_MODE),
+	"boot_mode":	(string) SCR::Read(.sysconfig.scpm.BOOT_MODE)
     ];
     y2debug ("scpm configuration: %1", scpm_conf);
     return true;
@@ -505,12 +539,12 @@ global define boolean ReadConfigFile () ``{
  */
 global define boolean WriteConfigFile () ``{
 
-    foreach (`key, `value, scpm_conf, ``{
+    foreach (string key, any value, scpm_conf, ``{
 	path agent = add(.sysconfig.scpm, toupper(key));
 	if (is (value, boolean))
-	    SCR::Write(agent, value?"yes":"no");
+	    SCR::Write(agent, ((boolean) value) ? "yes" : "no");
 	else
-	    SCR::Write(agent, value);
+	    SCR::Write(agent, (string) value);
     });
     return true;
 }
@@ -522,7 +556,7 @@ global define boolean WriteConfigFile () ``{
 global define map GetModifiedGroupResources(string groupname) ``{
 
     // we want to work with a local copy -> eval
-    return eval (modified_groups[groupname]:$[]);
+    return (map) eval (modified_groups[groupname]:$[]);
 }
 
 /**
@@ -566,9 +600,9 @@ global define void GetModifiedGroups() ``{
 
     integer i = 0;
     modified_groups = $[];
-    foreach (`resource, switch_info["modified_resources"]:[], ``{
+    foreach (map resource, switch_info["modified_resources"]:[], ``{
 	// go through all groups owning this resource:
-	foreach (`group, resource["groups"]:[], ``{
+	foreach (map group, resource["groups"]:[], ``{
 	    string groupname = group["name"]:"";
 	    if (!haskey (modified_groups, groupname))
 		modified_groups [groupname] = $[
@@ -582,6 +616,41 @@ global define void GetModifiedGroups() ``{
 	});
 	i = i + 1;
     });
+}
+
+/**
+ * Update global flags (save/m) of groups according to the state
+ * of their resources
+ * @param groups list of groups to check and possibly update
+ */
+global define boolean UpdateOtherGroups (list groups) ``{
+
+    boolean group_save = false;
+    foreach (string gname, groups, ``{
+	group_save = false;
+	// - check all the resources (some are possibly changed) of group
+	// - switch_info is updated, modified_groups not yet
+	foreach (any i, map resource, modified_groups[gname]:$[], ``{
+	    if (!is(i, integer))
+		return;
+	    integer pos = (integer) i;
+	    group_save = resource["save"]:default_save || group_save;
+	    foreach (string key, ["save", "save_mode"], ``{
+		// some resource flag was changed
+		if (switch_info["modified_resources", pos, key]:nil !=
+		    resource[key]:nil)
+		{
+		    // update modified_group and switch_info
+		    modified_groups [gname, pos, key] =
+			switch_info["modified_resources", pos,key]:nil;
+		    // set modified flag of the group
+		    modified_groups [gname, "modified"] = true;
+		}
+	    });
+	});
+	modified_groups[gname, "save"] = group_save;
+    });
+    return true;
 }
 
 
@@ -604,21 +673,22 @@ global define boolean CheckAndUpdateResources (string name, map resources) ``{
     list groups_to_check = [];
     boolean group_save = false;
     // go through all resources of current group
-    foreach (`i, `resource, resources, ``{
+    foreach (any i, map resource, resources, ``{
 	if (!is (i,integer))
 	    return;
+	integer pos = (integer) i;
 	group_save = resource["save"]:default_save || group_save;
-	foreach (`key, ["save", "save_mode"], ``{
+	foreach (string key, ["save", "save_mode"], ``{
 	    // some resource flag was changed
-	    if (modified_groups [name,i,key]:nil != resource[key]:nil)
+	    if (modified_groups [name, pos, key]:nil != resource[key]:nil)
 	    {
 		// update modified_group and switch_info
-		modified_groups [name, i, key] = resource[key]:nil;
-		switch_info["modified_resources",i,key] = resource[key]:nil;
+		modified_groups [name, pos, key] = resource[key]:nil;
+		switch_info["modified_resources",pos,key] = resource[key]:nil;
 		// set modified flag of the group
 		modified_groups [name, "modified"] = true;
 		// set other groups (this resource belongs to) for later check
-		foreach (`g, resource["groups"]:[], ``{
+		foreach (map g, resource["groups"]:[], ``{
 		    if (g["name"]:"" != name)
 		    groups_to_check = union (groups_to_check, [ g["name"]:"" ]);
 		});
@@ -627,39 +697,6 @@ global define boolean CheckAndUpdateResources (string name, map resources) ``{
     });
     modified_groups[name, "save"] = group_save;
     UpdateOtherGroups (groups_to_check);
-    return true;
-}
-
-/**
- * Update global flags (save/m) of groups according to the state
- * of their resources
- * @param groups list of groups to check and possibly update
- */
-global define boolean UpdateOtherGroups (list groups) ``{
-
-    boolean group_save = false;
-    foreach (`gname, groups, ``{
-	group_save = false;
-	// - check all the resources (some are possibly changed) of group
-	// - switch_info is updated, modified_groups not yet
-	foreach (`i, `resource, modified_groups[gname]:$[], ``{
-	    if (!is(i, integer))
-		return;
-	    group_save = resource["save"]:default_save || group_save;
-	    foreach (`key, ["save", "save_mode"], ``{
-		// some resource flag was changed
-		if (switch_info["modified_resources",i,key]:nil != resource[key]:nil)
-		{
-		    // update modified_group and switch_info
-		    modified_groups [gname, i, key] =
-			switch_info["modified_resources",i,key]:nil;
-		    // set modified flag of the group
-		    modified_groups [gname, "modified"] = true;
-		}
-	    });
-	});
-	modified_groups[gname, "save"] = group_save;
-    });
     return true;
 }
 
@@ -673,15 +710,16 @@ global define boolean SetGroupSaveFlag (string groupname) ``{
 
     list groups_to_check = [];
     boolean ret = !modified_groups[groupname, "save"]:false;
-    foreach (`index, `resource, modified_groups[groupname]:$[], ``{
+    foreach (any index, map resource, modified_groups[groupname]:$[], ``{
 	if (is (index, integer))
 	{
+	    integer pos = (integer) index;
 	    resource["save"] = ret;
 	    resource["save_mode"] = "normal";
-	    switch_info["modified_resources", index, "save"] = ret;
-	    switch_info["modified_resources", index, "save_mode"] = "normal";
+	    switch_info["modified_resources", pos, "save"] = ret;
+	    switch_info["modified_resources", pos, "save_mode"] = "normal";
 	    // set other groups (this resource belongs to) for later check
-	    foreach (`g, resource["groups"]:[], ``{
+	    foreach (map g, resource["groups"]:[], ``{
 		if (g["name"]:"" != groupname)
 		    groups_to_check = union (groups_to_check, [ g["name"]:"" ]);
 	    });
@@ -701,7 +739,7 @@ global define boolean SetGroupSaveFlag (string groupname) ``{
 global define list GetGroupsAsItems() ``{
 
     list items = [];
-    foreach (`name, `group, modified_groups, ``{
+    foreach (string name, map group, modified_groups, ``{
 	string save = group ["save"]:default_save ? "X":"";
 	if (group["modified"]:false)
 	    save = "m";
@@ -714,6 +752,172 @@ global define list GetGroupsAsItems() ``{
 
 // --------------------------------------------------------------------------
 // --------------------------------------------------------------------------
+
+/**
+ * Initialize the SCPM agent.
+ * @return true on success
+ */
+define boolean Initialize() ``{
+
+    // popup label, %1 is required application
+    if (!Require::RequireAndConflict (["scpm"], [], _("<p>To use the profile manager, the package <b>%1</b> is required.<br>
+Install it now?</p>
+")))
+         return false;
+
+    tmpdir		= (string) SCR::Read(.target.tmpdir);
+    progresspath	= tmpdir + progressfile;
+    hashpath		= tmpdir + hashfile;
+    changespath		= tmpdir + changesfile;
+    tmppath		= tmpdir + tmpfile;
+    y2debug("progresspath=%1, hashpath=%2", progresspath, hashpath);
+
+    boolean ret		= (boolean) SCR::Execute(.scpm, tmpdir);
+    if (ret == nil) ret = false;
+    if (ret == false)
+        SetError();
+
+    return ret;
+}
+
+/**
+ * Checks if SCPM is enabled/disabled/initialized.
+ * @return true on success
+ */
+define boolean ReadSCPMStatus() ``{
+
+    list stat = (list) SCR::Read(.scpm.status);
+    if (stat == nil)
+    {
+        SetError();
+        return false;
+    }
+
+    enabled		= stat[0]:false;
+    initialized		= stat[1]:false;
+    // resource groups are available from some version of scpm...
+    use_rg		= stat[2]:"0" > "0.9";
+    needs_reinit	= initialized && stat[3]:false;
+    return true;
+}
+
+/**
+ * Reads the current resource set.
+ * @return true on success
+ */
+global define boolean ReadCurrentResources() ``{
+
+    string cur = (string) SCR::Read(.scpm.resources.current);
+
+    if (cur == nil || cur =="")
+    {
+        SetError();
+        return false;
+    }
+
+    current_resources = cur;
+    return true;
+}
+
+/**
+ * Reads the list of aviable resource sets.
+ * @return true on success
+ */
+global define boolean ReadResourceSets() ``{
+
+    list sets = (list) SCR::Read(.scpm.resources);
+
+    if (sets == nil)
+    {
+        ShowError();
+        return false;
+    }
+
+    resource_sets_predefined = sets[0]:[];
+    resource_sets_individual = sets[1]:[];
+    return true;
+}
+
+
+
+/**
+ * Reads the list of aviable profiles.
+ * @return true on success
+ */
+global define boolean ReadProfiles() ``{
+
+    list profiles_l = (list) SCR::Read(.scpm.profiles);
+
+    if (profiles_l == nil)
+    {
+        SetError();
+        profiles_l = [];
+    }
+    foreach (string profile, profiles_l, ``{
+        profiles = add (profiles, profile, "");
+    });
+
+    if (profiles_l == [])
+        return false;
+    return true;
+
+}
+
+/**
+ * Reads the active profile.
+ * @return true on success
+ */
+global define boolean ReadActiveProfile() ``{
+
+    active_profile = (string) SCR::Read(.scpm.profiles.current);
+
+    if (active_profile == nil)
+    {
+        SetError();
+        active_profile = "";
+        return false;
+    }
+    return true;
+}
+
+/**
+ * Reads the descriptions of all aviable profiles.
+ * @return true on success
+ */
+global define boolean ReadProfilesDescriptions() ``{
+
+    // read the descriptions of each profile
+    map profilesm = profiles;
+
+    foreach (string profile, string d, profilesm, ``{
+        string desc = (string) SCR::Read(.scpm.profiles.description, profile);
+        if (desc == nil)
+        {
+            desc = "";
+            SetError();
+        }
+        profiles = add (profiles, profile, desc);
+    });
+    return true;
+}
+
+/**
+ * Check if the module is run for first time and
+ * reads user settings (currently close_popups check)
+ * @return true on success
+ */
+define boolean ReadUserSettings() ``{
+
+    SCR::Execute (.target.bash, "/bin/touch /var/lib/YaST2/scpm.ycp");
+    state = (map) SCR::Read (.target.ycp, "/var/lib/YaST2/scpm.ycp");
+
+    if (state == nil || state == $[])
+	first_time = true;
+    else
+	close_popups = state["close_popups"]:false;
+    return true;
+}
+
 
 /**
  * Read all profile-manager settings
@@ -842,11 +1046,27 @@ Perform the reinitialization now?
     ReadConfigFile();// TODO progress?
 
     if(Abort()) return false;
+
+    Progress::NextStage();
     // progress stage
-    ProgressNextStage(_("Finished"));
+    Progress::Title (_("Finished"));
 
     if(Abort()) return false;
     return true;
+}
+
+/**
+ * Writes the user settings (currently close_popups check).
+ * @return true on success
+ */
+global define boolean WriteUserSettings() ``{
+
+    state = $[];
+    state = add (state, "first_time", false);
+    state = add (state, "close_popups", close_popups);
+    boolean ret = SCR::Write(.target.ycp, "/var/lib/YaST2/scpm.ycp", state);
+
+	return ret;
 }
 
 /**
@@ -909,191 +1129,12 @@ global define boolean Write() ``{
         Report::Error (_("Cannot write user settings!"));
     }
 
-    // progress stage:
-    ProgressNextStage(_("Finished"));
+    Progress::NextStage();
+    // progress stage
+    Progress::Title (_("Finished"));
 
     return true;
 }
-
-/**
- * Reads the list of aviable profiles.
- * @return true on success
- */
-global define boolean ReadProfiles() ``{
-
-    list profiles_l = SCR::Read(.scpm.profiles);
-
-    if (profiles_l == nil)
-    {
-        SetError();
-        profiles_l = [];
-    }
-    foreach (`profile, profiles_l, ``{
-        profiles = add (profiles, profile, "");
-    });
-
-    if (profiles_l == [])
-        return false;
-    return true;
-
-}
-
-/**
- * Reads the active profile.
- * @return true on success
- */
-global define boolean ReadActiveProfile() ``{
-
-    active_profile = SCR::Read(.scpm.profiles.current);
-
-    if (active_profile == nil)
-    {
-        SetError();
-        active_profile = "";
-        return false;
-    }
-    return true;
-}
-
-/**
- * Reads the descriptions of all aviable profiles.
- * @return true on success
- */
-global define boolean ReadProfilesDescriptions() ``{
-
-    // read the descriptions of each profile
-    map profilesm = profiles;
-
-    foreach (string profile, string d, profilesm, ``{
-        string desc = SCR::Read(.scpm.profiles.description, profile);
-        if (desc == nil)
-        {
-            desc = "";
-            SetError();
-        }
-        profiles = add (profiles, profile, desc);
-    });
-    return true;
-}
-
-/**
- * Check if the module is run for first time and
- * reads user settings (currently close_popups check)
- * @return true on success
- */
-define boolean ReadUserSettings() ``{
-
-    SCR::Execute (.target.bash, "/bin/touch /var/lib/YaST2/scpm.ycp");
-    state = SCR::Read (.target.ycp, "/var/lib/YaST2/scpm.ycp");
-
-    if (state == nil || state == $[])
-		first_time = true;
-	else
-		close_popups = lookup(state, "close_popups", false);
-    return true;
-}
-
-/**
- * Writes the user settings (currently close_popups check).
- * @return true on success
- */
-global define boolean WriteUserSettings() ``{
-
-    state = $[];
-    state = add (state, "first_time", false);
-    state = add (state, "close_popups", close_popups);
-    boolean ret = SCR::Write(.target.ycp, "/var/lib/YaST2/scpm.ycp", state);
-
-	return ret;
-}
-
-
-/**
- * Initialize the SCPM agent.
- * @return true on success
- */
-define boolean Initialize() ``{
-
-    // popup label, %1 is required application
-    if (!Require::RequireAndConflict (["scpm"], [], _("<p>To use the profile manager, the package <b>%1</b> is required.<br>
-Install it now?</p>
-")))
-         return false;
-
-    tmpdir = SCR::Read(.target.tmpdir);
-    progresspath = tmpdir + progressfile;
-    hashpath = tmpdir + hashfile;
-    changespath = tmpdir + changesfile;
-    tmppath = tmpdir + tmpfile;
-    y2debug("progresspath=%1, hashpath=%2", progresspath, hashpath);
-
-    boolean ret = SCR::Execute(.scpm, tmpdir);
-    if (ret == nil) ret = false;
-    if (ret == false)
-        SetError();
-
-    return ret;
-}
-
-/**
- * Checks if SCPM is enabled/disabled/initialized.
- * @return true on success
- */
-define boolean ReadSCPMStatus() ``{
-
-    list stat = SCR::Read(.scpm.status);
-    if (stat == nil)
-    {
-        SetError();
-        return false;
-    }
-
-    enabled = select (stat, 0, false);
-    initialized = select (stat, 1, false);
-    // resource groups are available from some version of scpm...
-    use_rg = select (stat, 2, true) > "0.9";
-    needs_reinit = initialized && select (stat, 3, false);
-    return true;
-}
-
-/**
- * Reads the current resource set.
- * @return true on success
- */
-global define boolean ReadCurrentResources() ``{
-
-    string cur = SCR::Read(.scpm.resources.current);
-
-    if (cur == nil || cur =="")
-    {
-        SetError();
-        return false;
-    }
-
-    current_resources = cur;
-    return true;
-}
-
-/**
- * Reads the list of aviable resource sets.
- * @return true on success
- */
-global define boolean ReadResourceSets() ``{
-
-    list sets = [];
-    sets = SCR::Read(.scpm.resources);
-
-    if (sets == nil)
-    {
-        ShowError();
-        return false;
-    }
-
-    resource_sets_predefined = select (sets, 0, []);
-    resource_sets_individual = select (sets, 1, []);
-    return true;
-}
-
 
 /**
  * Reads the settings of the selected profile
@@ -1108,12 +1149,13 @@ global define boolean GetProfile() ``{
         return true;
     }
 
-    profile_settings = add (profile_settings, "name", selected_profile);
-    profile_settings = add (profile_settings, "description", lookup(profiles, selected_profile,""));
+    profile_settings ["name"] = selected_profile;
+    profile_settings ["description"] = profiles[selected_profile]:"";
 
-    foreach (`setting, ["prestart", "poststart", "prestop", "poststop"], ``{
+    foreach (string setting,["prestart", "poststart", "prestop", "poststop"],``{
 
-        string val = SCR::Read(add(.scpm.profiles, setting), selected_profile);
+        string val = (string)
+	    SCR::Read(add(.scpm.profiles, setting), selected_profile);
         if (val == nil)
         {
             ShowError();
@@ -1156,13 +1198,12 @@ global define boolean CopyProfile(string source, string new) ``{
  */
 global define boolean RenameProfile(string old, string new) ``{
 
-
-    boolean ret = SCR::Execute(.scpm.profiles.rename, old, new);
+    boolean ret = (boolean) SCR::Execute(.scpm.profiles.rename, old, new);
     if (ret)
     {
-        string desc = lookup(profiles, old, "");
-        profiles = filter (`name, `desc, profiles, ``(name != old));
-        profiles = add (profiles, new, desc);
+        string description = profiles[old]:"";
+        profiles = filter (string name, string desc, profiles, ``(name != old));
+        profiles = add (profiles, new, description);
         if (active_profile == old)
             active_profile = new;
     }
@@ -1209,9 +1250,9 @@ global define boolean SetProfile(string name, map settings) ``{
  */
 global define boolean DeleteProfile(string to_delete) ``{
 
-    boolean ret = SCR::Execute(.scpm.profiles.delete, to_delete);
+    boolean ret = (boolean) SCR::Execute(.scpm.profiles.delete, to_delete);
     if (ret)
-        profiles = filter (`name, `desc, profiles, ``(name != to_delete));
+        profiles = filter (string name, any d, profiles,``(name != to_delete));
     else
         SetError();
     return ret;
@@ -1328,7 +1369,7 @@ global define boolean RebuildDB() ``{
     if (!initialized)
 	return true; // no need for rebuild
 
-    boolean ret = SCR::Execute(.scpm.resources.rebuild);
+    boolean ret = (boolean) SCR::Execute(.scpm.resources.rebuild);
     if (!ret)
         ShowError();
     return ret;
@@ -1343,17 +1384,16 @@ global define boolean RebuildDB() ``{
 global define string ShowChanges() ``{
 
     string changes = "";
-    list resources = lookup (switch_info, "modified_resources", []);
+    list resources	= switch_info["modified_resources"]:[];
+    map resource	= resources[active_resource]:$[];
 
-    map resource = select (resources, active_resource, $[]);
+    string rt		= resource["resource_type"]:"";
+    active_resource_name = resource["resource_name"]:"";
 
-    active_resource_name = lookup(resource, "resource_name","");
-    string type = lookup(resource, "resource_type","");
-
-    if (!SCR::Execute(.scpm.profiles.changes, type, active_resource_name))
+    if (!(boolean)SCR::Execute(.scpm.profiles.changes, rt,active_resource_name))
         ShowError();
     else
-        changes = SCR::Read(.target.string, changespath);
+        changes = (string) SCR::Read(.target.string, changespath);
 
     if (changes == "" || changes == nil)
         changes = "";
@@ -1384,7 +1424,7 @@ global define boolean SetSaveFlag() ``{
 global define list GetProfilesAsItems() ``{
 
     list items = [];
-    items = maplist (`name, `descr, profiles, ``{
+    items = maplist (string name, string descr, profiles, ``{
 	// take 1st line from description
 	descr = substring (descr, 0, find (descr, "\n"));
         if (name == active_profile)
@@ -1405,7 +1445,7 @@ global define list GetResourcesAsItems() ``{
     list items = [];
     integer i = 0;
 
-    foreach (`resource, resources, ``{
+    foreach (map resource, resources, ``{
         string flag = "";
         if (lookup(resource,"is_new",false))
             // flag
@@ -1451,7 +1491,7 @@ global define boolean CheckNameValidity(string name) ``{
 global define list CheckFilesValidity(map settings) ``{
 
     list not_executable = [];
-    foreach (`type, [ "prestart", "poststart", "prestop", "poststop" ], ``{
+    foreach (string type, ["prestart", "poststart", "prestop", "poststop" ], ``{
 
 	string file = settings[type]:"";
 	if (file != "" && (SCR::Execute (.target.bash,
@@ -1469,7 +1509,7 @@ global define list CheckFilesValidity(map settings) ``{
 global define boolean SetFilePermitions (map settings) ``{
 
     boolean ret = true;
-    foreach (`type, [ "prestart", "poststart", "prestop", "poststop" ], ``{
+    foreach (string type, [ "prestart", "poststart", "prestop", "poststop" ],``{
 	string file = settings[type]:"";
 	if (file != "" && (SCR::Execute (.target.bash,
 	    sformat("/bin/chmod 700 %1", file))) != 0)
@@ -1488,7 +1528,7 @@ global define boolean ModifiedSettings(map new_settings) ``{
 
     boolean ret = false;
 
-    foreach (`type, `value, profile_settings, ``{
+    foreach (string type, any value, profile_settings, ``{
         if (type != "name")
             if (value != lookup(new_settings, type, "")) ret = true;
     });
@@ -1502,7 +1542,7 @@ global define boolean ModifiedSettings(map new_settings) ``{
  */
 global define integer GetHashMarks() ``{
 
-    string all = SCR::Read(.target.string, hashpath);
+    string all = (string) SCR::Read(.target.string, hashpath);
     if (all == nil || all == "") return 0;
     return (size(all) - (100 * hash_size));
 }
@@ -1515,15 +1555,14 @@ global define integer GetHashMarks() ``{
 global define string GetProgressText(boolean everything) ``{
 
     string ret = "";
-    string all = SCR::Read(.target.string, progresspath);
+    string all = (string) SCR::Read(.target.string, progresspath);
 
     // check for non-existent file
     if (all == nil) return ret;
 
-    list all_l = splitstring (all, "\n");
-
-    string current = select(all_l,progress_size,"");
-    string last = select(all_l,progress_size - 1,"");
+    list all_l		= splitstring (all, "\n");
+    string current	= all_l[progress_size]:"";
+    string last		= all_l[progress_size - 1]:"";
 
     if (!everything) // return only one line
     {
@@ -1531,7 +1570,7 @@ global define string GetProgressText(boolean everything) ``{
         if (last_ret != "" && last_ret != last)
         {
             ret = substring (last, size(last_ret), size(last)-size(last_ret));
-            last_ret = select(all_l, progress_size - 1, "");
+            last_ret = all_l[progress_size - 1]:"";
         }
         // continue with the new line
         else if (progress_size < size(all_l) && current !="" && current !="\n")
@@ -1555,7 +1594,7 @@ global define string GetProgressText(boolean everything) ``{
         {
             ret = "\n" + current;
             progress_size = progress_size + 1;
-            current = select(all_l,progress_size,"");
+            current = all_l[progress_size]:"";
         }
     }
     return ret;
@@ -1569,7 +1608,7 @@ global define string GetProgressText(boolean everything) ``{
 global define boolean ReadSwitchInfo() ``{
 
     switch_info = $[];
-    switch_info = SCR::Read(.target.ycp, tmppath);
+    switch_info = (map) SCR::Read(.target.ycp, tmppath);
     if (switch_info == nil)
     {
         switch_info = $[];
@@ -1586,34 +1625,10 @@ global define boolean ReadSwitchInfo() ``{
  * @return boolean true if thread finished succesfully
  */
 global define boolean Wait() ``{
-    boolean ret = SCR::Read(.scpm.exit_status );
+    boolean ret = (boolean) SCR::Read(.scpm.exit_status );
     if (!ret)
         SetError();
     return ret;
-}
-
-/**
- * This function is called when some scpm command failed.
- * The error message is read and shown in Popup::Error.
- */
-define void ShowError () ``{
-
-    string err = SCR::Read (.scpm.error);
-    if (err != nil && err != "")
-        Popup::Error (err);
-}
-
-/**
- * This function is called when some scpm command failed.
- * The error message is read and stored in global variable scpm_error.
- */
-define void SetError () ``{
-
-    string err = SCR::Read (.scpm.error);
-    if (err != nil && err != "")
-        scpm_error = err;
-    else
-        scpm_error = "";
 }
 
 /* EOF */

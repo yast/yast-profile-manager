@@ -19,7 +19,7 @@ import "Popup";
 import "Label";
 
 include "profile-manager/helps.ycp";
-include "profile-manager/routines.ycp";
+include "profile-manager/dialogs.ycp";
 
 
 /**
@@ -28,7 +28,7 @@ include "profile-manager/routines.ycp";
  */
 global define symbol ReadDialog() ``{
     Wizard::RestoreHelp(HELPS["read"]:"");
-    ProfileManager::AbortFunction = ``{ return PollAbort();};
+    ProfileManager::AbortFunction = ``{ return UI::PollInput() == `abort;};
     boolean ret = ProfileManager::Read();
     return ret ? `next : `abort;
 }
@@ -155,7 +155,7 @@ global define any MainDialog () ``{
 	ret = UI::UserInput ();
 	if (ret == `delete_button)
 	{
-	    selected = UI::QueryWidget(`id(`profiles), `CurrentItem);
+	    selected = (string) UI::QueryWidget(`id(`profiles), `CurrentItem);
 	    if (selected == active)
 		// Popup text (user wants to delete active profile):
 		Popup::Message(_("You cannot delete the active profile."));
@@ -190,13 +190,14 @@ global define any MainDialog () ``{
 	else if (ret == `edit_button || ret == `profiles)
 	{
 	    ret = `edit_button;
-	    ProfileManager::selected_profile = UI::QueryWidget(`id(`profiles), `CurrentItem);
+	    ProfileManager::selected_profile = (string)
+		UI::QueryWidget(`id(`profiles), `CurrentItem);
 	    ProfileManager::profile_action = "edit";
 	    break;
 	}
 	else if (ret == `switch_button)
 	{
-	    selected = UI::QueryWidget(`id(`profiles), `CurrentItem);
+	    selected = (string) UI::QueryWidget(`id(`profiles), `CurrentItem);
 	    ProfileManager::selected_profile = selected;
 	    ProfileManager::PrepareSwitch();
 	    ProgressPopup("",0,100);
@@ -442,7 +443,7 @@ global define any OptionsDialog () ``{
     }
     else if (ret == `next)
     {
-        close_popups = UI::QueryWidget(`id(`close_popups_ch), `Value);
+        close_popups = (boolean) UI::QueryWidget(`id(`close_popups_ch), `Value);
 
 	// SCPM will be enabled
         if (UI::QueryWidget(`id(`rb), `CurrentButton) == `ena)
@@ -451,7 +452,7 @@ global define any OptionsDialog () ``{
 	    if (use_rg)
 		selected = ProfileManager::current_resources;
 	    else
-		selected = UI::QueryWidget(`id(`resources), `CurrentItem);
+		selected =(string)UI::QueryWidget(`id(`resources),`CurrentItem);
             if (selected == separator || selected == nil)
             {
 		// Popup label:

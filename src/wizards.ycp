@@ -19,63 +19,6 @@ import "Label";
 include "wizard/sequencer.ycp";
 
 include "profile-manager/complex.ycp";
-include "profile-manager/dialogs.ycp";
-
-/**
- * Whole configuration of profile-manager
- * @return sequence result
- */
-global define symbol ProfileManagerSequence() ``{
-
-    map aliases = $[
-	"read"	: [ ``( ReadDialog() ), true ],
-	"main"	:   ``( MainSequence() ),
-    "write"	: [ ``( WriteDialog() ), true ]
-    ];
-
-    map sequence = $[
-	"ws_start" : "read",
-	"read" : $[
-	    `abort	: `abort,
-	    `next	: "main"
-	],
-	"main" : $[
-	    `abort	: `abort,
-	    `next	: "write"
-	]
-	,"write" : $[
-	    `abort	: `abort,
-	    `next	: `next
-	]
-    ];
-
-    Wizard::CreateDialog();
-    any ret = WizardSequencer(aliases, sequence);
-    UI::CloseDialog();
-
-    return ret;
-}
-
-/**
- * Whole configuration of profile-manager but without reading and writing.
- * For use with autoinstallation.
- * @return sequence result
- */
-global define symbol ProfileManagerAutoSequence() ``{
-    // Caption of the initialize process
-    string caption = _("Profile Manager Configuration");
-    // Lable of the initialize process
-    term contents = `Label(_("Initializing ..."));
-
-    Wizard::CreateDialog();
-    Wizard::SetContentsButtons(caption, contents, "",
-	    Label::BackButton(), Label::NextButton());
-
-    any ret = MainSequence();
-
-    UI::CloseDialog();
-    return ret;
-}
 
 /**
  * Finishing module after clicking windowmanager "close window" button
@@ -86,6 +29,7 @@ global define symbol Cancel() ``{
     ProfileManager::canceled = true;
     return `next; //FIXME cancel should really cancel!!
 }
+
 
 /**
  * Main sequence of profile-manager
@@ -157,7 +101,61 @@ global define any MainSequence () ``{
     return ret;
 }
 
+/**
+ * Whole configuration of profile-manager
+ * @return sequence result
+ */
+global define symbol ProfileManagerSequence() ``{
 
+    map aliases = $[
+	"read"	: [ ``( ReadDialog() ), true ],
+	"main"	:   ``( MainSequence() ),
+    "write"	: [ ``( WriteDialog() ), true ]
+    ];
+
+    map sequence = $[
+	"ws_start" : "read",
+	"read" : $[
+	    `abort	: `abort,
+	    `next	: "main"
+	],
+	"main" : $[
+	    `abort	: `abort,
+	    `next	: "write"
+	]
+	,"write" : $[
+	    `abort	: `abort,
+	    `next	: `next
+	]
+    ];
+
+    Wizard::CreateDialog();
+    any ret = WizardSequencer(aliases, sequence);
+    UI::CloseDialog();
+
+    return (symbol) ret;
+}
+
+/**
+ * Whole configuration of profile-manager but without reading and writing.
+ * For use with autoinstallation.
+ * @return sequence result
+ */
+global define symbol ProfileManagerAutoSequence() ``{
+    // Caption of the initialize process
+    string caption = _("Profile Manager Configuration");
+    // Lable of the initialize process
+    term contents = `Label(_("Initializing ..."));
+
+    Wizard::CreateDialog();
+    Wizard::SetContentsButtons(caption, contents, "",
+	    Label::BackButton(), Label::NextButton());
+
+    any ret = MainSequence();
+
+    UI::CloseDialog();
+    return (symbol) ret;
+}
 
 /* EOF */
 }
