@@ -496,19 +496,18 @@ global define boolean ProgressPopup() ``{
 
     string progresstext = "";
     integer hashmarks = 0;
+    ProfileManager::last_ret = "";
 
-    ProfileManager::end_of_progress = false;
-    ProfileManager::start_of_progress = ProfileManager::progress_size;
     UI::BusyCursor();
     do
     {
         // this is strange:
         if (UI::PollInput() == `close_ch) {
-            if (close_popups) close_popups = false;
-            else close_popups = true;
+            if (ProfileManager::close_popups)
+                ProfileManager::close_popups = false;
+            else ProfileManager::close_popups = true;
         }
 
-        sleep(10);
         hashmarks = ProfileManager::GetHashMarks();
 /*        UI::ChangeWidget(`id(`pb), `Value, hashmarks);*/
 
@@ -518,14 +517,22 @@ global define boolean ProgressPopup() ``{
             UI::ChangeWidget(`id(`progress), `LastLine, recoded);
         }
     }
-//    while (!ProfileManager::end_of_progress);
-    while (hashmarks<100);
+    while (hashmarks<100);// read to the end of file?
 
     UI::NormalCursor();
     if (!close_popups)
     {
         UI::ChangeWidget(`id(`close), `Enabled, true);
-        any ret = UI::UserInput();
+        any ret = nil;
+        while (ret != `close)
+        {
+            ret = UI::UserInput();
+            if (ret == `close_ch) {
+                if (ProfileManager::close_popups)
+                    ProfileManager::close_popups = false;
+                else ProfileManager::close_popups = true;
+            }
+        }
     }
     UI::CloseDialog();
     return true;
