@@ -1080,7 +1080,7 @@ global define boolean Write() ``{
     // profile-manager Write dialog caption:
     string caption = _("Writing profile manager configuration");
 
-    list stagelist = [
+    list<string> stagelist = [
 	// progress stage:
 	_("Write the SCPM database")
     ];
@@ -1091,7 +1091,7 @@ global define boolean Write() ``{
 
     if (!canceled)
     {
-	stagelist = merge (stagelist, [
+	stagelist = (list<string>) merge (stagelist, [
 	    // progress stage:
 	    _("Write SCPM settings"),
 	    // progress stage:
@@ -1108,7 +1108,7 @@ global define boolean Write() ``{
     // progress step:
     steplist = add (steplist, _("Finished"));
 
-    Progress::New(caption, " ", steps, stagelist, steplist, "");
+    Progress::New (caption, " ", steps, stagelist, steplist, "");
 
     Progress::NextStage();
     if(!SCR::Write(.scpm, nil))

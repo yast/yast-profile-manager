@@ -11,12 +11,11 @@
 
 textdomain "profile-manager";
 
-import "Wizard";
-import "ProfileManager";
-
-import "Popup";
 import "Label";
-include "wizard/sequencer.ycp";
+import "Popup";
+import "ProfileManager";
+import "Sequencer";
+import "Wizard";
 
 include "profile-manager/complex.ycp";
 
@@ -96,7 +95,7 @@ define any MainSequence () ``{
 	]
     ];
 
-    any ret = WizardSequencer (aliases, sequence);
+    any ret = Sequencer::Run (aliases, sequence);
 
     return ret;
 }
@@ -130,7 +129,7 @@ define symbol ProfileManagerSequence() ``{
     ];
 
     Wizard::CreateDialog();
-    any ret = WizardSequencer(aliases, sequence);
+    any ret = Sequencer::Run (aliases, sequence);
     UI::CloseDialog();
 
     return (symbol) ret;

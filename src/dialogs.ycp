@@ -934,8 +934,8 @@ profile nor does it start or stop services."))),
 			// Popup text, part 3/3
                         _("on an &existing profile:")))
                     )),
-            `SelectionBox(`id(`profiles),
-                 "", maplist(`name, `desc, profiles, ``{ return name; })),
+            `SelectionBox(`id(`profiles), "", maplist (
+		string name, any desc, profiles, ``{ return name; })),
             `VSpacing(1),
 	        `HBox(
 	            `HSpacing(1),
