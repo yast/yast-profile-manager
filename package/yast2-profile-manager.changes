@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Mon Aug 19 10:50:21 CEST 2002 - jsuchome@suse.cz
+
+- Correctly writing all progress information.
+- Fixed bug in ProgressPopup checkbox.
+
+-------------------------------------------------------------------
 Thu Aug 15 17:49:08 CEST 2002 - jsuchome@suse.cz
 
 - recoding texts from different encoding
