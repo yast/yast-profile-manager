@@ -318,7 +318,7 @@ global define boolean ReadResourceGroups() ``{
 	SetError();
 	return false;
     }
-    foreach (string name, map group, resource_groups, ``{
+    foreach (string name, map group, (map<string,map<string,any> >)resource_groups, ``{
 	resource_groups[name,"resources"] = GetResourceGroupResources (name);
 // FIXME looks like description is not in UTF-8?
 	resource_groups[name,"description"]	= (string) UI::Recode (
@@ -467,7 +467,7 @@ global define boolean SaveResourceGroups () ``{
 
     // deletion must be done in first cycle
     // (because some new group can have the name of deleted one)
-    foreach (string name, resource_groups_deleted, ``{
+    foreach (string name, (list<string>) resource_groups_deleted, ``{
 
 	y2milestone ("deleting group %1", name);
 	if (!SCR::Write (.scpm.rg.group.delete, name))
@@ -478,7 +478,7 @@ global define boolean SaveResourceGroups () ``{
     });
     // renaming must be done in second cycle
     // (because some new group can have the old name of renamed one)
-    foreach (string name, map group, resource_groups, ``{
+    foreach (string name, map group, (map<string,map<string,any> >) resource_groups, ``{
 	if (group["what"]:"" == "renamed")
 	{
 	    y2milestone ("renaming group %1 to %2", group["org_name"]:"", name);
@@ -490,7 +490,7 @@ global define boolean SaveResourceGroups () ``{
 	error = AllErrorMessages (error);
     });
     // rest of modifications
-    foreach (string name, map group, resource_groups, ``{
+    foreach (string name, map group, (map<string,map<string,any> >) resource_groups, ``{
 	string what = group["what"]:"";
 
 	if (what == "added" || what == "edited")
@@ -541,7 +541,7 @@ global define boolean ReadConfigFile () ``{
  */
 global define boolean WriteConfigFile () ``{
 
-    foreach (string key, any value, scpm_conf, ``{
+    foreach (string key, any value, (map<string,any>) scpm_conf, ``{
 	path agent = add(.sysconfig.scpm, toupper(key));
 	if (is (value, boolean))
 	    SCR::Write(agent, ((boolean) value) ? "yes" : "no");
@@ -602,7 +602,7 @@ global define void GetModifiedGroups() ``{
 
     integer i = 0;
     modified_groups = $[];
-    foreach (map resource, switch_info["modified_resources"]:[], ``{
+    foreach (map resource, (list<map<string,any> >) switch_info["modified_resources"]:[], ``{
 	// go through all groups owning this resource:
 	foreach (map group, resource["groups"]:[], ``{
 	    string groupname = group["name"]:"";
@@ -628,7 +628,7 @@ global define void GetModifiedGroups() ``{
 global define boolean UpdateOtherGroups (list groups) ``{
 
     boolean group_save = false;
-    foreach (string gname, groups, ``{
+    foreach (string gname, (list<string>) groups, ``{
 	group_save = false;
 	// - check all the resources (some are possibly changed) of group
 	// - switch_info is updated, modified_groups not yet
@@ -675,7 +675,7 @@ global define boolean CheckAndUpdateResources (string name, map resources) ``{
     list groups_to_check = [];
     boolean group_save = false;
     // go through all resources of current group
-    foreach (any i, map resource, resources, ``{
+    foreach (any i, map resource, (map<any,map<string,any> >) resources, ``{
 	if (!is (i,integer))
 	    return;
 	integer pos = (integer) i;
@@ -690,7 +690,7 @@ global define boolean CheckAndUpdateResources (string name, map resources) ``{
 		// set modified flag of the group
 		modified_groups [name, "modified"] = true;
 		// set other groups (this resource belongs to) for later check
-		foreach (map g, resource["groups"]:[], ``{
+		foreach (map g, (list<map<string,any> >) resource["groups"]:[], ``{
 		    if (g["name"]:"" != name)
 		    groups_to_check = union (groups_to_check, [ g["name"]:"" ]);
 		});
@@ -741,7 +741,7 @@ global define boolean SetGroupSaveFlag (string groupname) ``{
 global define list GetGroupsAsItems() ``{
 
     list items = [];
-    foreach (string name, map group, modified_groups, ``{
+    foreach (string name, map group, (map<string,map<string,any> >)modified_groups, ``{
 	string save = group ["save"]:default_save ? "X":"";
 	if (group["modified"]:false)
 	    save = "m";
@@ -855,7 +855,7 @@ global define boolean ReadProfiles() ``{
         SetError();
         profiles_l = [];
     }
-    foreach (string profile, profiles_l, ``{
+    foreach (string profile, (list<string>) profiles_l, ``{
         profiles = add (profiles, profile, "");
     });
 
@@ -891,7 +891,7 @@ global define boolean ReadProfilesDescriptions() ``{
     // read the descriptions of each profile
     map profilesm = profiles;
 
-    foreach (string profile, string d, profilesm, ``{
+    foreach (string profile, string d, (map<string,string>) profilesm, ``{
         string desc = (string) SCR::Read(.scpm.profiles.description, profile);
         if (desc == nil)
         {
@@ -1204,7 +1204,8 @@ global define boolean RenameProfile(string old, string new) ``{
     if (ret)
     {
         string description = profiles[old]:"";
-        profiles = filter (string name, string desc, profiles, ``(name != old));
+        profiles = filter (string name, string desc, (map<string,string>)
+	    profiles, ``(name != old));
         profiles = add (profiles, new, description);
         if (active_profile == old)
             active_profile = new;
@@ -1254,7 +1255,7 @@ global define boolean DeleteProfile(string to_delete) ``{
 
     boolean ret = (boolean) SCR::Execute(.scpm.profiles.delete, to_delete);
     if (ret)
-        profiles = filter (string name, any d, profiles,``(name != to_delete));
+        profiles = filter (string name, any d, (map<string,any>) profiles,``(name != to_delete));
     else
         SetError();
     return ret;
@@ -1426,7 +1427,7 @@ global define boolean SetSaveFlag() ``{
 global define list GetProfilesAsItems() ``{
 
     list items = [];
-    items = maplist (string name, string descr, profiles, ``{
+    items = maplist (string name, string descr, (map<string,string>) profiles, ``{
 	// take 1st line from description
 	descr = substring (descr, 0, find (descr, "\n"));
         if (name == active_profile)
@@ -1447,7 +1448,7 @@ global define list GetResourcesAsItems() ``{
     list items = [];
     integer i = 0;
 
-    foreach (map resource, resources, ``{
+    foreach (map resource, (list<map<string,any> >)resources, ``{
         string flag = "";
         if (resource["is_new"]:false)
             // flag
@@ -1529,7 +1530,7 @@ global define boolean ModifiedSettings(map new_settings) ``{
 
     boolean ret = false;
 
-    foreach (string type, any value, profile_settings, ``{
+    foreach (string type, any value, (map<string,any>)profile_settings, ``{
         if (type != "name")
             if (value != new_settings[type]:"") ret = true;
     });
