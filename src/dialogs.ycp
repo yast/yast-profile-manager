@@ -283,9 +283,11 @@ global define any SwitchDialog () ``{
                 `VSpacing(0.2),
 		        `HBox(
                     // Push button label
-		            `PushButton(`id(`save_button), _("&Save all")),
+		            `PushButton(`id(`select_button), _("&Select or unselect")),
                     // Push button label
-		            `PushButton(`id(`drop_button), _("&Drop all")),
+		            `PushButton(`id(`save_button), _("Select &all")),
+                    // Push button label
+		            `PushButton(`id(`drop_button), _("&Unselect all")),
                     // Push button label
                     `Right( `PushButton(`id(`changes_button), _("Show c&hanges")))
 				    ),
@@ -324,7 +326,7 @@ global define any SwitchDialog () ``{
 	    ret = UI::UserInput ();
 	    if (ret == `back)
             break;
-        else if (ret ==`modified)
+        else if (ret ==`modified || ret ==`select_button)
         {
             ProfileManager::active_resource =
                 UI::QueryWidget(`id(`modified), `CurrentItem);
@@ -333,7 +335,7 @@ global define any SwitchDialog () ``{
                     ProfileManager::GetResourcesAsItems());
             UI::ChangeWidget(`id(`modified), `CurrentItem,
                     ProfileManager::active_resource);
-            continue;
+        continue;
         }
         else if (ret == `save_button)
 	    {
@@ -359,6 +361,7 @@ global define any SwitchDialog () ``{
         {
             ProfileManager::active_resource =
                 UI::QueryWidget(`id(`modified), `CurrentItem);
+            y2milestone("active:%1", ProfileManager::switch_info["modified_resources", ProfileManager::active_resource]:$[]);
             ShowChangesPopup();
             continue;
         }
@@ -509,15 +512,23 @@ global define boolean ProgressPopup() ``{
         }
 
         hashmarks = ProfileManager::GetHashMarks();
+        sleep(10);
 /*        UI::ChangeWidget(`id(`pb), `Value, hashmarks);*/
 
-        progresstext = ProfileManager::GetProgressText();
+        progresstext = ProfileManager::GetProgressText(false);
         if (progresstext != "") {
             string recoded = UI::Recode(Console::encoding,"UTF-8",progresstext);
             UI::ChangeWidget(`id(`progress), `LastLine, recoded);
         }
     }
-    while (hashmarks<100);// read to the end of file?
+    while (hashmarks<100);
+
+    // read to the end of file?
+    progresstext = ProfileManager::GetProgressText(true);
+    if (progresstext != "") {
+        string recoded = UI::Recode(Console::encoding,"UTF-8",progresstext);
+        UI::ChangeWidget(`id(`progress), `LastLine, recoded);
+    }
 
     UI::NormalCursor();
     if (!close_popups)
