@@ -188,7 +188,7 @@ global define any MainDialog () ``{
         selected = UI::QueryWidget(`id(`profiles), `CurrentItem);
         ProfileManager::selected_profile = selected;
         ProfileManager::PrepareSwitch();
-        ProgressPopup();
+        ProgressPopup("");
 
         if (!ProfileManager::Wait())
         {
@@ -383,7 +383,7 @@ global define any OptionsDialog () ``{
 
                     ProfileManager::initialized = true;
                     ProfileManager::WriteStatusFirst();
-                    ProgressPopup();
+                    ProgressPopup("");
                     if (!ProfileManager::Wait())
                     {
                         // Error popup text, %1 is additional error message
@@ -433,8 +433,6 @@ global define any OptionsDialog () ``{
 					// maybe WriteResources should be run every time
 					ProfileManager::WriteResources(selected);
 					ProfileManager::RebuildDB();
-                    /*
-                    ProgressPopup();*/
 				}
 				else continue;
             }

@@ -140,7 +140,7 @@ global define any ProfileSettingsDialog () ``{
                 continue;
             }
             ProfileManager::AddProfile(selected);
-            ProgressPopup();
+            ProgressPopup("");
             if (!ProfileManager::Wait())
             {
                 // Error popup text, %1 is additional translated error message
@@ -178,7 +178,7 @@ global define any ProfileSettingsDialog () ``{
                 continue;
             }
             ProfileManager::CopyProfile(edited, selected);
-            ProgressPopup();
+            ProgressPopup("");
             if (!ProfileManager::Wait())
             {
                 // Error popup text, %1 is additional translated error message
@@ -389,9 +389,7 @@ global define any SwitchDialog () ``{
 	    {
             // saving changes: check for "drop all"
             ProfileManager::Save();
-            /* we do not want to have two popups...
-            ProgressPopup();
-            */
+            ProgressPopup("first");
             if (!ProfileManager::Wait())
             {
                 // Error popup text, %1 is additional translated error message
@@ -402,7 +400,7 @@ global define any SwitchDialog () ``{
                 break;
             }
             ProfileManager::Switch();
-            ProgressPopup();
+            ProgressPopup("last");
             if (!ProfileManager::Wait())
                 // Error popup text, %1 is additional translated error message
                 UI::ErrorPopup (sformat(_("Switching was not successful:
@@ -521,12 +519,16 @@ profile nor does it start or stop services."))),
 
 /**
  * Popup for showing progress informations
+ * @param postition of this progress:
+ *  (if "first", popup is not closed, for "last" popup is not created)
  * @return boolean true
  */
-global define boolean ProgressPopup() ``{
+global define boolean ProgressPopup(string position) ``{
 
     boolean close_popups = ProfileManager::close_popups;
 
+    if (position != "last")
+    {
     UI::OpenDialog(`opt(`decorated), `HBox(`HSpacing(1.5),
         `VBox(
             `VSpacing(1),
@@ -548,6 +550,7 @@ global define boolean ProgressPopup() ``{
         ));
 
     UI::ChangeWidget(`id(`close), `Enabled, false);
+    }
 
     string progresstext = "";
     integer hashmarks = 0;
@@ -574,19 +577,24 @@ global define boolean ProgressPopup() ``{
         string recoded = UI::Recode(Console::encoding,"UTF-8",progresstext);
         UI::ChangeWidget(`id(`progress), `LastLine, recoded);
     }
+    else if (position == "first") // hack: missing newline
+        UI::ChangeWidget(`id(`progress), `LastLine, "\n");
 
     UI::NormalCursor();
-    if (!close_popups)
+    if (position != "first")
     {
-        UI::ChangeWidget(`id(`close), `Enabled, true);
-        any ret = nil;
-        while (ret != `close)
+        if (!close_popups)
         {
-            ret = UI::UserInput();
+            UI::ChangeWidget(`id(`close), `Enabled, true);
+            any ret = nil;
+            while (ret != `close)
+            {
+                ret = UI::UserInput();
+            }
         }
+        ProfileManager::close_popups = UI::QueryWidget(`id(`close_ch), `Value);
+        UI::CloseDialog();
     }
-    ProfileManager::close_popups = UI::QueryWidget(`id(`close_ch), `Value);
-    UI::CloseDialog();
     return true;
 }
 
