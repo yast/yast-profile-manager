@@ -272,7 +272,9 @@ global define boolean Read() ``{
 	if (enabled)
 	    if(!ReadProfilesDescriptions())
 			// Error message: %1 is special error message, should be translated
-			Report::Error(sformat(_("Cannot read profiles descriptions:\n%1"),
+			Report::Error(sformat(_("Cannot read profile descriptions:
+%1
+"),
                 scpm_error));
 
     // read current resources

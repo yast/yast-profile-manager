@@ -159,7 +159,9 @@ global define any MainDialog () ``{
                 if (!ProfileManager::DeleteProfile(selected))
 					// Error popup text: %1 is additional error message
                     UI::ErrorPopup(sformat(
-                        _("Deleting the profile was not succesful:\n%1"),
+                        _("Deleting the profile was not successful:
+%1
+"),
                         ProfileManager::scpm_error));
                 UI::ChangeWidget(`id(`profiles), `Items,
                         ProfileManager::GetProfilesAsItems());
@@ -385,7 +387,9 @@ global define any OptionsDialog () ``{
                     if (!ProfileManager::Wait())
                     {
                         // Error popup text, %1 is additional error message
-                        UI::ErrorPopup(sformat (_("Enabling SCPM was not succesful:\n%1"), ProfileManager::scpm_error));
+                        UI::ErrorPopup(sformat (_("Enabling SCPM was not successful:
+%1
+"), ProfileManager::scpm_error));
                         ProfileManager::enabled = false;
 //                        ProfileManager::initialized = false;??
                         //    continue;
@@ -406,7 +410,9 @@ global define any OptionsDialog () ``{
                     {
                         UI::ErrorPopup(sformat(
                             // Error popup text, %1 is additional error text
-                            _("Enabling SCPM was not succesful:\n%1"),
+                            _("Enabling SCPM was not successful:
+%1
+"),
                             ProfileManager::scpm_error));
                         ProfileManager::enabled = false;
                         break;
@@ -443,7 +449,9 @@ global define any OptionsDialog () ``{
                 {
                     UI::ErrorPopup(sformat(
                         // Error popup text, %1 is additional error text
-                        _("Disabling SCPM was not succesful:\n%1"),
+                        _("Disabling SCPM was not successful:
+%1
+"),
                         ProfileManager::scpm_error));
                     ProfileManager::enabled = true;
                     break;

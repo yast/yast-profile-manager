@@ -46,21 +46,23 @@ overview of how SCPM can be used.
     _("<p>Assume you have a notebook you want to connect to your home LAN and 
 your company network and to use independently when traveling.
 Usually, that requires configuring your system to fit into the
-different networks. Maybe you need to use a dhcp client in your office,
+different networks. Maybe you need to use a DHCP client in your office,
 but a fixed IP at home. Additionally, you may need to run a system time
 syncer (xnptd), a NIS client, and an automounter at your office, but at
 home only the automounter. None of these are needed when on the road. 
 For cases like this, SCPM can help manage those different
 configurations and makes it easy to switch between them.
-</p>") +
+</p>
+") +
 
     /* SCPM introduction text 5/10 */
     _("<p>SCPM can do more. It is quite configurable, so you can handle almost
 all possible scenarios where data in different versions is needed to
 be stored and restored. Even use it to run various scripts depending
-of the profile from which it switched and the one to which it is
+on the profile from which it switched and the one to which it is
 switched.  More information is available in the info pages.
-</p>") +
+</p>
+") +
 
     /* SCPM introduction text 6/10 */
     _("<h2>SCPM Limitations</h2>
@@ -69,7 +71,7 @@ meant to manage user profiles, such as different KDE desktop settings.
 <h2>Quick Start</h2>") +
 
     /* SCPM introduction text 7/10 */
-    _("<p>In SCPM languague, there are some terms you need to know to
+    _("<p>There are some terms you need to know to
 successfully use this program. SCPM itself means
 <strong>System Configuration Profile Management</strong>. The
 <strong>system configuration</strong> represents the current status of
@@ -89,7 +91,8 @@ directory, or even a system service (such as the sendmail daemon). You
 are not restricted to a specific predefined bundle of
 resources. Multiple groups, called <strong>Resource Sets</strong>,
 exist. Even create your own resource sets if desired.
-</p>") +
+</p>
+") +
 
     /* SCPM introduction text 8/10
        For translators: do not translate the name "typical" */
@@ -98,12 +101,13 @@ your system. This is needed to specify the resource set to
 use. Usually, the default resource set <code>typical</code> is
 sufficient. When enabled, SCPM creates its database and default
 profile from your current system configuration. Afterwards, use SCPM
-to create new profiles as snapshots of your actual configuration or by
-copying existing profiles as the base for configuration
+to create new profiles as snapshots of your actual configuration or to
+copy existing profiles as the base for configuration
 modifications. To modify a configuration saved in a profile, switch to
 that profile. Then modify your settings as usual with YaST2 or your
 favorite editor.
-</p>") +
+</p>
+") +
 
     /* SCPM introduction text 9/10 */
     _("<p>Switching profiles is the process of
@@ -123,17 +127,17 @@ KDE's Konqueror: just open the address \"info:/scpm\" or enter that in the
 </p>"),
 
     /* Read dialog help 1/2 */
-    "read" : _("<p><b><big>Initializing profile manager configuration</big></b><br>
+    "read" : _("<p><b><big>Initializing Profile Manager Configuration</big></b><br>
 Please wait...<br></p>
 ") +
 
     /* Read dialog help 2/2 */
-    _("<p><b><big>Aborting the initialization:</big></b><br>
+    _("<p><b><big>Aborting initialization:</big></b><br>
 Safely abort the configuration utility by pressing <b>Abort</b> now.</p>
 "),
 
     /* Main dialog help 1/6*/
-    "main" : _("<p>SCPM allows you to store different profiles of your system configuration and to switch between them. If you are not familiar with SCPM, read the <b>Introduction to SCPM</b> in the administration guide or in info scpm.</p>") +
+    "main" : _("<p>SCPM allows you to store different profiles of your system configuration and to switch between them. If you are not familiar with SCPM, read the <b>Introduction to SCPM</b> in the Administration Guide or in info scpm.</p>") +
 
     /* Main dialog help 2/6 */
     _("<p>If SCPM is not enabled, use <b>Options</b></p>") +
@@ -142,8 +146,9 @@ Safely abort the configuration utility by pressing <b>Abort</b> now.</p>
     _("<p>In the table, see the list of available profiles. The currently active profile is marked in the column <b>active</b>.</p>") +
 
     /* Main dialog help 4/6*/
-    _("<p>After selecting a profile in the list, you can <b>Switch</b> your system configuration to this profile. You will be asked what to do with changes in the active profile before switching. In case you only want to save changes of the current system configuration to the active profile or undo them, perform a <b>Switch</b> to the active profile. Just like a normal switch, you will be asked what to do with the changes, but you are not going to leave the active
-profile, of course.</p>") +
+    _("<p>After selecting a profile in the list, you can <b>Switch</b> your system configuration to this profile. You will be asked what to do with changes in the active profile before switching. If you only want to save changes of the current system configuration to the active profile or undo them, perform a <b>Switch</b> to the active profile. Just like a normal switch, you will be asked what to do with the changes, but you are not going to leave the active
+profile, of course.</p>
+") +
 
     /* Main dialog help 5/6 */
     _("<p><b>Add</b> a new profile or <b>Edit</b> or <b>Delete</b> the selected one. Editing a profile does not mean changing the system configuration for this profile, but setting some special actions when entering or leaving this profile. To change the system configuration in a profile, switch to it. Then change your system configuration as usual.</p>") +
@@ -156,12 +161,13 @@ profile, of course.</p>") +
 
     /* Options dialog help 2/5*/
     _("<p>A configuration profile covers only a part of the system
-configuration. You can choose which files and services are affected.
-In SCPM terminology files and services are called resources. There are
-so called resource sets, which contain a predefined list of
-resources. Choose a resource set that suits your needs best from the list.<br>
+configuration. You can choose which files and services are effected.
+In SCPM terminology, files and services are called resources. There are
+also resource sets, which contain a predefined list of
+resources. Choose a resource set that suits your needs from the list.<br>
 The following resource sets are available: 
-    </p>") +
+    </p>
+") +
 
     /* Options dialog help 3/5
        For translators: do not translate the names (typical, etc.)*/
@@ -171,7 +177,7 @@ The following resource sets are available:
 <br><i>everything:</i> handles nearly all configuration files and services</p>") +
 
     /* Options dialog help 4/5*/
-    _("<p>You may create your own individual resource set, but currently not with YaST2. See info scpm or the administration guide for information. Your manually created resource sets will then be available in this list as well. If you change the used resource set, some resource may get obsolete and will be deleted from the profiles.</p>") +
+    _("<p>You may create custom resource sets, but currently not with YaST2. See info scpm or the Administration Guide for information. Manually-created resource sets will then be available in this list as well. If you change the used resource set, some resource may become obsolete and be deleted from the profiles.</p>") +
 
     /* Options dialog help 5/5 */
     _("<p>For progress windows to close automatically, check <b>Close progress pop-ups automatically</b>. This box is also available in the progress pop-ups themselves.</p>"),
@@ -197,20 +203,20 @@ The following resource sets are available:
 These scripts are executed as the user root. Make sure no users can change or even read them without authorization. For YaST to set the appropriate file permissions, check the box at the bottom of the dialog.</p>"),
 
     /* Switch dialog help 1/4 */
-    "switch" : _("<p>When you leave a profile, there might be changes in resources covered by SCPM. You have to decide what to do with these changes. By default, all changes get saved, but you can freely <b>select</b> and <b>unselect</b> resources, so only the changes you want to preserve get written to the active profile.</p>") +
+    "switch" : _("<p>When you leave a profile, there might be changes in resources covered by SCPM. You have to decide what to do with these changes. By default, all changes get saved, but you can freely <b>select</b> and <b>deselect</b> resources, so only the changes you want to preserve get written to the active profile.</p>") +
 
     /* Switch dialog help 2/4 */
     _("<p>The <b>flags</b> DELETED or NEW show that a resource will be deleted or added to the profile. This only happens if you changed the resource set in the SCPM options or if packages have been installed or removed from the system.</p>") +
 
     /* Switch dialog help 3/4 */
     /* Do not translate resource type names (\"file\" and \"service\") here */
-    _("<p>The resource <b>type</b> <i>file</i> indicates changes in a file or a directory. The resource type <i>service</i> means that there are changes in the runlevel links of this service, which decide if a service has to be started in a runlevel.</p>") +
+    _("<p>The resource <b>type</b> <i>file</i> indicates changes in a file or a directory. The resource type <i>service</i> means that there are changes in the runlevel links of this service, which decide if a service should be started in a runlevel.</p>") +
 
     /* Switch dialog help 4/4 */
     _("<p>If you are unsure what was changed in a resource, select it and use Show changes. This will show you the changes in the selected resource.</p>"),
 
     /* Write dialog help 1/1 */
-    "write" : _("<p><b><big>Writing profile manager configuration</big></b><br>
+    "write" : _("<p><b><big>Writing Profile Manager Configuration</big></b><br>
 Please wait...<br></p>
 ")
 

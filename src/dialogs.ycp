@@ -144,7 +144,9 @@ global define any ProfileSettingsDialog () ``{
             if (!ProfileManager::Wait())
             {
                 // Error popup text, %1 is additional translated error message
-                UI::ErrorPopup(sformat(_("Adding new profile was not succesful:\n%1"), ProfileManager::scpm_error));
+                UI::ErrorPopup(sformat(_("Adding new profile was not successful:
+%1
+"), ProfileManager::scpm_error));
                 // continue;
             }
             else
@@ -160,7 +162,9 @@ global define any ProfileSettingsDialog () ``{
                 {
                     UI::ErrorPopup(sformat(
                         // Error popup text, %1 is additional error message
-                        _("Writing profile settings was not succesful:\n%1"),
+                        _("Writing profile settings was not successful:
+%1
+"),
                         ProfileManager::scpm_error));
                 }
             }
@@ -178,7 +182,9 @@ global define any ProfileSettingsDialog () ``{
             if (!ProfileManager::Wait())
             {
                 // Error popup text, %1 is additional translated error message
-                UI::ErrorPopup(sformat(_("Copying profile was not succesful:\n:%1"), ProfileManager::scpm_error));
+                UI::ErrorPopup(sformat(_("Copying profile was not successful:
+:%1
+"), ProfileManager::scpm_error));
                 //    continue;
             }
             else
@@ -191,7 +197,9 @@ global define any ProfileSettingsDialog () ``{
                 {
                     UI::ErrorPopup(sformat(
                         // Error popup text, %1 is additional error message
-                        _("Writing profile settings was not succesful:\n%1"),
+                        _("Writing profile settings was not successful:
+%1
+"),
                         ProfileManager::scpm_error));
                 }
             }
@@ -210,7 +218,9 @@ global define any ProfileSettingsDialog () ``{
                 if (!ProfileManager::RenameProfile(edited, selected))
                 {
                     // Error popup text, %1 is additional error text
-                    UI::ErrorPopup(sformat(_("Renaming profile was not succesful:\n%1"), ProfileManager::scpm_error));
+                    UI::ErrorPopup(sformat(_("Renaming profile was not successful:
+%1
+"), ProfileManager::scpm_error));
                     continue;
                 }
             }
@@ -221,7 +231,9 @@ global define any ProfileSettingsDialog () ``{
                 {
                     // Error popup text, %1 is additional error message
                     UI::ErrorPopup(sformat(
-                        _("Writing profile settings was not succesful:\n%1"),
+                        _("Writing profile settings was not successful:
+%1
+"),
                         ProfileManager::scpm_error));
                 }
             }
@@ -288,13 +300,13 @@ global define any SwitchDialog () ``{
 		        `HBox(
 		            `PushButton(`id(`select_button), `opt(`key_F3),
                         // Push button label
-                        _("&Select or unselect")),
+                        _("&Select or Deselect")),
 		            `PushButton(`id(`save_button), `opt(`key_F4),
                         // Push button label
-                        _("Select &all")),
+                        _("Select &All")),
 		            `PushButton(`id(`drop_button), `opt(`key_F5),
                         // Push button label
-                        _("&Unselect all")),
+                        _("&Deselect all")),
                     `Right( `PushButton(`id(`changes_button), `opt(`key_F2),
                         // Push button label
                         _("Show c&hanges")))
@@ -379,7 +391,9 @@ global define any SwitchDialog () ``{
             ProgressPopup();
             if (!ProfileManager::Wait())
                 // Error popup text, %1 is additional translated error message
-                UI::ErrorPopup (sformat(_("Switching was not succesful:\n%1"),
+                UI::ErrorPopup (sformat(_("Switching was not successful:
+%1
+"),
                     ProfileManager::scpm_error));
             else
                 ProfileManager::active_profile = selected;

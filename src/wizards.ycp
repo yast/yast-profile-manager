@@ -49,7 +49,7 @@ global define symbol ProfileManagerSequence() ``{
     ];
 
     // Caption of the initialize process
-    string caption = _("Profile manager configuration");
+    string caption = _("Profile Manager Configuration");
     // Lable of the initialize process
     term contents = `Label(_("Initializing ..."));
 
@@ -70,7 +70,7 @@ global define symbol ProfileManagerSequence() ``{
  */
 global define symbol ProfileManagerAutoSequence() ``{
     // Caption of the initialize process
-    string caption = _("Profile manager configuration");
+    string caption = _("Profile Manager Configuration");
     // Lable of the initialize process
     term contents = `Label(_("Initializing ..."));
 
