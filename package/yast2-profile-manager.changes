@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Fri Sep  3 12:15:59 CEST 2004 - jsuchome@suse.cz
+
+- scpm-agent: added support for SCPM::Recovery () function
+- documentation slightly updated
+- 2.10.4
+
+-------------------------------------------------------------------
 Fri Aug 27 14:05:54 CEST 2004 - jsuchome@suse.cz
 
 - merged in proofread text

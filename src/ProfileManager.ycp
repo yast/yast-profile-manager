@@ -37,6 +37,11 @@ global boolean enabled = false;
  */
 global boolean needs_reinit = false;
 
+/**
+ * Is SCPM recovery? (after something failed)
+ */
+global boolean needs_recover = false;
+
 // for saving status of enabled/disabled radiobuttons in OptionsDialog
 // when going to ConfigureResources
 global boolean tmp_enabled = false;
@@ -789,18 +794,18 @@ Install it now?</p>
  */
 define boolean ReadSCPMStatus() ``{
 
-    list stat = (list) SCR::Read(.scpm.status);
-    if (stat == nil)
+    // get the scpm_status_t struct as a map
+    map status = (map) SCR::Read (.scpm.status);
+    if (status == nil)
     {
         SetError();
         return false;
     }
 
-    enabled		= stat[0]:false;
-    initialized		= stat[1]:false;
-    // resource groups are available from some version of scpm...
-    use_rg		= stat[2]:"0" > "0.9";
-    needs_reinit	= initialized && stat[3]:false;
+    enabled		= status["enabled"]:false;
+    initialized		= status["initialized"]:false;
+    needs_reinit	= initialized && status["needs_reinit"]:false;
+    needs_recover	= status["needs_recover"]:false;
     return true;
 }
 

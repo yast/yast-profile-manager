@@ -269,11 +269,12 @@ SCPMAgent::~SCPMAgent()
 /**
  * Dir
  */
-YCPList SCPMAgent::Dir(const YCPPath& path)
-{
+YCPList SCPMAgent::Dir(const YCPPath& path) 
+{   
     y2error("Wrong path '%s' in Dir().", path->toString().c_str());
     return YCPNull();
 }
+
 
 /**
  * Read
@@ -416,12 +417,18 @@ YCPValue SCPMAgent::Read(const YCPPath &path, const YCPValue& arg, const YCPValu
 		y2error ( scpm_error );
 	    }
 	    else {
-		YCPList l;
-		l->add(YCPBoolean(scpm_status.enabled));
-		l->add(YCPBoolean(scpm_status.initialized));
-		l->add (YCPString (scpm_status.scpm_version));
-		l->add (YCPBoolean (scpm_status.needs_reinit));
-		ret = l;
+		YCPMap retmap;
+		retmap->add (YCPString ("enabled"),
+			     YCPBoolean (scpm_status.enabled));
+		retmap->add (YCPString ("initialized"),
+			     YCPBoolean (scpm_status.initialized));
+		retmap->add (YCPString ("scpm_version"),
+			     YCPString (scpm_status.scpm_version));
+		retmap->add (YCPString ("needs_reinit"),
+			     YCPBoolean (scpm_status.needs_reinit));
+		retmap->add (YCPString ("needs_recover"),
+			     YCPBoolean (scpm_status.needs_recover));
+		ret = retmap;
 	    }
 	}
 	else if (PC(0) == "exit_status" ) {
@@ -732,6 +739,11 @@ YCPValue SCPMAgent::Execute(const YCPPath &path, const YCPValue& value,
 		pthread_create( &pt, NULL, (void*(*)(void*))&call_save, this );
 	    }
 	}
+
+   	if (PC(0) == "recover") {
+        
+	    pthread_create (&pt, NULL, (void*(*)(void*))&call_recover, this);
+	}
     }
     else if (path->length() == 2) {
 	
@@ -894,6 +906,9 @@ YCPValue SCPMAgent::otherCommand(const YCPTerm& term)
     return YCPNull();
 }
 
+/**
+ * Call PrepareSwitch in the new thread
+ */
 void *SCPMAgent::call_prepare( SCPMAgent *ag )
 {
   static int retval;
@@ -989,3 +1004,16 @@ void *SCPMAgent::call_enable( SCPMAgent *ag )
   pthread_exit((void*)&retval);
 }
 
+void *SCPMAgent::call_recover (SCPMAgent *ag)
+{
+  static int retval;
+  
+  if (!ag->scpm->Recover ()) {
+      y2error ( scpm_error );
+      retval = 1;
+  }
+  else
+      retval = 0;
+
+  pthread_exit((void*)&retval);
+}

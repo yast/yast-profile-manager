@@ -47,18 +47,46 @@ private:
     switch_info_t switch_info;
     string profile, dest_profile;
 
-    // Forbid any scpm calls, when not initialized (Execute(.scpm)).
+    /**
+     * Forbid any scpm calls, when not initialized (Execute(.scpm)).
+     */
     bool initialized;
 
     /**
-     * Functions to be called in new thread.
+     * Call SCPM->PrepareSwitch (prepare the switch to profile profile)
+     * in the new thread
      */
     static void *call_prepare( SCPMAgent *);
+
+    /**
+     * Call SCPM->Switch (perform prepared switch) in the new thread
+     */
     static void *call_switch( SCPMAgent *);
+
+    /**
+     * Call SCPM->Save (save modified resources) in the new thread
+     */
     static void *call_save( SCPMAgent *);
+
+    /**
+     * Call SCPM->Add (add a new profile) in the new thread
+     */
     static void *call_add( SCPMAgent *);
+
+    /**
+     * Call SCPM->Copy (add a new profile) in the new thread
+     */
     static void *call_copy( SCPMAgent *);
+
+    /**
+     * Call SCPM->Enable in the new thread
+     */
     static void *call_enable( SCPMAgent *);
+
+    /**
+     * Call SCPM->Recover in the new thread
+     */
+    static void *call_recover (SCPMAgent *);
     // ----------------------
 	
     /**
@@ -159,7 +187,6 @@ public:
 			     const YCPValue& value = YCPNull(),
 			     const YCPValue& arg = YCPNull());
                  
-
     /**
      * Provides SCR Dir ().
      */

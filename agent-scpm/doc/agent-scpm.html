@@ -6,6 +6,8 @@
 <BODY>
 <H1>SCPM agent description</H1>
 <HR>
+<h2>TODO</h2>
+management of resource groups !
 
 <H2>Purpose</H2> 
 The SCPM agent (<TT>ag_scpm</TT>) is used to access SCPM library.
@@ -17,7 +19,7 @@ The agent creates a SCPM object and calls the functions from SCPM library (=SCPM
 <p>
 Some functions called from SCPM library generate the "progress output" - the text which has to be shown in some YCP widget. These functions are called from agents's separate thread, so the progress output can be read from YCP client while the functions are still running. After the end of output is reached (this also means that threads exited), Read(.scpm.exit_status) must be read.
 <p>
-Functions generating output are Add, Copy, PrepareSwitch, Switch, Enable (only from uninitialized state).
+Functions generating output are curretnly Add, Copy, PrepareSwitch, Switch, Save, Enable (only from uninitialized state).
 <P>
 <I>Check the development documentation in the <A HREF="autodocs/index.html"><TT>autodocs/</TT></A> directory.</I>
 
@@ -39,8 +41,12 @@ See the <A HREF="Todo.txt">Todo.txt</A> file for the list of possible future enh
 
 <TABLE>
 	<TR><TH WIDTH="20%" ALIGN="left">Path</TH><th width="10%" align="left">Argument</th><TH WIDTH="10%" ALIGN="left">Type</TH><TH ALIGN="left">Result</TH></TR>
-	<TR><TD><TT>.scpm.status</TD><td></td><TD ALIGN="left">YCPList</TD>
-	<TD>list of two booleans; these says if SCPM is enabled and initialized</TD></TR>
+	<TR><TD><TT>.scpm.status</TD><td></td><TD ALIGN="left">YCPMap</TD>
+	<TD>Map with description of SCPM status. The important keys are
+	    <b>enabled</b>, <b>initialized</b>,
+	    <b>needs_reinit</b> (if reinitialization is necessary) and
+	    <b>needs_recover</b> (recovary after crash is needed)
+	     </TD></TR>
 	<TR><TD><TT>.scpm.profiles</TD><td></td><TD ALIGN="left">YCPList</TD>
 	<TD>list with all available profiles</TD></TR>
 	<TR><TD><TT>.scpm.profiles.current</TD><td></td><TD ALIGN="left">YCPString</TD>
@@ -97,8 +103,14 @@ Return values are YCPBoolean  - the success of the library call.
 	<TD>calls a constructor of the SCPM object; argument is path to the temporary directory, where outfile, hashfile, changesfile and tmpfile are created</TD></TR>
 	<TR><TD><TT>.switch.prepare</TD><td align="left">YCPString</td><td></td>
 	<TD>prepares switch to the profile given as argument; dumps switch_info_t struct to tmpfile</TD></TR>
+	
 	<TR><TD><TT>.switch</TD><td align="left">YCPMap</td><td></td>
 	<TD>switchs to the selected profile; argument is switch_info_t struct</TD></TR>
+
+	<TR><TD><TT>.save</TD><td></td><td></td>
+	<TD>Saves modified resources of the profile</TD></TR>
+
+	
 	<TR><TD><TT>.enable.first</TD><td></td><td></td>
 	<TD>enables SCPM for the first time - this is different from Write(.scpm.status.enabled) by generating output</TD></TR>
 	<TR><TD><TT>.profiles.add</TD><td align="left">YCPString</td><td></td>
