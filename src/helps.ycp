@@ -159,7 +159,7 @@ Safely abort the configuration utility by pressing <b>Abort</b> now.</p>
     "options" : _("<p>First, <b>enable</b> SCPM. If disabled later, none of your configuration data in the profiles will be lost. It just keeps the current configuration of your system and you cannot switch to any other profile until you enable it again.</p>") +
 
     // Options dialog help 2/6
-    _("<p>A configuration profile covers only the files and services to changae
+    _("<p>A configuration profile covers only the files and services to change
 when switching to another profile. In SCPM terminology, these files and
 services are called resources. Those resources are group into logical units,
 which are called <b>Resource Groups</b>. SCPM comes with a predefined set of
@@ -256,14 +256,14 @@ resources and add them to your groups.</p>") +
 
     // Configure Resources Dialog help 3/4
     _("<p>Changes to the resource configuration will get applied when leaving
-the dialog using the <b>Ok</b> button. Please note that in case you deactivated
+the dialog using the <b>OK</b> button. Please note that in case you deactivated
 or removed resources those will get removed from your saved profiles, too.
 This data can not be recovered later, so please pay attention when altering
 your resource setup.</p>") +
 
     // Configure Resources Dialog help 4/4
     _("<p>You can return all Resource Groups to its initial state by pressing
-the <b>Reset All</b> button. The changes will be applied immediataly!</b></p>"),
+the <b>Reset All</b> button. The changes will be applied immediately!</p>"),
 
     /* Write dialog help 1/1 */
     "write" : _("<p><b><big>Writing Profile Manager Configuration</big></b><br>
