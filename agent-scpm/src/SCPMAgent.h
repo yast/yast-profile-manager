@@ -12,7 +12,6 @@
 
 #include <Y2.h>
 #include <scr/SCRAgent.h>
-#include <scr/SCRInterpreter.h>
 
 using namespace std;
 
@@ -143,7 +142,8 @@ public:
      * @param arg Additional parameter.
      */
     virtual YCPValue Read(const YCPPath &path,
-			  const YCPValue& arg = YCPNull());
+			  const YCPValue& arg = YCPNull(),
+			  const YCPValue& opt = YCPNull());
 
     /**
      * Provides SCR Write ().

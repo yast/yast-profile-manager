@@ -278,7 +278,7 @@ YCPValue SCPMAgent::Dir(const YCPPath& path)
 /**
  * Read
  */
-YCPValue SCPMAgent::Read(const YCPPath &path, const YCPValue& arg) {
+YCPValue SCPMAgent::Read(const YCPPath &path, const YCPValue& arg, const YCPValue& opt) {
 
     y2debug("Path in Read(): %s", path->toString().c_str());
     YCPValue ret = YCPVoid(); 
@@ -672,7 +672,7 @@ YCPValue SCPMAgent::Write(const YCPPath &path, const YCPValue& value,
 YCPValue SCPMAgent::Execute(const YCPPath &path, const YCPValue& value,
 			     const YCPValue& arg)
 {
-    y2debug("Path in Execute(): %s", path->toString().c_str());
+    y2internal ("Path in Execute(): %s", path->toString().c_str());
     YCPValue ret = YCPBoolean(false);
     
     if (path->length() == 0) {
@@ -884,7 +884,7 @@ YCPValue SCPMAgent::Execute(const YCPPath &path, const YCPValue& value,
  */
 YCPValue SCPMAgent::otherCommand(const YCPTerm& term)
 {
-    string sym = term->symbol()->symbol();
+    string sym = term->name();
 
     if (sym == "SCPMAgent") {
         

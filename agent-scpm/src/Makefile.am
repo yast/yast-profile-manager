@@ -1,4 +1,4 @@
-#
+
 # Makefile.am for .../agent-scpm/src
 #
 
@@ -17,7 +17,7 @@ liby2ag_scpm_la_LIBADD = -lscpm -L$(libdir)
 
 libpy2ag_scpm_la_SOURCES =				\
         $(liby2ag_scpm_la_SOURCES)			\
-        Y2CCSCPMAgent.cc        # Y2CCSCPMAgent.h
+        Y2CCSCPMAgent.cc
 libpy2ag_scpm_la_LDFLAGS = -version-info 2:0
 #libpy2ag_scpm_la_LIBADD = @LIBSCPM@
 libpy2ag_scpm_la_LIBADD = -lscpm -L$(libdir)
