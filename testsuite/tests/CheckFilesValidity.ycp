@@ -1,0 +1,41 @@
+{
+
+    include "testsuite.ycp";
+
+    map READ = $[
+	"etc" : $[ "install_inf" : $[] ],
+	"target" : $[ "ycp" : $[] ],
+	"probe" : $[ "system" : []],
+    ];
+
+    TESTSUITE_INIT([READ], nil);
+    import "ProfileManager";
+
+    map EX_nil =
+    $[ "target":
+        $[ "bash": nil ]
+    ];
+
+    map EX0 =
+    $[ "target":
+        $[ "bash": 0 ]
+    ];
+
+    map EX1 =
+    $[ "target":
+        $[ "bash": 1 ]
+    ];
+
+    map new_settings =
+    $[ "prestart": "/tmp/default/p1",
+       "posttart": "",
+       "prestop": "",
+       "poststop": "/var/scpm/default/ps"
+    ];
+
+    DUMP(new_settings);
+
+	TEST (``(ProfileManager::CheckFilesValidity(new_settings)), [ $[], $[], EX0 ], nil);
+
+	TEST (``(ProfileManager::CheckFilesValidity(new_settings)), [ $[], $[], EX1 ], nil);
+}

@@ -1,0 +1,10 @@
+Read	.target.ycp ["/var/lib/YaST2/installmap.ycp", $[]] $[]
+Dump	$["modified_resources":[$["is_deleted":true, "is_new":false, "resource_name":"/etc/X11/XF86Config", "resource_type":"file", "save":true], $["is_deleted":true, "is_new":false, "resource_name":"sendmail", "resource_type":"service", "save":false]], "profile_modified":true, "profile_name":"home"]
+Dump	---------
+Dump	changing 'save' flag of resource 0
+Return	true
+Dump	$["modified_resources":[$["is_deleted":true, "is_new":false, "resource_name":"/etc/X11/XF86Config", "resource_type":"file", "save":false], $["is_deleted":true, "is_new":false, "resource_name":"sendmail", "resource_type":"service", "save":false]], "profile_modified":true, "profile_name":"home"]
+Dump	---------
+Dump	changing 'save' flag of resource 1
+Return	true
+Dump	$["modified_resources":[$["is_deleted":true, "is_new":false, "resource_name":"/etc/X11/XF86Config", "resource_type":"file", "save":false], $["is_deleted":true, "is_new":false, "resource_name":"sendmail", "resource_type":"service", "save":true]], "profile_modified":true, "profile_name":"home"]

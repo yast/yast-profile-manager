@@ -1,0 +1,37 @@
+{
+
+    include "testsuite.ycp";
+
+    map READ = $[
+	"etc" : $[ "install_inf" : $[] ],
+	"target" : $[ "ycp" : $[] ],
+	"probe" : $[ "system" : []],
+    ];
+
+    TESTSUITE_INIT([READ], nil);
+    import "ProfileManager";
+
+    ProfileManager::profiles = $[];
+
+    DUMP("profiles:");
+    DUMP(ProfileManager::profiles);
+
+    DUMP("table items list:");
+	TEST (``(ProfileManager::GetProfilesAsItems()), [ $[], $[], $[] ], nil);
+
+    ProfileManager::profiles =
+    $[ "default" : "default profile description",
+       "home" : "My private configuration",
+       "train" : "Maximum power savings"
+    ];
+
+    DUMP("profiles:");
+    DUMP(ProfileManager::profiles);
+    ProfileManager::active_profile = "default";
+    DUMP("active profile:");
+    DUMP(ProfileManager::active_profile);
+
+    DUMP("table items list:");
+	TEST (``(ProfileManager::GetProfilesAsItems()), [ $[], $[], $[] ], nil);
+
+}

@@ -1,0 +1,61 @@
+{
+
+    include "testsuite.ycp";
+
+    map READ = $[
+	"etc" : $[ "install_inf" : $[] ],
+	"target" : $[ "ycp" : $[] ],
+	"probe" : $[ "system" : []],
+    ];
+
+    TESTSUITE_INIT([READ], nil);
+    import "ProfileManager";
+
+    ProfileManager::switch_info = nil;
+
+    DUMP("switch_info:");
+    DUMP(ProfileManager::switch_info);
+    DUMP("table items list:");
+
+	TEST (``(ProfileManager::GetResourcesAsItems()), [ $[], $[], $[] ], nil);
+    DUMP("---------");
+    ProfileManager::switch_info = $[];
+
+    DUMP("switch_info:");
+    DUMP(ProfileManager::switch_info);
+    DUMP("table items list:");
+
+	TEST (``(ProfileManager::GetResourcesAsItems()), [ $[], $[], $[] ], nil);
+    DUMP("---------");
+
+    ProfileManager::switch_info =
+    $[ "profile_name": "home",
+       "profile_modified": true,
+       "modified_resources":
+       [ $[ "resource_name": "/etc/X11/XF86Config",
+            "resource_type": "file",
+            "is_new": false,
+            "is_deleted": true,
+            "save": true
+         ],
+         $[ "resource_name": "sendmail",
+            "resource_type": "service",
+            "is_new": true,
+            "is_deleted": false,
+            "save": false
+         ],
+         $[ "resource_name": "/ets/fstab",
+            "resource_type": "file",
+            "is_new": false,
+            "is_deleted": false,
+            "save": true
+         ]
+       ]
+    ];
+
+    DUMP("switch_info:");
+    DUMP(ProfileManager::switch_info);
+    DUMP("table items list:");
+
+	TEST (``(ProfileManager::GetResourcesAsItems()), [ $[], $[], $[] ], nil);
+}

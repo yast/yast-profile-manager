@@ -1,0 +1,7 @@
+Read	.target.ycp ["/var/lib/YaST2/installmap.ycp", $[]] $[]
+Dump	$["poststop":"/var/scpm/default/ps", "posttart":"", "prestart":"/tmp/default/p1", "prestop":""]
+Execute	.target.bash "/usr/bin/test -e /tmp/default/p1" 0
+Execute	.target.bash "/usr/bin/test -e /var/scpm/default/ps" 0
+Return	true
+Execute	.target.bash "/usr/bin/test -e /tmp/default/p1" 1
+Return	false

@@ -1,0 +1,10 @@
+Read	.target.ycp ["/var/lib/YaST2/installmap.ycp", $[]] $[]
+Dump	name to check:
+Dump	new name
+Return	false
+Dump	name to check:
+Dump	new_name
+Return	true
+Dump	name to check:
+Dump	_new_name
+Return	false
