@@ -1,9 +1,9 @@
 #
-# Makefile.am for devtools/devtools/skeletons/config/agents
+# Makefile.am for scpm/agents
 #
 
 agent_SCRIPTS =
 
-scrconf_DATA =
+scrconf_DATA = *.scr
 
 EXTRA_DIST = $(agent_SCRIPTS) $(scrconf_DATA)
