@@ -19,7 +19,7 @@ import "Progress";
 import "Report";
 
 include "profile-manager/routines.ycp";
-include "require.ycp";
+//include "require.ycp";
 
 /**
  * Is the module runing for the first time?
@@ -176,7 +176,7 @@ global block AbortFunction = nil;
 global define boolean Read() ``{
 
     // profile-manager Read dialog caption:
-    string caption = _("Initializing profile-manager configuration");
+    string caption = _("Initializing profile manager configuration");
 
     integer steps = 8;
 
@@ -228,7 +228,7 @@ global define boolean Read() ``{
     if(!Initialize())
     {
 		// Error message:
-		Report::Error(_("Can not initialize SCPM!"));
+		Report::Error(_("Cannot initialize SCPM!"));
         return false;
     }
     sleep(sl);
@@ -239,7 +239,7 @@ global define boolean Read() ``{
     if(!ReadSCPMStatus())
     {
 		// Error message:
-		Report::Error(_("Can not read SCPM status!"));
+		Report::Error(_("Cannot read SCPM status!"));
         return false;
     }
     sleep(sl);
@@ -250,7 +250,7 @@ global define boolean Read() ``{
 	if (enabled)
 	    if(!ReadProfiles())
 			// Error message:
-			Report::Error(_("Can not read profiles!"));
+			Report::Error(_("Cannot read profiles!"));
     sleep(sl);
 
     // read
@@ -259,7 +259,7 @@ global define boolean Read() ``{
 	if (enabled)
 	    if(!ReadActiveProfile())
 			// Error message:
-			Report::Error(_("Can not read active profile!"));
+			Report::Error(_("Cannot read active profile!"));
     sleep(sl);
 
     // read
@@ -268,7 +268,7 @@ global define boolean Read() ``{
 	if (enabled)
 	    if(!ReadProfilesDescriptions())
 			// Error message:
-			Report::Error(_("Can not read profiles descriptions!"));
+			Report::Error(_("Cannot read profiles descriptions!"));
     sleep(sl);
 
     // read current resources
@@ -276,7 +276,7 @@ global define boolean Read() ``{
     Progress::NextStage();
 	if(!ReadCurrentResources())
 		// Error message:
-		Report::Error(_("Can not read current resources!"));
+		Report::Error(_("Cannot read current resources!"));
     sleep(sl);
 
     // read user settings
@@ -284,7 +284,7 @@ global define boolean Read() ``{
     Progress::NextStage();
 	if(!ReadUserSettings())
 		// Error message:
-		Report::Error(_("Can not read user settings!"));
+		Report::Error(_("Cannot read user settings!"));
     sleep(sl);
 
     if(Abort()) return false;
@@ -303,7 +303,7 @@ global define boolean Read() ``{
 global define boolean Write() ``{
 
     // profile-manager Write dialog caption:
-    string caption = _("Writing profile-manager configuration");
+    string caption = _("Writing profile manager configuration");
 
     integer steps = 2;
 
@@ -330,13 +330,13 @@ global define boolean Write() ``{
     Progress::NextStage();
     if(!SCR::Write(.scpm, nil))
 	    // Error message:
-        Report::Error (_("Can not write SCPM database!"));
+        Report::Error (_("Cannot write SCPM database!"));
     sleep(sl);
 
     Progress::NextStage();
     if(!WriteUserSettings())
 	    // Error message:
-        Report::Error (_("Can not write user settings!"));
+        Report::Error (_("Cannot write user settings!"));
     sleep(sl);
 
     // progress stage:
@@ -769,14 +769,22 @@ global define boolean CopyResourceSet(string set, string newset) ``{
 }
 
 /**
- * Runs the Konqueror with an info page
+ * Runs application with an info page
  * @return true
  */
 global define boolean RunIntro() ``{
 
+/*
     if (IsPackageInstalled("kdebase3") || IsPackageInstalled("kdebase3-konqueror"))
         SCR::Execute(.background.run,"konqueror info:/scpm/introduction");
     else if (IsPackageInstalled("texinfo"))
+        SCR::Execute(.background.run,"xterm -e info scpm");
+    else
+        SCR::Execute(.background.run,"xterm -e man scpm");
+*/
+	if (SCR::Execute (.target.bash, "/usr/bin/test -x /opt/kde3/bin/konqueror") == 0)
+        SCR::Execute(.background.run,"konqueror info:/scpm/introduction");
+    else if (SCR::Execute (.target.bash, "/usr/bin/test -x /usr/bin/info") == 0)
         SCR::Execute(.background.run,"xterm -e info scpm");
     else
         SCR::Execute(.background.run,"xterm -e man scpm");

@@ -149,11 +149,11 @@ global define any MainDialog () ``{
         else
         {
 			// Popup text (confirmation)
-            if (UI::YesNoPopup(sformat(_("Do you really want to delete profile %1?"), selected)))
+            if (UI::YesNoPopup(sformat(_("Really delete profile %1?"), selected)))
             {
                 if (!ProfileManager::DeleteProfile(selected))
 					// Error popup text
-                    UI::ErrorPopup(_("Deleting profile was not succesfull."));
+                    UI::ErrorPopup(_("Deleting the profile was not succesful."));
                 UI::ChangeWidget(`id(`profiles), `Items,
                         ProfileManager::GetProfilesAsItems());
                 UI::ChangeWidget(`id(`profiles), `CurrentItem,
@@ -273,7 +273,7 @@ global define any OptionsDialog () ``{
                 `HSpacing(1),
 		        `Left(`CheckBox(`id(`close_popups_ch),
 				    // checkbox label
-                    _("Close progress popups &automaticaly"), close_popups))
+                    _("Close progress pop-ups &automaticaly"), close_popups))
                 ),
             `VSpacing(0.5)
             )),
@@ -352,7 +352,7 @@ global define any OptionsDialog () ``{
             if (selected == separator || selected == nil)
             {
 				// Popup label:
-                UI::MessagePopup(_("You should choose a resource set first."));
+                UI::MessagePopup(_("Choose a resource set first."));
                 continue;
             }
 
@@ -368,7 +368,7 @@ global define any OptionsDialog () ``{
                     if (!ProfileManager::Wait())
                     {
                         // Error popup text
-                        UI::ErrorPopup(_("Enabling SCPM was not succesfull."));
+                        UI::ErrorPopup(_("Enabling SCPM was not succesful."));
                         ProfileManager::enabled = false;
                         //    continue;
                     }
@@ -387,7 +387,7 @@ global define any OptionsDialog () ``{
                     if (!ProfileManager::WriteSCPMStatus())
                     {
                         // Error popup text
-                        UI::ErrorPopup(_("Enabling SCPM was not succesfull."));
+                        UI::ErrorPopup(_("Enabling SCPM was not succesful."));
                         ProfileManager::enabled = false;
                         break;
                     }
@@ -404,7 +404,7 @@ global define any OptionsDialog () ``{
 			else if (ProfileManager::current_resources != selected)
             {
 				// Popup label (confirmation)
-				if (UI::YesNoPopup(_("Changing the Resource Set may drop some of your configuration settings. Are you sure you want to proceed?")))
+				if (UI::YesNoPopup(_("Changing the resource set may drop some of your configuration settings. Proceed?")))
 				{
 					ProfileManager::current_resources = selected;
 					// maybe WriteResources should be run every time
@@ -425,7 +425,7 @@ global define any OptionsDialog () ``{
                 if (!ProfileManager::WriteSCPMStatus())
                 {
                     // Error popup text
-                    UI::ErrorPopup(_("Disabling SCPM was not succesfull."));
+                    UI::ErrorPopup(_("Disabling SCPM was not succesful."));
                     ProfileManager::enabled = true;
                     break;
                 }

@@ -17,12 +17,14 @@ textdomain "profile-manager";
 global map HELPS = $[
 
     /* Read dialog help 1/2 */
-    "read" : _("<p><b><big>Initializing profile-manager configuration</big></b><br>
-Please wait for a while...<br></p>") +
+    "read" : _("<p><b><big>Initializing profile manager configuration</big></b><br>
+Please wait...<br></p>
+") +
 
     /* Read dialog help 2/2 */
     _("<p><b><big>Aborting the initialization:</big></b><br>
-Safely abort the configuration utility by pressing the <b>Abort</b> now.</p>"),
+Safely abort the configuration utility by pressing <b>Abort</b> now.</p>
+"),
 
     /* Main dialog help 1/6 */
     "main" : _("<p>SCPM allows you to store different profiles of your system configuration and to switch between them. If you are not familiar with SCPM, read the introduction to SCPM in the administration guide or in <b>info scpm</b>.</p>") +
@@ -58,7 +60,7 @@ Safely abort the configuration utility by pressing the <b>Abort</b> now.</p>"),
 <br><i>Everything:</i> all installed services, all files below /etc and any other important file for any service</p>") +
 
     /* Options dialog help 4/5 */
-    _("<p>You may create your own individual resource set, but currently not with YaST2. See info scpm or administration guide for information. Your manually created resource sets will then be available in this list as well. If you change the used resource set, all resources that will be deleted from the profiles are backed up below /var/lib/scpm/backup/.</p>") +
+    _("<p>You may create your own individual resource set, but currently not with YaST2. See info scpm or the administration guide for information. Your manually created resource sets will then be available in this list as well. If you change the used resource set, all resources that will be deleted from the profiles are backed up below /var/lib/scpm/backup/.</p>") +
 
     /* Options dialog help 5/5 */
     _("<p>For progress windows to close automatically, check <b>Close progress pop-ups automatically</b>. This box is also available in the progress pop-ups themselves.</p>"),
@@ -96,8 +98,9 @@ These scripts are executed as the user root. Make sure no users can change or ev
     _("<p>If you are unsure what was changed in a resource, select it and use Show changes. This will show you the changes in the selected resource.</p>"),
 
     /* Write dialog help 1/1 */
-    "write" : _("<p><b><big>Writing profile-manager configuration</big></b><br>
-Please wait for a while...<br></p>")
+    "write" : _("<p><b><big>Writing profile manager configuration</big></b><br>
+Please wait...<br></p>
+")
 
 ];
 

@@ -67,7 +67,7 @@ global define any ProfileSettingsDialog () ``{
                 `VSpacing(0.2),
                 `Left(`CheckBox(`id(`secure_ch),
 				// checkbox label
-                    _("Set file &permitions of all scripts secure (0700)."))),
+                    _("Set file &permissions of all scripts secure (0700)."))),
                 `VSpacing(0.2)
             ),
             `HSpacing(1))),
@@ -109,7 +109,7 @@ global define any ProfileSettingsDialog () ``{
         if (!ProfileManager::CheckNameValidity(selected))
         {
 			// Popup text (wrong data):
-            UI::MessagePopup(_("You have to choose valid name."));
+            UI::MessagePopup(_("Choose valid name."));
             continue;
         }
 
@@ -122,7 +122,7 @@ global define any ProfileSettingsDialog () ``{
         if (!ProfileManager::CheckFilesValidity(new_settings))
         {
 			// Popup text (file paths are wrong):
-			UI::MessagePopup(_("You have to choose valid paths to scripts."));
+			UI::MessagePopup(_("Choose valid paths to scripts."));
             continue;
         }
 
@@ -135,7 +135,7 @@ global define any ProfileSettingsDialog () ``{
             if (lookup(profiles, selected, nil) != nil)
             {
 				// Popup text:
-                UI::MessagePopup(_("Profile with this name already exists."));
+                UI::MessagePopup(_("A profile with this name already exists."));
                 continue;
             }
             ProfileManager::AddProfile(selected);
@@ -143,7 +143,7 @@ global define any ProfileSettingsDialog () ``{
             if (!ProfileManager::Wait())
             {
                 // Error popup text
-                UI::ErrorPopup(_("Adding new profile was not succesfull."));
+                UI::ErrorPopup(_("Adding new profile was not succesful."));
                 // continue;
             }
             else
@@ -159,7 +159,7 @@ global define any ProfileSettingsDialog () ``{
                 {
                     UI::ErrorPopup(
                         // Error popup text
-                        _("Writing profile settings was not succesfull."));
+                        _("Writing profile settings was not succesful."));
                 }
             }
         }
@@ -168,7 +168,7 @@ global define any ProfileSettingsDialog () ``{
             if (lookup(profiles, selected, nil) != nil)
             {
 				// Popup text
-                UI::MessagePopup(_("Profile with this name already exists."));
+                UI::MessagePopup(_("A profile with this name already exists."));
                 continue;
             }
             ProfileManager::CopyProfile(edited, selected);
@@ -176,7 +176,7 @@ global define any ProfileSettingsDialog () ``{
             if (!ProfileManager::Wait())
             {
                 // Error popup text
-                UI::ErrorPopup(_("Copying profile was not succesfull."));
+                UI::ErrorPopup(_("Copying profile was not succesful."));
                 //    continue;
             }
             else
@@ -189,7 +189,7 @@ global define any ProfileSettingsDialog () ``{
                 {
                     UI::ErrorPopup(
                         // Error popup text
-                        _("Writing profile settings was not succesfull."));
+                        _("Writing profile settings was not succesful."));
                 }
             }
         }
@@ -201,13 +201,13 @@ global define any ProfileSettingsDialog () ``{
                 if (lookup(profiles, selected, nil) != nil)
                 {
 					// Popup text
-                    UI::MessagePopup(_("Profile with this name already exists."));
+                    UI::MessagePopup(_("A profile with this name already exists."));
                     continue;
                 }
                 if (!ProfileManager::RenameProfile(edited, selected))
                 {
                     // Error popup text
-                    UI::ErrorPopup(_("Renaming profile was not succesfull."));
+                    UI::ErrorPopup(_("Renaming profile was not succesful."));
                     continue;
                 }
             }
@@ -217,7 +217,7 @@ global define any ProfileSettingsDialog () ``{
                 if (!ProfileManager::SetProfile(selected))
                 {
                     // Error popup text
-                    UI::ErrorPopup(_("Writing profile settings was not succesfull."));
+                    UI::ErrorPopup(_("Writing profile settings was not succesful."));
                 }
             }
         }
@@ -250,7 +250,7 @@ global define any SwitchDialog () ``{
         `HBox(
             `HSpacing(1),
             // Label text
-            `Label(_("active Profile:")),
+            `Label(_("Active Profile:")),
             `Right(`Heading(active)),
             `HSpacing(2)
             ),
@@ -258,13 +258,13 @@ global define any SwitchDialog () ``{
         `HBox(
             `HSpacing(1),
             // Label text
-            `Label(_("new Profile:")),
+            `Label(_("New Profile:")),
             `Right(`Heading(selected)),
             `HSpacing(2)
             ),
         `VSpacing(1),
 		// frame label
-        `Frame(_("Modified Resources of active Profile"), `HBox(`HSpacing(1),
+        `Frame(_("Modified Resources of Active Profile"), `HBox(`HSpacing(1),
             `VBox(
                 `VSpacing(0.2),
 		        `Table(`id(`modified),`opt(`notify),
@@ -367,7 +367,7 @@ global define any SwitchDialog () ``{
             ProgressPopup();
             if (!ProfileManager::Wait())
                 // Error popup text
-                UI::ErrorPopup(_("Switching was not succesfull."));
+                UI::ErrorPopup(_("Switching was not succesful."));
             else
                 ProfileManager::active_profile = selected;
 	        break;
@@ -437,7 +437,7 @@ profile nor does it start or stop services."))),
                 if (selected == nil)
                 {
 					// Popup text
-                    UI::MessagePopup(_("Please select a profile which you want to copy."));
+                    UI::MessagePopup(_("Select a profile to copy."));
                     continue;
                 }
                 ProfileManager::profile_action = "copy";
@@ -475,12 +475,12 @@ global define boolean ProgressPopup() ``{
         `VBox(
             `VSpacing(1),
 			// LogView label:
-            `LogView(`id(`progress),_("Progress informations"), 10, 0),
+            `LogView(`id(`progress),_("Progress information"), 10, 0),
             `VSpacing(1),
 /*            `ProgressBar(`id(`pb), "", 100, 0),
             `VSpacing(1),*/
 			// checkbox label:
-            `CheckBox(`id(`close_ch),_("Close progress popups &automatically (reenable it in SCPM Setup)"),close_popups),
+            `CheckBox(`id(`close_ch),_("Close progress pop-ups &automatically (reenable it in SCPM Setup)"),close_popups),
             `VSpacing(1),
 	        `HBox(
 	            `Right(`PushButton(`id(`close), `opt(`default), CloseButtonLabel())),
@@ -533,10 +533,11 @@ global define boolean IntroductionPopup() ``{
 
 	// Inroduction text, part 1/2
     string intro_text = _("<p>SCPM is currently disabled.<br>
-To enable it use the Options button<br></p>") +
+To enable it, use the Options button.<br></p>
+") +
 
 	// Inroduction text, part 2/2
- _("<p>If you are new to SCPM then please read at least the help texts. Better read the introduction in the info pages. You should know what we mean with 'active profile' or 'current configuration' before you start using SCPM.</p>");
+ _("<p>If you are new to SCPM, read at least the help texts. It is better to read the introduction in the info pages. You should know what 'active profile' and 'current configuration' mean before using SCPM.</p>");
 
     UI::OpenDialog(`opt(`decorated), `HBox(`HSpacing(1.5),
         `VSpacing(15),
@@ -551,7 +552,7 @@ To enable it use the Options button<br></p>") +
 
 	            `PushButton(`id(`intro),`opt(`default), _("&Show introduction")),
                 // Push button label (start without reading the intrduction)
-	            `PushButton(`id(`cont), _("Let's &go")),
+	            `PushButton(`id(`cont), _("&Go")),
 	            `HSpacing(1)
 	            ),
             `VSpacing(1)),
@@ -585,7 +586,7 @@ global define boolean ShowChangesPopup() ``{
             `HSpacing(50),
             `VSpacing(1),
 			// Popup text
-            `Label(_("Changes of the resource")),
+            `Label(_("Changes to the resource")),
             `Label(ProfileManager::active_resource_name),
             `VSpacing(1),
             `RichText(changes),
