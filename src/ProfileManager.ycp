@@ -119,7 +119,7 @@ global list resource_sets_individual = [];
  *      ]
  *  ]
  */
-global map switch_info = $[];
+global map switch_info = $[]; // FIXME don't have to be global!
 
 /**
  * This variable defines the action whis will be done
@@ -183,6 +183,319 @@ global boolean write_only = false;
  */
 global block AbortFunction = nil;
 
+// --------------------------------------------------------------------------
+// ------- new functions and variables for work with resource groups --------
+
+/**
+ * all resource groups available; filled by ListResourceGroups()
+ */
+map resource_groups = $[];
+
+/**
+ * this map holds the contents of scpm.conf configuration file
+ */
+global map scpm_conf = $[];
+
+/**
+ * helper structure, where "save" flags of resource groups are stored (to show
+ * in Switch dialog without need of going through all resources every time)
+ */
+//global map groups_flags = $[];//FIXME remove!
+global map modified_groups = $[];
+
+/**
+ * default value of "save" flags of modified resources (groups)
+ * TODO: when is changed?
+ */
+boolean default_save = true;
+
+/**
+ * if module was canceled (aborted)
+ */
+global boolean canceled = false;
+
+// just a helper TODO remove?
+global boolean use_rg = true;
+
+
+global string current_resource_group = "";
+
+/**
+ * Delete resource group from scpm database and from local structures
+ * @param groupname resource group name
+ * @return success
+ */
+global define boolean DeleteResourceGroup(string groupname) ``{
+
+    if (!SCR::Write(.scpm.rg.group.delete, groupname))
+    {
+	SetError();
+	return false;
+    }
+    remove (resource_groups, groupname);
+    return true;
+}
+
+/**
+ * Writes modified resource group.
+ * @param groupname resource group name
+ * @param resources list of resources belonging to this group
+ * @param descr group description
+ * @return success
+ */
+global define boolean SetResourceGroup(string groupname, list resources, string descr) ``{
+
+    boolean ret = SCR::Write(add(.scpm.rg.group, groupname), resources, descr);
+    if (!ret)
+    {
+	SetError();
+    }
+    return ret;
+}
+
+/**
+ * Gets resource group information.
+ * @param groupname resource group name
+ * @return list of resources
+ */
+global define list GetResourceGroup(string groupname) ``{
+
+    list resource_group = SCR::Read(.scpm.rg.group, groupname);
+    if (resource_group == nil)
+    {
+	SetError();
+	return [];
+    }
+    return resource_group;
+}
+
+/**
+ * Reads a list of all available resource groups.
+ * @return true on success
+ */
+global define boolean ListResourceGroups() ``{
+
+    resource_groups = SCR::Read(.scpm.rg);
+    if (resource_groups == nil)
+    {
+	SetError();
+	return false;
+    }
+    foreach (`name, `group, resource_groups, ``{
+	group["resources"] = GetResourceGroup (name);// TODO check error?
+    });
+
+    return true;
+}
+
+/**
+ * returns new copy of map with resource groups
+ */
+global define map GetResourceGroups() ``{
+
+    return eval (resource_groups);
+}
+
+// temporary fix, FIXME remove later
+global define void UpdateResourceGroups (map groups) ``{
+
+    resource_groups = $[];
+    resource_groups = eval (groups);
+
+}
+
+/**
+ * reads a contents of scpm config file (/etc/scpm.conf)
+ * @return false when file doesn't exist
+ */
+global define boolean ReadConfigFile () ``{
+
+    if (SCR::Read(.target.size, "/etc/scpm.conf") == -1)
+	return false;
+
+    scpm_conf = $[
+	"verbose":	SCR::Read(.sysconfig.scpm.VERBOSE) == "yes",
+	"switch_mode":	SCR::Read(.sysconfig.scpm.SWITCH_MODE),
+	"boot_mode":	SCR::Read(.sysconfig.scpm.BOOT_MODE)
+    ];
+    y2debug ("scpm configuration: %1", scpm_conf);
+    return true;
+}
+
+/**
+ * writes configuration data to scpm config file (/etc/scpm.conf)
+ * @return true
+ */
+global define boolean WriteConfigFile () ``{
+
+    foreach (`key, `value, scpm_conf, ``{
+	path agent = add(.sysconfig.scpm, toupper(key));
+	if (is (value, boolean))
+	    SCR::Write(agent, value?"yes":"no");
+	else
+	    SCR::Write(agent, value);
+    });
+    return true;
+}
+
+/**
+ * gets the modified resources belonging to one group
+ * @return map of format resources_of_modified_group (see GetModifiedGroups())
+ */
+global define map GetModifiedGroupResources(string groupname) ``{
+
+    // we want to work with a local copy -> eval
+    return eval (modified_groups[groupname]:$[]);
+}
+
+/**
+ * uses switch_info map to generate helper structure in the form
+ * $[ modified_group: resources_of_modified_group ]
+ * resources_of_modified_group is a map of format:
+ * $[
+ *	0: $[
+ *		"resource_name":	"/etc/inetd.conf",
+ *		"resource_type":	"file",
+ *		"save":			true,
+ *		"save_mode":		"normal",
+ *		"groups": [
+ *			$[ "name":	"inetd",
+ *			   "description": "Inetd services"
+ *			]]
+ *	],
+ *	1: $[
+ *		"resource_name":	"xinetd",
+ *		"resource_type":	"service",
+ *		"save":			true,
+ *		"save_mode":		"normal",
+ *		"groups": [
+ *			$[ "name":	"inetd",
+ *			   "description": "Inetd services"
+ *			]]
+ *	],
+ *	"save"	:	true,
+ *	"modified":	false,
+ *	"description"	"Inetd services"
+ * ]
+ * numbers are indexes in the switch_info["modified_resources"]:[] list,
+ * "save" and "modified" are flags of this group
+ */
+global define void GetModifiedGroups() ``{
+
+    integer i = 0;
+    foreach (`resource, switch_info["modified_resources"]:[], ``{
+	// go through all groups owning this resource:
+	foreach (`group, resource["groups"]:[], ``{
+	    string groupname = group["name"]:"";
+	    if (!haskey (modified_groups, groupname))
+		modified_groups [groupname] = $[
+		    "description":	group["description"]:"",
+		    "save":		default_save,
+		    "modified":		false
+		];
+	    // add a map of this resource to the group,
+	    // key is resource's index in modified_resources list
+	    modified_groups [groupname,i] = resource;//TODO use eval?
+	});
+	i = i + 1;
+    });
+}
+
+
+global define boolean CheckAndUpdateResources (string name, map resources) ``{
+
+    list groups_to_check = [];
+    boolean group_save = false;
+    // go through all resources of current group
+    foreach (`i, `resource, resources, ``{
+	if (!is (i,integer))
+	    return;
+	group_save = resource["save"]:default_save || group_save;
+	foreach (`key, ["save", "save_mode"], ``{
+	    // some resource flag was changed
+	    if (modified_groups [name,i,key]:nil != resource[key]:nil)
+	    {
+		// update modified_group and switch_info
+		modified_groups [name, i, key] = resource[key]:nil;
+		switch_info["modified_resources",i,key] = resource[key]:nil;
+		// set modified flag of the group
+		modified_groups [name, "modified"] = true;
+		// set other groups to check
+		foreach (`g, resource["groups"]:[], ``{
+		    if (g["name"]:"" != name)
+		    groups_to_check = union (groups_to_check, [ g["name"]:"" ]);
+		});
+	    }
+	});
+    });
+    modified_groups[name, "save"] = group_save;
+    // now go through other groups and possibly check save and "m" flags
+    // TODO test this!
+    foreach (`gname, groups_to_check, ``{
+y2internal ("other group to check: %1", gname);
+	group_save = false;
+	// check all the resources (some are possibly changed) of group
+	// switch_info is updated, modified groups not
+	foreach (`i, `resource, modified_groups[gname]:$[], ``{
+	    if (!is(i, integer))
+		return;
+	    group_save = resource["save"]:default_save || group_save;
+	    foreach (`key, ["save", "save_mode"], ``{
+		// some resource flag was changed
+		if (switch_info["modified_resources",i,key]:nil != resource[key]:nil)
+		{
+		    // update modified_group and switch_info
+		    modified_groups [gname, i, key] =
+			switch_info["modified_resources",i,key]:nil;
+		    // set modified flag of the group
+		    modified_groups [gname, "modified"] = true;
+		}
+	    });
+	});
+	modified_groups[gname, "save"] = group_save;
+    });
+
+}
+
+
+/**
+ * Sets the "save" flag of all resources belonging to selected resource group
+ * the opposite value.
+ * @param groupname resource group name
+ * @return the new value
+ */
+global define boolean SetGroupSaveFlag(string groupname) ``{
+
+    boolean ret = !modified_groups[groupname, "save"]:false;
+    foreach (`index, `resource, modified_groups[groupname]:$[], ``{
+	if (is (index, integer))
+	{
+	    resource["save"] = ret;
+	    switch_info["modified_resources", index, "save"] = ret;
+	}
+    });
+    modified_groups [groupname, "save"] = ret;
+    return ret;
+}
+
+global define list GetGroupsAsItems() ``{
+
+    list items = [];
+    foreach (`name, `group, modified_groups, ``{
+y2warning ("group %1: %2", name, group);
+
+	string save = group ["save"]:default_save ? "X":"";
+	if (group["modified"]:false)
+	    save = "m";
+	items = add (items,
+	    `item (`id(name), save, name, group["description"]:""));
+    });
+
+    return items;
+}
+
+// --------------------------------------------------------------------------
+// --------------------------------------------------------------------------
 
 /**
  * Read all profile-manager settings
@@ -196,36 +509,36 @@ global define boolean Read() ``{
     integer steps = 8;
 
     Progress::New( caption, " ", steps, [
-		// progress stage
+	    // progress stage
 	    _("Initialize SCPM"),
-		// progress stage
+	    // progress stage
 	    _("Read the SCPM state"),
-		// progress stage
+	    // progress stage
 	    _("Read the list of profiles"),
-		// progress stage
+	    // progress stage
 	    _("Read active profile"),
-		// progress stage
+	    // progress stage
 	    _("Read the profiles descriptions"),
-		// progress stage
+	    // progress stage
 	    _("Read current resource set"),
-		// progress stage
+	    // progress stage
 	    _("Read user settings"),
 	], [
-		// progress stage
+	    // progress stage
 	    _("Initializing SCPM..."),
-		// progress stage
+	    // progress stage
 	    _("Reading the SCPM state..."),
-		// progress stage
+	    // progress stage
 	    _("Reading the profiles..."),
-		// progress stage
+	    // progress stage
 	    _("Reading active profile..."),
-		// progress stage
+	    // progress stage
 	    _("Reading the profiles descriptions..."),
-		// progress stage
+	    // progress stage
 	    _("Reading current resource set..."),
-		// progress stage
+	    // progress stage
 	    _("Reading user settings..."),
-		// progress stage
+	    // progress stage
 	    _("Finished")
 	],
 	""
@@ -236,66 +549,62 @@ global define boolean Read() ``{
     Progress::NextStage();
     if(!Initialize())
     {
-		// Error message: %1 is special error message, should be translated
-		Report::Error(sformat(_("Cannot initialize SCPM:\n%1"), scpm_error));
+	// Error message: %1 is special error message, should be translated
+	Report::Error(sformat(_("Cannot initialize SCPM:\n%1"), scpm_error));
         return false;
     }
 
-    // read
+    // read status
     if(Abort()) return false;
     Progress::NextStage();
     if(!ReadSCPMStatus())
     {
-		// Error message: %1 is special error message, should be translated
-		Report::Error(sformat(_("Cannot read SCPM status:\n%1"), scpm_error));
+	// Error message: %1 is special error message, should be translated
+	Report::Error(sformat(_("Cannot read SCPM status:\n%1"), scpm_error));
         return false;
     }
 
-    // read
+    // read profiles
     if(Abort()) return false;
     Progress::NextStage();
-	if (enabled)
-	    if(!ReadProfiles())
-			// Error message: %1 is special error message, should be translated
-			Report::Error(sformat(_("Cannot read profiles:\n%1"), scpm_error));
+    if (enabled && !ReadProfiles())
+	// Error message: %1 is special error message, should be translated
+	Report::Error(sformat(_("Cannot read profiles:\n%1"), scpm_error));
 
-    // read
+    // read active profile
     if(Abort()) return false;
     Progress::NextStage();
-	if (enabled)
-	    if(!ReadActiveProfile())
-			// Error message: %1 is special error message, should be translated
-			Report::Error(sformat(_("Cannot read active profile:\n%1"),
-                scpm_error));
+    if (enabled && !ReadActiveProfile())
+	// Error message: %1 is special error message, should be translated
+	Report::Error(sformat(_("Cannot read active profile:\n%1"),scpm_error));
 
-    // read
+    // read profile descriptions
     if(Abort()) return false;
     Progress::NextStep();
-	if (enabled)
-	    if(!ReadProfilesDescriptions())
-			// Error message: %1 is special error message, should be translated
-			Report::Error(sformat(_("Cannot read profile descriptions:
-%1
-"),
-                scpm_error));
+    if (enabled && !ReadProfilesDescriptions())
+	// Error message: %1 is special error message, should be translated
+	Report::Error(sformat(_("Cannot read profile descriptions:\n%1"),
+            scpm_error));
 
     // read current resources
     if(Abort()) return false;
     Progress::NextStage();
-	if(!ReadCurrentResources())
-		// Error message: %1 is special error message, should be translated
-		Report::Error(sformat(_("Cannot read current resources:\n%1"),
+    if(!ReadCurrentResources())
+	// Error message: %1 is special error message, should be translated
+	Report::Error(sformat(_("Cannot read current resources:\n%1"),
             scpm_error));
 
     // read user settings
     if(Abort()) return false;
     Progress::NextStage();
-	if(!ReadUserSettings())
-		// Error message:
-		Report::Error(_("Cannot read user settings!"));
+    if(!ReadUserSettings())
+	// Error message:
+	Report::Error(_("Cannot read user settings!"));
+
+    ReadConfigFile();// TODO progress?
 
     if(Abort()) return false;
-	// progress stage
+    // progress stage
     ProgressNextStage(_("Finished"));
 
     if(Abort()) return false;
@@ -311,42 +620,60 @@ global define boolean Write() ``{
     // profile-manager Write dialog caption:
     string caption = _("Writing profile manager configuration");
 
-    integer steps = 2;
+    list stagelist = [
+	// progress stage:
+	_("Write the SCPM database")
+    ];
+    list steplist = [
+        // progress step:
+	_("Writing SCPM database...")
+    ];
 
-    Progress::New(caption, " ", steps, [
-        // progress stage:
-	    _("Write the SCPM database"), // we should also save "close popups" check
-        // progress stage:
-        _("Write user settings"),
-	], [
-        // progress stage:
-	    _("Writing SCPM database..."),
-        // progress stage:
-	    _("Writing the user settings..."),
-        // progress stage:
-	    _("Finished")
-	],
-	""
-    );
+    if (!canceled)
+    {
+	stagelist = merge (stagelist, [
+	    // progress stage:
+	    _("Write SCPM settings"),
+	    // progress stage:
+	    _("Write user settings") ]);
 
-//    if(Abort()) return false; ... abort is disabled here
+	steplist = merge (steplist, [
+	    // progress step:
+	    _("Writing SCPM settings..."),
+	    // progress step:
+	    _("Writing the user settings...") ]);
+    }
+
+    integer steps = size (steplist);
+    // progress step:
+    steplist = add (steplist, _("Finished"));
+
+    Progress::New(caption, " ", steps, stagelist, steplist, "");
+
     Progress::NextStage();
     if(!SCR::Write(.scpm, nil))
     {
         SetError();
-	    // Error message:
+	// Error message:
         Report::Error(sformat(_("Cannot write SCPM database:\n%1"),scpm_error));
     }
 
+    if (!canceled) // only for proper finish
+    {
+    Progress::NextStage();
+    if(!WriteConfigFile())
+	// Error message:
+        Report::Error (_("Cannot write SCPM settings!"));
+
     Progress::NextStage();
     if(!WriteUserSettings())
-	    // Error message:
+	// Error message:
         Report::Error (_("Cannot write user settings!"));
+    }
 
     // progress stage:
     ProgressNextStage(_("Finished"));
 
-    if(Abort()) return false;
     return true;
 }
 
@@ -486,7 +813,6 @@ define boolean ReadSCPMStatus() ``{
     initialized = select (stat, 1, false);
     return true;
 }
-
 
 /**
  * Reads the current resource set.
@@ -776,6 +1102,8 @@ global define void WriteStatusFirst() ``{
  */
 global define boolean WriteResources(string resource_set) ``{
 
+    if (use_rg)
+	return true;
     boolean ret = SCR::Write(.scpm.resources.current, resource_set);
     if (!ret)
         ShowError();
@@ -795,27 +1123,6 @@ global define boolean RebuildDB() ``{
     return ret;
 
 }
-
-/*
-global efine boolean DeleteResourceSet(string set) ``{
-
-    boolean ret = SCR::Execute(.scpm.resources.delete, set);
-    if (ret)
-        resource_sets_individual = filter (`name, resource_sets_individual,
-            ``(name != set));
-    return ret;
-}
-
-global efine boolean CopyResourceSet(string set, string newset) ``{
-
-    boolean ret = SCR::Execute(.scpm.resources.copy, set, newset);
-
-    if (ret)
-        resource_sets_individual = add (resource_sets_individual, newset);
-
-    return ret;
-}*/
-
 
 /**
  * Checks, what changes will be done to the selected resource after switch.
@@ -876,7 +1183,7 @@ global define list GetProfilesAsItems() ``{
 }
 
 /**
- * Creates the item list for the Table widget.
+ * Creates the item list for the Table widget (to use in Switch dialog).
  * @return list of items
  */
 global define list GetResourcesAsItems() ``{
@@ -930,28 +1237,29 @@ global define boolean CheckNameValidity(string name) ``{
  */
 global define boolean CheckFilesValidity(map new_settings) ``{
 
-	string file ="";
+    string file ="";
 
     // TODO: better return value (file)
-	// test -x ???
-	file = lookup(new_settings, "prestart","");
-	if (file != "" &&
-		(SCR::Execute (.target.bash, sformat("/usr/bin/test -e %1",file))) != 0)
+    // test -x ???
+
+    file = lookup(new_settings, "prestart","");
+    if (file != "" &&
+	(SCR::Execute (.target.bash, sformat("/usr/bin/test -e %1",file))) != 0)
 	return false;
 
-	file = lookup(new_settings, "poststart","");
-	if (file != "" &&
-		(SCR::Execute (.target.bash, sformat("/usr/bin/test -e %1",file))) != 0)
+    file = lookup(new_settings, "poststart","");
+    if (file != "" &&
+	(SCR::Execute (.target.bash, sformat("/usr/bin/test -e %1",file))) != 0)
 	return false;
 
-	file = lookup(new_settings, "prestop","");
-	if (file != "" &&
-		(SCR::Execute (.target.bash, sformat("/usr/bin/test -e %1",file))) != 0)
+    file = lookup(new_settings, "prestop","");
+    if (file != "" &&
+	(SCR::Execute (.target.bash, sformat("/usr/bin/test -e %1",file))) != 0)
 	return false;
 
-	file = lookup(new_settings, "poststop","");
-	if (file != "" &&
-		(SCR::Execute (.target.bash, sformat("/usr/bin/test -e %1",file))) != 0)
+    file = lookup(new_settings, "poststop","");
+    if (file != "" &&
+	(SCR::Execute (.target.bash, sformat("/usr/bin/test -e %1",file))) != 0)
 	return false;
 
     return true;
@@ -1054,6 +1362,8 @@ global define boolean ReadSwitchInfo() ``{
         return false;
     }
     y2debug("switch_info: %1",switch_info);
+    // compute helper structure:
+    GetModifiedGroups();
     return true;
 }
 

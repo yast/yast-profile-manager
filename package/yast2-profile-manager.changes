@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Wed May 21 14:24:17 CEST 2003 - jsuchome@suse.de
+
+- initial resource groups support
+- extended workflow: dilaogs for editing resource groups and
+  switch details
+- 2.8.1
+
+-------------------------------------------------------------------
 Mon Apr 28 12:41:07 CEST 2003 - jsuchome@suse.de
 
 - adapted to Require interface

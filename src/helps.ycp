@@ -155,7 +155,7 @@ Safely abort the configuration utility by pressing <b>Abort</b> now.</p>
     /* Main dialog help 6/6 */
     _("<p>To configure SCPM itself, use <b>Options</b>.</p>"),
 
-    /* Options dialog help 1/5 */
+    /* Options dialog help 1/5 */ // FIXME update!
     "options" : _("<p>First, <b>enable</b> SCPM. If disabled later, none of your configuration data in the profiles will be lost. It just keeps the current configuration of your system and you cannot switch to any other profile until you enable it again.</p>") +
 
     /* Options dialog help 2/5*/

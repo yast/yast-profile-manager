@@ -90,7 +90,8 @@ global define symbol ProfileManagerAutoSequence() ``{
  */
 global define symbol Cancel() ``{
 
-    return `next;
+    ProfileManager::canceled = true;
+    return `next; //FIXME cancel should really cancel!!
 }
 
 /**
@@ -100,11 +101,13 @@ global define symbol Cancel() ``{
 global define any MainSequence () ``{
     map aliases =
 	$[
-	    "main"	:   ``( MainDialog () ),
-	    "options"	:  ``( OptionsDialog () ),
-	    "switch"	:  ``( SwitchDialog () ),
-	    "edit"	:  ``( ProfileSettingsDialog () ),
-	    "cancel"	:	``( Cancel() )
+	    "main"	:	``( MainDialog () ),
+	    "options"	:	``( OptionsDialog () ),
+	    "switch"	:	``( SwitchDialog () ),
+	    "details"	:	``( DetailsSwitchDialog ()),
+	    "edit"	:	``( ProfileSettingsDialog () ),
+	    "cancel"	:	``( Cancel() ),
+	    "resources"	:	``( ConfigureResourcesDialog() )
 	];
 
     map sequence = $[
@@ -122,19 +125,33 @@ global define any MainSequence () ``{
 	$[
 	    `abort	: `abort,
 	    `cancel	: "cancel",
+	    `details	: "details",
 	    `next	: "main"
+	],
+	"details" :
+	$[
+	    `abort	: "cancel",
+	    `cancel	: "cancel",
+	    `next	: "switch"
 	],
 	"options" :
 	$[
 	    `abort	: `abort,
 	    `cancel	: "cancel",
-	    `next	: "main"
+	    `next	: "main",
+	    `resources	: "resources"
 	],
 	"edit" :
 	$[
 	    `abort	: `abort,
 	    `cancel	: "cancel",
 	    `next	: "main"
+	],
+	"resources":
+	$[
+	    `abort	: "cancel",
+	    `cancel	: "cancel",
+	    `next	: "options"
 	],
 	"cancel" :
 	$[
