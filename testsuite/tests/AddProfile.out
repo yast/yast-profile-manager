@@ -1,7 +1,0 @@
-Read	.target.ycp ["/var/lib/YaST2/installmap.ycp", $[]] $[]
-Execute	.scpm.profiles.add "new" false false
-Return	false
-Dump	$["default":"default profile description", "home":"My private configuration", "train":"Maximum power savings"]
-Execute	.scpm.profiles.add "new" false true
-Return	true
-Dump	$["default":"default profile description", "home":"My private configuration", "new":"", "train":"Maximum power savings"]

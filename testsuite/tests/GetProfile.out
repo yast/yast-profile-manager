@@ -1,4 +1,3 @@
-Read	.target.ycp ["/var/lib/YaST2/installmap.ycp", $[]] $[]
 Read	.scpm.profiles.prestart "default" nil
 Read	.scpm.profiles.poststart "default" nil
 Read	.scpm.profiles.prestop "default" nil

@@ -1,4 +1,3 @@
-Read	.target.ycp ["/var/lib/YaST2/installmap.ycp", $[]] $[]
 Dump	switch_info:
 Dump	nil
 Dump	table items list:

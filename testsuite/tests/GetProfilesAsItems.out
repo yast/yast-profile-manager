@@ -1,4 +1,3 @@
-Read	.target.ycp ["/var/lib/YaST2/installmap.ycp", $[]] $[]
 Dump	profiles:
 Dump	$[]
 Dump	table items list:

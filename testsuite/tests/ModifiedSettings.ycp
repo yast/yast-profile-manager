@@ -2,13 +2,6 @@
 
     include "testsuite.ycp";
 
-    map READ = $[
-	"etc" : $[ "install_inf" : $[] ],
-	"target" : $[ "ycp" : $[] ],
-	"probe" : $[ "system" : []],
-    ];
-
-    TESTSUITE_INIT([READ], nil);
     import "ProfileManager";
 
     ProfileManager::profile_settings =

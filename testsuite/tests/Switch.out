@@ -1,8 +1,0 @@
-Read	.target.ycp ["/var/lib/YaST2/installmap.ycp", $[]] $[]
-Dump	default
-Execute	.scpm.switch $["modified_resources":[], "profile_modified":true, "profile_name":"home"] false
-Return	false
-Dump	default
-Execute	.scpm.switch $["modified_resources":[], "profile_modified":true, "profile_name":"home"] true
-Return	true
-Dump	home
