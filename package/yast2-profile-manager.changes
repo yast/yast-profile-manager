@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Mon Jul 22 19:05:04 2002 - jsuchome@suse.cz
+
+- implemented workflow
+- help texts
+- initial version of agent-scpm
+
+-------------------------------------------------------------------
 Thu Jul 11 19:00:04 2002 - jsuchome@suse.cz
 
 - initial version
