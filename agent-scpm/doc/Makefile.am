@@ -6,5 +6,5 @@ SUBDIRS = autodocs
 
 htmldir = $(docdir)
 
-html_DATA = SCPM.html Todo.txt
+html_DATA = scpm.html Todo.txt
 EXTRA_DIST = $(html_DATA)

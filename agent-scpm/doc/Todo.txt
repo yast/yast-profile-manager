@@ -5,7 +5,6 @@ $Id$
 TODO:
 -----
 
-- Something
-- Something else
-- ...
+- Fork process for getting progress info
+- Implement CopyResource, DeleteResource
 
