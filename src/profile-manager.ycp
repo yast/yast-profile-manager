@@ -24,6 +24,23 @@ y2milestone ("Profile-manager module started");
 import "Popup";
 include "profile-manager/wizards.ycp";
 
+list args		= WFM::Args();
+string switch_to	= "";
+if (size(args) > 0) {
+    if(is(WFM::Args(0), string) && WFM::Args(0) == "switch") {
+	if (size (args) > 1 && is (WFM::Args(1), string)) {
+	    switch_to	= (string) WFM::Args(1);
+	    y2milestone ("Using direct switch to profile %1", switch_to);
+	}
+    }
+    if (is(WFM::Args(0), string) && WFM::Args(0) == "help") {
+	string error = _("Command line interface for Profile Manager is not available - use 'scpm' tool instead.");
+
+	y2warning (error + " If you want to switch to some profile and see the list of modified resources, it is possible to call Profile Manager with parameters 'switch <profile_name>'. This will invoke 'Confirm Switch' dialog.");
+	return `abort;
+    }
+}
+
 /*
  * exit when running for non-root
  */
@@ -37,21 +54,6 @@ if (!root)
     return `abort;
 }
 
-list args		= WFM::Args();
-string switch_to	= "";
-if (size(args) > 0) {
-    if(is(WFM::Args(0), string) && WFM::Args(0) == "switch") {
-	if (size (args) > 1 && is (WFM::Args(1), string)) {
-	    switch_to	= (string) WFM::Args(1);
-	    y2milestone ("Using direct switch to profile %1", switch_to);
-	}
-    }
-    if (is(WFM::Args(0), string) && WFM::Args(0) == "help") {
-	y2warning ("Command line interface is not supported for Profile Manager, use 'scpm' tool instead.
-If you want to switch to some profile and see the list of modified resources, it is possible to call Profile Manager with parameters 'switch <profile_name>'. This will invoke 'Confirm Switch' dialog.");
-	return `abort;
-    }
-}
 
 symbol ret = ProfileManagerSequence (switch_to);
 
