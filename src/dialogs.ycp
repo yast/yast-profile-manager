@@ -585,10 +585,10 @@ define any SwitchDialog () ``{
 	UI::SetFocus(`id(`modified));
     }
 
-    any ret = nil;
+    symbol ret = nil;
     while (true)
     {
-	ret = UI::UserInput ();
+	ret = (symbol) UI::UserInput ();
 
 	any selected_res = UI::QueryWidget(`id(`modified), `CurrentItem);
 	if (ret == `back || ret == `cancel)
@@ -676,7 +676,7 @@ define any SwitchDialog () ``{
 	    break;
 	    }
     };
-    return ret;
+    return (any) ret;
 }
 
 /**
@@ -694,7 +694,7 @@ define symbol DetailsSwitchDialog () ``{
     define list resources_items() ``{
 
 	list items = [];
-	foreach (any i, map resource, resources, ``{
+	foreach (any i, map resource, (map<any,map>) resources, ``{
 	    if (!is(i, integer))
 		return;
 	    // flag for resource action
@@ -935,7 +935,7 @@ profile nor does it start or stop services."))),
                         _("on an &existing profile:")))
                     )),
             `SelectionBox(`id(`profiles), "", maplist (
-		string name, any desc, profiles, ``{ return name; })),
+	string name, any desc, (map<string,any>) profiles, ``{ return name; })),
             `VSpacing(1),
 	        `HBox(
 	            `HSpacing(1),
@@ -1082,7 +1082,7 @@ define string GetService() ``{
     map services	= (map) SCR::Read (.init.scripts.comments);
     list service_items	= [];
 
-    foreach (map k, map v, services, ``{
+    foreach (any k, map v, (map<any,map>) services, ``{
 	service_items = add (service_items,
 	    `item( `id(k), k, false));
     });
@@ -1209,7 +1209,7 @@ define map ResourceGroupPopup (map group) ``{
     string descr	= group["description"]:"";
     string what		= (group == $[] || group["what"]:""=="added")
 			? "added": "edited";
-    list items		= [];
+    list<term> items		= [];
     map org_group	= (map) eval (group);
 
     // map for saving user_defined flags of each resource
@@ -1226,7 +1226,7 @@ define map ResourceGroupPopup (map group) ``{
     /**
      * helper function for building table items of one resource group
      */
-    define list resource_group_items() ``{
+    define list<term> resource_group_items() ``{
 
 	return maplist (map res, group["resources"]:[], ``{
 	    string name = res["name"]:"";
@@ -1307,10 +1307,10 @@ define map ResourceGroupPopup (map group) ``{
 	// user defined group cannot be reset
 	UI::ChangeWidget(`id(`reset_b), `Enabled, false);
 
-    any ret = nil;
+    symbol ret = nil;
     do
     {
-        ret		= UI::UserInput ();
+        ret		= (symbol) UI::UserInput ();
 	groupname	= (string) UI::QueryWidget (`id(`name), `Value);
 	string selected	= (string)UI::QueryWidget(`id(`resources),`CurrentItem);
 
@@ -1431,7 +1431,7 @@ Choose another name."), groupname));
 		group["active"]		= true;
 	    }
 	    boolean group_modified = false;
-	    foreach (string k, any v, group,``{
+	    foreach (string k, any v, (map<string,any>) group,``{
 		if (org_group[k]:nil != v)
 		    group_modified = true;
 	    });
@@ -1467,7 +1467,7 @@ define symbol ConfigureResourcesDialog () ``{
     define list resource_groups_items() ``{
 
 	list items = [];
-	foreach (string name, map group, ProfileManager::GetResourceGroups(),``{
+	foreach (string name, map group, (map<string,map>) ProfileManager::GetResourceGroups(),``{
 	    if (group["what"]:"" == "deleted")
 		return;
 	    string desc = group["description"]:"";
