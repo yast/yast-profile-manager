@@ -956,7 +956,7 @@ global define integer GetHashMarks() ``{
  * Reads the file with the progress informations.
  * @return string One line of the text to show in ProgressPopup()
  */
-global define string GetProgressText() ``{
+global define string GetProgressText(boolean everything) ``{
 
     string ret = "";
     string all = SCR::Read(.target.string, progresspath);
@@ -964,6 +964,8 @@ global define string GetProgressText() ``{
 
     string current = select(all_l,progress_size,"");
     string last = select(all_l,progress_size - 1,"");
+
+    if (!everything) { //we return only one line
 
     // last line has been updated:
     if (last_ret != "" && last_ret != last)
@@ -981,6 +983,20 @@ global define string GetProgressText() ``{
         }
         else last_ret = ret;
         progress_size = progress_size + 1;
+    }
+    }
+    else { // return everything to the end of file
+
+    if (last_ret != "" && last_ret != last)
+    {
+        ret = substring (last, size(last_ret), size(last)-size(last_ret));
+    }
+    while (progress_size < size(all_l) &&  current != "" && current != "\n")
+    {
+        ret = "\n" + current;
+        progress_size = progress_size + 1;
+        current = select(all_l,progress_size,"");
+    }
     }
     return ret;
 }
