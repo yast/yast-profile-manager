@@ -1391,7 +1391,7 @@ define symbol ConfigureResourcesDialog () ``{
     // read resource groups every time entering the dialog
     if (!ProfileManager::ReadResourceGroups())
     {
-	// error message
+	// error message (%1 is additional error message)
 	Report::Error( sformat(_("Cannot read resource groups:\n%1"),
 	    ProfileManager::scpm_error));
     }
@@ -1438,8 +1438,8 @@ define symbol ConfigureResourcesDialog () ``{
 	`HSpacing(1.5)
     );
 
-    Wizard::SetContentsButtons ( caption, contents, HELPS["resources"]:"",
-                Label::CancelButton (), Label::OKButton () );
+    Wizard::SetContentsButtons (caption, contents, HELPS["resources"]:"",
+                Label::CancelButton (), Label::OKButton ());
 
     Wizard::HideAbortButton();
 

@@ -392,7 +392,7 @@ define any OptionsDialog () ``{
     Wizard::RestoreBackButton ();
 
     Wizard::SetContentsButtons ( caption, contents, HELPS["options"]:"",
-				Label::BackButton (), Label::OKButton () );
+				Label::CancelButton (), Label::OKButton () );
 
     if (ProfileManager::enabled || ProfileManager::tmp_enabled)
     {

@@ -1,4 +1,17 @@
 -------------------------------------------------------------------
+Tue Jan  4 14:24:49 CET 2005 - jsuchome@suse.cz
+
+- added dialog for choosing Recover or Rollback
+- scpm-agent: added support for rollback (SCPM::Recover (true))
+- 2.11.0
+
+-------------------------------------------------------------------
+Fri Dec 10 15:11:29 CET 2004 - jsuchome@suse.cz
+
+- removed select's
+- enable using some special characters (@,#) for profile names (#49109)
+
+-------------------------------------------------------------------
 Wed Sep  8 14:56:06 CEST 2004 - jsuchome@suse.cz
 
 - call Recovery from profile-manager when necessary

@@ -18,8 +18,7 @@ map HELPS = $[
 
     /* SCPM introduction text 1/10 */
     "intro": _("<h1>Introduction</h1>
-This chapter describes for what SCPM is good, what it can do for
-you, and what it cannot do.
+This is the description of what SCPM (<strong>System Configuration Profile Management</strong>) is good, what it can do for you, and what it cannot do.
 ") +
 
     /* SCPM introduction text 2/10 */

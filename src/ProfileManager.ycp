@@ -820,7 +820,7 @@ define boolean ReadSCPMStatus() ``{
 }
 
 /**
- * Calls SCPM::Recover function, which replays journal after the crash
+ * Calls SCPM::Recover (false) function, which replays journal after the crash
  * (started in separate agen'ts thread, return value must be checked with Wait)
  */
 global define void Recover () {
@@ -828,6 +828,13 @@ global define void Recover () {
     SCR::Execute (.scpm.recover, $[]);
 }
 
+/**
+ * Calls SCPM::Recover (true)
+ */
+global define void Rollback () {
+
+    SCR::Execute (.scpm.rollback, $[]);
+}
 
 /**
  * Reads the current resource set.
@@ -952,6 +959,49 @@ define boolean ReadUserSettings() ``{
     return true;
 }
 
+/**
+ * Ask user which action should be taken when scom recovery is necessary
+ * @return symbol: `cancel, `recover, `rollback
+ */
+define symbol AskForRecoveryPopup () {
+
+    symbol ret	= nil;
+
+    string text	=
+    // popup text
+_("SCPM is currently locked and needs recovery. This may be
+the result of an aborted profile switch or similar. You
+can have SCPM <b>recover</b> the last command, that means your
+database will be updated and outstanding actions will be
+performed. You can also have SCPM <b>rollback</b> the command, in
+that case the old system status will be restored (if possible).");
+
+    UI::OpenDialog(`opt(`decorated), `HBox (`HSpacing(1.5),
+        `VSpacing (14),
+        `VBox (
+            `HSpacing (50),
+            `VSpacing (1),
+            `RichText (text),
+            `VSpacing (0.5),
+	    `HBox(
+		// Push button label
+		`PushButton(`id(`recover),`opt(`default),_("&Recover")),
+		`HSpacing(1),
+                // Push button label
+	        `PushButton(`id(`rollback), _("Ro&llback")),
+		`HSpacing(1),
+		`PushButton (`id(`cancel), Label::CancelButton ())
+	    ),
+            `VSpacing (0.5)
+	),
+        `HSpacing(1.5)
+    ));
+
+    ret = (symbol) UI::UserInput();
+    UI::CloseDialog();
+    return ret;
+}
+
 
 /**
  * Read all profile-manager settings
@@ -1039,7 +1089,12 @@ Perform the reinitialization now?
 
     if (needs_recover)
     {
-	Recover ();
+	symbol recover_ret	= AskForRecoveryPopup ();
+	if (recover_ret == `recover)
+	    Recover ();
+	else if (recover_ret == `rollback)
+	    Rollback ();
+	else return false;
 	ProgressPopup ("", 0, 100);
 	if (!Wait())
 	{
@@ -1523,12 +1578,12 @@ global define boolean CheckNameValidity(string name) ``{
     string additional	= "-_.@#"; // additional characters allowed
     if (name != filterchars (name, String::CAlnum () + additional))
     {
-	y2error ("invalid characters in profile name");
+	y2milestone ("invalid characters in profile name");
         return false;
     }
     if (issubstring (additional, substring (name, 0, 1)))
     {
-	y2error ("profile name must start with letter or digit");
+	y2milestone ("profile name must start with letter or digit");
         return false;
     }
     return true;

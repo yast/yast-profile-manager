@@ -87,6 +87,11 @@ private:
      * Call SCPM->Recover in the new thread
      */
     static void *call_recover (SCPMAgent *);
+
+    /**
+     * Call SCPM->Recover (true) in the new thread
+     */
+    static void *call_rollback (SCPMAgent *);
     // ----------------------
 	
     /**

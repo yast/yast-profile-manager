@@ -747,6 +747,12 @@ YCPValue SCPMAgent::Execute(const YCPPath &path, const YCPValue& value,
 	    pthread_create (&pt, NULL, (void*(*)(void*))&call_recover, this);
 	    ret = YCPBoolean (true);
 	}
+
+   	if (PC(0) == "rollback") {
+        
+	    pthread_create (&pt, NULL, (void*(*)(void*))&call_rollback, this);
+	    ret = YCPBoolean (true);
+	}
     }
     else if (path->length() == 2) {
 	
@@ -1016,6 +1022,20 @@ void *SCPMAgent::call_recover (SCPMAgent *ag)
   static int retval;
   
   if (!ag->scpm->Recover ()) {
+      y2error ( scpm_error );
+      retval = 1;
+  }
+  else
+      retval = 0;
+
+  pthread_exit((void*)&retval);
+}
+
+void *SCPMAgent::call_rollback (SCPMAgent *ag)
+{
+  static int retval;
+  
+  if (!ag->scpm->Recover (true)) {
       y2error ( scpm_error );
       retval = 1;
   }
