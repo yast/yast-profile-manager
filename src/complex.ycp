@@ -51,7 +51,7 @@ define boolean PreparePopup (string selected) {
 
     ProfileManager::selected_profile = selected;
     ProfileManager::PrepareSwitch (selected);
-    ProgressPopup("",0,100);
+    ProfileManager::ProgressPopup("",0,100);
 
     if (!ProfileManager::Wait())
     {
@@ -480,7 +480,7 @@ define any OptionsDialog () ``{
 
                     ProfileManager::initialized = true;
                     ProfileManager::WriteStatusFirst();
-                    ProgressPopup("",0,100);
+                    ProfileManager::ProgressPopup("",0,100);
                     if (!ProfileManager::Wait())
                     {
                         // Error popup text, %1 is additional error message

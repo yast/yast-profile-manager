@@ -16,11 +16,27 @@ module "ProfileManager";
 textdomain "profile-manager";
 
 import "Directory";
+import "Label";
 import "Package";
 import "Popup";
 import "Progress";
 import "Report";
 
+
+// function prototypes:
+global define boolean ProgressPopup (string position,integer start,integer end);
+global define boolean Wait ();
+
+
+global string last_ret = "";
+
+/**
+ * how many times was progress bar used
+ */
+global integer hash_size = 0;
+
+
+//include "profile-manager/progress.ycp";
 
 /**
  * Is the module runing for the first time?
@@ -119,24 +135,6 @@ global list resource_sets_predefined = [];
 global list resource_sets_individual = [];
 
 /**
- * This map represents the switch_info struct.
- * It is read in PrepareSwitch() and used by Switch().
- * @example
- *  $[ "profile_name": "home",
- *     "profile_modified": true,
- *     "modified_resources":
- *      [ $[ "resource_name": "/etc/X11/XF86Config",
- *           "resource_type": "file",
- *           "is_new": false,
- *           "is_deleted": true,
- *           "save": true
- *        ]
- *      ]
- *  ]
- */
-map switch_info = $[];
-
-/**
  * This variable defines the action whis will be done
  * with the profile in the ProfileSettingsDialog.
  * Can be "new", "copy" or "edit".
@@ -145,12 +143,17 @@ global string profile_action = "";
 
 global integer active_resource = 0;
 global string active_resource_name = "";
-global string last_ret = "";
 
 /**
  *  When scpm action fails, the error message is stored here by SetError()
  */
 global string scpm_error = "";
+
+/**
+ * Abort function
+ * return boolean return true if abort
+ */
+global block<boolean> AbortFunction = nil;
 
 /**
  * In this map are written the variables close_popups and first_time.
@@ -164,10 +167,6 @@ map state = $[];
  */
 integer progress_size = 0;
 
-/**
- * how many times was progress bar used
- */
-global integer hash_size = 0;
 
 /**
  * The name of the file, where the progress state is beeing written.
@@ -189,14 +188,24 @@ string changespath = "";
 string tmppath = "";
 string tmpdir = "";
 
-global boolean proposal_valid = false;
-global boolean write_only = false;
-
 /**
- * Abort function
- * return boolean return true if abort
+ * This map represents the switch_info struct.
+ * It is read in PrepareSwitch() and used by Switch().
+ * @example
+ *  $[ "profile_name": "home",
+ *     "profile_modified": true,
+ *     "modified_resources":
+ *      [ $[ "resource_name": "/etc/X11/XF86Config",
+ *           "resource_type": "file",
+ *           "is_new": false,
+ *           "is_deleted": true,
+ *           "save": true
+ *        ]
+ *      ]
+ *  ]
  */
-global block<boolean> AbortFunction = nil;
+map switch_info = $[];
+
 
 /**
  * Abort function
@@ -810,6 +819,16 @@ define boolean ReadSCPMStatus() ``{
 }
 
 /**
+ * Calls SCPM::Recover function, which replays journal after the crash
+ * (started in separate agen'ts thread, return value must be checked with Wait)
+ */
+global define void Recover () {
+
+    SCR::Execute (.scpm.recover, $[]);
+}
+
+
+/**
  * Reads the current resource set.
  * @return true on success
  */
@@ -1014,6 +1033,17 @@ Perform the reinitialization now?
 	{
 	    // force enabling
 	    SCR::Write(.scpm.status.enabled.force, true);
+	}
+    }
+
+    if (needs_recover)
+    {
+	Recover ();
+	ProgressPopup ("", 0, 100);
+	if (!Wait())
+	{
+	    ShowError ();
+	    return false;
 	}
     }
 
@@ -1645,5 +1675,90 @@ global define boolean Wait() ``{
     return ret;
 }
 
+/**
+ * Popup for showing progress informations
+ * @param position of this progress:
+ *  (if "first", popup is not closed, for "last" popup is not created)
+ * @param start start of progress (mainly 0)
+ * @param end end of progress (mainly 100)
+ * @return boolean true
+ */
+global define boolean ProgressPopup (string position, integer start, integer end) {
+
+    if (position != "last")
+    {
+	UI::OpenDialog(`opt(`decorated), `HBox(`HSpacing(1.5), `VBox(
+            `VSpacing(1),
+			// LogView label:
+            `LogView(`id(`progress),_("Progress information"), 10, 0),
+            `VSpacing(1),
+            `ProgressBar(`id(`pb), "", 100, 0),
+            `VSpacing(1),
+	    // checkbox label: ('SCPM Options' is another dialog name
+            `CheckBox(`id(`close_ch), `opt(`notify), _("Close Progress Pop-ups &Automatically (reenable it in SCPM Options)"),close_popups),
+            `VSpacing(1),
+	        `HBox(
+	            `Right(`PushButton(`id(`close), `opt(`default, `key_F10),
+                    Label::CloseButton())),
+	            `HSpacing(1)
+	            ),
+            `VSpacing(1)),
+	`HSpacing(1.5)));
+
+	UI::ChangeWidget(`id(`close), `Enabled, false);
+    }
+
+    string progresstext = "";
+    integer hashmarks = start;
+    last_ret = "";
+
+    UI::BusyCursor();
+    do
+    {
+	// TODO check the process status here!!!
+        sleep(5);
+        hashmarks = GetHashMarks();
+        UI::ChangeWidget(`id(`pb), `Value, hashmarks);
+
+        progresstext = GetProgressText(false);
+        if (progresstext != "") {
+	    string recoded = (string)
+		UI::Recode(WFM::GetEnvironmentEncoding(),"UTF-8",progresstext);
+            UI::ChangeWidget(`id(`progress), `LastLine, recoded);
+        }
+    }
+    while (hashmarks < end);
+
+    // next hundred of hash marks
+    if (hashmarks >= 100)
+        hash_size = hash_size + 1;
+
+    // read to the end of file
+    progresstext = GetProgressText(true);
+    if (progresstext != "") {
+	string recoded = (string)
+	    UI::Recode (WFM::GetEnvironmentEncoding(),"UTF-8",progresstext);
+        UI::ChangeWidget(`id(`progress), `LastLine, recoded);
+    }
+    if (position == "first") // hack: missing newline
+        UI::ChangeWidget(`id(`progress), `LastLine, "\n");
+
+    UI::NormalCursor();
+    if (position != "first")
+    {
+        if (!close_popups)
+        {
+            UI::ChangeWidget(`id(`close), `Enabled, true);
+            any ret = nil;
+            while (ret != `close)
+            {
+                ret = UI::UserInput();
+            }
+        }
+        close_popups = (boolean) UI::QueryWidget(`id(`close_ch), `Value);
+        UI::CloseDialog();
+    }
+    return true;
+}
 /* EOF */
 }

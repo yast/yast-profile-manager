@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Wed Sep  8 14:56:06 CEST 2004 - jsuchome@suse.cz
+
+- call Recovery from profile-manager when necessary
+- ProgressPopup moved to ProfileManager.ycp
+- 2.10.5
+
+-------------------------------------------------------------------
 Fri Sep  3 12:15:59 CEST 2004 - jsuchome@suse.cz
 
 - scpm-agent: added support for SCPM::Recovery () function
