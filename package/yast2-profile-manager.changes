@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Mon Sep  2 17:14:44 CEST 2002 - jsuchome@suse.cz
+
+- added introduction text 
+
+-------------------------------------------------------------------
 Mon Aug 26 17:12:07 CEST 2002 - jsuchome@suse.cz
 
 - adding new profile doesn't copy the active profile's properties
