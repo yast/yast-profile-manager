@@ -42,6 +42,9 @@ global boolean initialized = false;
  */
 global boolean close_popups = false;
 
+/**
+ * This shows if the "autoswitch" was set while adding a new profile.
+ */
 global boolean auto = false;
 
 /**
@@ -104,6 +107,17 @@ global list resource_sets_individual = [];
  * This map represents the switch_info struct.
  * It is read in PrepareSwitch() and used by Switch().
  * @example
+ *  $[ "profile_name": "home",
+ *     "profile_modified": true,
+ *     "modified_resources":
+ *      [ $[ "resource_name": "/etc/X11/XF86Config",
+ *           "resource_type": "file",
+ *           "is_new": false,
+ *           "is_deleted": true,
+ *           "save": true
+ *        ]
+ *      ]
+ *  ]
  */
 global map switch_info = $[];
 
@@ -122,6 +136,7 @@ global string profile_action = "";
 global map state = $[];
 
 global integer progress_size = 0;
+global integer active_resource = 0;
 
 global string progressfile = "/scpm.progress"; // same name uses agent!
 global string hashfile = "/scpm.hash";
@@ -130,19 +145,14 @@ global string progresspath = "";
 global string hashpath = "";
 global string changespath = "";
 
+global boolean proposal_valid = false;
+global boolean write_only = false;
+
 /**
  * Abort function
  * return boolean return true if abort
  */
 global block AbortFunction = nil;
-
-/**
- * Data was modified?
- */
-global boolean modified = false;
-
-global boolean proposal_valid = false;
-global boolean write_only = false;
 
 
 /**
@@ -269,7 +279,6 @@ global define boolean Read() ``{
     sleep(sl);
 
     if(Abort()) return false;
-    modified = false;
     return true;
 }
 
@@ -303,21 +312,19 @@ global define boolean Write() ``{
 	""
     );
 
-    if(Abort()) return false;
+//    if(Abort()) return false; ... abort is disabled
     Progress::NextStage();
     if(!SCR::Write(.scpm, nil))
 	    // Error message:
         Report::Error (_("Can not write SCPM database!"));
     sleep(sl);
 
-    if(Abort()) return false;
     Progress::NextStage();
     if(!WriteUserSettings())
 	    // Error message:
         Report::Error (_("Can not write user settings!"));
     sleep(sl);
 
-    if(Abort()) return false;
     ProgressNextStage(_("Finished"));
     sleep(sl);
 
@@ -326,6 +333,7 @@ global define boolean Write() ``{
 }
 
 /**
+ * Reads the list of aviable profiles.
  * @return true on success
  */
 global define boolean ReadProfiles() ``{
@@ -343,6 +351,7 @@ global define boolean ReadProfiles() ``{
 }
 
 /**
+ * Reads the active profile.
  * @return true on success
  */
 global define boolean ReadActiveProfile() ``{
@@ -355,6 +364,7 @@ global define boolean ReadActiveProfile() ``{
 }
 
 /**
+ * Reads the descriptions of all aviable profiles.
  * @return true on success
  */
 global define boolean ReadProfilesDescriptions() ``{
@@ -370,6 +380,8 @@ global define boolean ReadProfilesDescriptions() ``{
 }
 
 /**
+ * Check if the module is run for first time and
+ * reads user settings (currently close_popups check)
  * @return true on success
  */
 define boolean ReadUserSettings() ``{
@@ -385,6 +397,22 @@ define boolean ReadUserSettings() ``{
 }
 
 /**
+ * Writes the user settings (currently close_popups check).
+ * @return true on success
+ */
+global define boolean WriteUserSettings() ``{
+
+    state = $[];
+    state = add (state, "first_time", false);
+    state = add (state, "close_popups", close_popups);
+    boolean ret = SCR::Write(.target.ycp, "/var/lib/YaST2/scpm.ycp", state);
+
+	return ret;
+}
+
+
+/**
+ * Initialize the SCPM agent.
  * @return true on success
  */
 define boolean Initialize() ``{
@@ -400,6 +428,7 @@ define boolean Initialize() ``{
 }
 
 /**
+ * Checks if SCPM is enabled/disabled/initialized.
  * @return true on success
  */
 define boolean ReadSCPMStatus() ``{
@@ -415,7 +444,7 @@ define boolean ReadSCPMStatus() ``{
 
 
 /**
- * reads the current resource set
+ * Reads the current resource set.
  * @return true on success
  */
 global define boolean ReadCurrentResources() ``{
@@ -430,6 +459,7 @@ global define boolean ReadCurrentResources() ``{
 }
 
 /**
+ * Reads the list of aviable resource sets.
  * @return true on success
  */
 global define boolean ReadResourceSets() ``{
@@ -447,11 +477,12 @@ global define boolean ReadResourceSets() ``{
 
 
 /**
+ * Reads the settings of the selected profile
+ * (we already have description from ReadProfileDescriptions()).
  * @return true on success
  */
 global define boolean GetProfile() ``{
 
-    // read the profile settings (we already have descriptions)
 
     profile_settings = add (profile_settings, "name", selected_profile);
     profile_settings = add (profile_settings, "description", lookup(profiles, selected_profile,""));
@@ -469,6 +500,8 @@ global define boolean GetProfile() ``{
 }
 
 /**
+ * Creates a new profile.
+ * @param name Name of the new profile
  * @return true on success
  */
 global define boolean AddProfile(string name) ``{
@@ -481,6 +514,9 @@ global define boolean AddProfile(string name) ``{
 }
 
 /**
+ * Creates a new profile by copying old one.
+ * @param source Name of the source profile
+ * @param new Name of the new profile
  * @return true on success
  */
 global define boolean CopyProfile(string source, string new) ``{
@@ -493,6 +529,9 @@ global define boolean CopyProfile(string source, string new) ``{
 }
 
 /**
+ * Renames a profile.
+ * @param old Name of the affected profile
+ * @param new New name of the profile
  * @return true on success
  */
 global define boolean RenameProfile(string old, string new) ``{
@@ -512,12 +551,14 @@ global define boolean RenameProfile(string old, string new) ``{
 
 
 /**
+ * Sets the parameters of the profile.
+ * Uses the global variable profile_settings.
+ * @param name Name of the affected profile
  * @return true on success
  */
 global define boolean SetProfile(string name) ``{
 
     string desc = deletechars(lookup(profile_settings, "description",""), "\n");
-    profiles = add (profiles, name, desc);
 
     boolean ret = SCR::Write(.scpm.profiles.description, desc, name);
     ret = ret &&  SCR::Write(.scpm.profiles.prestart,
@@ -529,11 +570,15 @@ global define boolean SetProfile(string name) ``{
     ret = ret &&  SCR::Write(.scpm.profiles.poststop,
         lookup(profile_settings, "poststop",""), name);
 
+    if (ret)
+        profiles = add (profiles, name, desc);
+
     return ret;
 }
 
 
 /**
+ * Sets the file permitions of scripts from profile_settings to 700.
  * @return true on success
  */
 global define boolean SetFilePermitions() ``{
@@ -564,6 +609,8 @@ global define boolean SetFilePermitions() ``{
 
 
 /**
+ * Deletes the profile.
+ * @param to_delete Name of the affected profile
  * @return true on success
  */
 global define boolean DeleteProfile(string to_delete) ``{
@@ -575,6 +622,8 @@ global define boolean DeleteProfile(string to_delete) ``{
 }
 
 /**
+ * Calls SCPM::PrepareSwitch() and gets
+ * the switch_info map.
  * @return true on success
  */
 global define boolean PrepareSwitch() ``{
@@ -589,6 +638,7 @@ global define boolean PrepareSwitch() ``{
 }
 
 /**
+ * Sets all "save" flags in switch_info map to true.
  * @return true on success
  */
 global define boolean SaveSwitchInfo() ``{
@@ -609,6 +659,7 @@ global define boolean SaveSwitchInfo() ``{
 }
 
 /**
+ * Sets all "save" flags in switch_info map to false.
  * @return true on success
  */
 global define boolean DropSwitchInfo() ``{
@@ -629,6 +680,7 @@ global define boolean DropSwitchInfo() ``{
 }
 
 /**
+ * Switchs to the selected profile.
  * @return true on success
  */
 global define boolean Switch() ``{
@@ -643,6 +695,8 @@ global define boolean Switch() ``{
 }
 
 /**
+ * Enables or disables SCPM
+ * (depends on value of enabled variable).
  * @return true on success
  */
 global define boolean WriteSCPMStatus() ``{
@@ -653,6 +707,8 @@ global define boolean WriteSCPMStatus() ``{
 }
 
 /**
+ * Changes the current resources.
+ * @param string resource_set Name of new resource set
  * @return true on success
  */
 global define boolean WriteResources(string resource_set) ``{
@@ -663,6 +719,7 @@ global define boolean WriteResources(string resource_set) ``{
 }
 
 /**
+ * Rebuilds SCPM database after changing resources.
  * @return true on success
  */
 global define boolean RebuildDB() ``{
@@ -692,22 +749,25 @@ global define boolean CopyResourceSet(string set, string newset) ``{
 }
 
 /**
+ * Runs the Konqueror with an info page
  * @return true on success
  */
-global define boolean RunIntro() ``{
+global define integer RunIntro() ``{
 
-    boolean ret = SCR::Execute(.target.bash,"konqueror info:/scpm/introduction &");
+    integer ret = SCR::Execute(.target.bash,"konqueror info:/scpm/introduction &");
     return ret;
 }
 
 /**
- * @return
+ * Checks, what changes will be done to the selected resource after switch.
+ * @param resource_no Number of the resource in the list of modified resources.
+ * @return string The changes.
  */
 global define string ShowChanges(integer resource_no) ``{
 
     list resources = lookup (switch_info, "modified_resources", []);
 
-    map resource = select (resources, resource_no, $[]);
+    map resource = select (resources, active_resource, $[]);
 
     string name = lookup(resource, "resource_name","");
     string type = lookup(resource, "resource_type","");
@@ -718,24 +778,45 @@ global define string ShowChanges(integer resource_no) ``{
     if (changes == "" || changes == nil)
         return name + "(" + type + ")" + "<br> not implemented yet";
     else
+    {
+        list lines = splitstring (changes, "\n");
+        changes = mergestring (lines, "<br>");
         return changes;
+    }
+}
+
+global define boolean SetSaveFlag() ``{
+
+    list resources = lookup(switch_info, "modified_resources",[]);
+    list new_resources = [];
+    map resource = select (resources, active_resource, $[]);
+
+    boolean flag = lookup(resource, "save", false);
+    resource = add (resource, "save", !flag);
+
+    integer i=0;
+    while (i < active_resource)
+    {
+        new_resources = add(new_resources, select(resources,i,$[]));
+        i = i + 1;
+    }
+    new_resources = add (new_resources, resource);
+    i = i + 1;
+    while (i<size(resources))
+    {
+        new_resources = add(new_resources, select(resources,i,$[]));
+        i = i + 1;
+    }
+
+    switch_info = add(switch_info,"modified_resources",new_resources);
+
+    return true;
+
 }
 
 /**
- * @return true on success
- */
-global define boolean WriteUserSettings() ``{
-
-    state = $[];
-    state = add (state, "first_time", false);
-    state = add (state, "close_popups", close_popups);
-    boolean ret = SCR::Write(.target.ycp, "/var/lib/YaST2/scpm.ycp", state);
-
-	return ret;
-}
-
-/**
- * @return
+ * Creates the item list for the Table widget.
+ * @return list of items
  */
 global define list GetProfilesAsItems() ``{
 
@@ -750,7 +831,8 @@ global define list GetProfilesAsItems() ``{
 }
 
 /**
- * @return
+ * Creates the item list for the Table widget.
+ * @return list of items
  */
 global define list GetResourcesAsItems() ``{
 
@@ -777,7 +859,10 @@ global define list GetResourcesAsItems() ``{
 }
 
 /**
- * @return
+ * Checks if the name of the new profile consists of
+ * valid characters: [a-zA-Z0-9_-.]
+ * @param name Name of the new profile.
+ * @return true if valid
  */
 global define boolean CheckNameValidity(string name) ``{
 
@@ -792,7 +877,9 @@ global define boolean CheckNameValidity(string name) ``{
 }
 
 /**
- * @return
+ * Checks the existence of the scripts from
+ * @param new_setting The map with paths to scripts
+ * @return true if ok
  */
 global define boolean CheckFilesValidity(map new_settings) ``{
 
@@ -823,7 +910,9 @@ global define boolean CheckFilesValidity(map new_settings) ``{
 }
 
 /**
- * @return
+ * Checks if the profile settings was modified.
+ * @param new_settings The map of new profile settings.
+ * @return true if modified
  */
 global define boolean ModifiedSettings(map new_settings) ``{
 

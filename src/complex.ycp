@@ -40,7 +40,6 @@ global define symbol ReadDialog() ``{
  */
 global define symbol WriteDialog() ``{
     Wizard::RestoreHelp(HELPS["write"]:"");
-    ProfileManager::AbortFunction = ``{ return PollAbort();};
     boolean ret = ProfileManager::Write();
     return ret ? `next : `abort;
 }
@@ -115,7 +114,7 @@ global define any MainDialog () ``{
     Wizard::ReplaceBackButton (`HBox());
     Wizard::ReplaceAbortButton (`HBox());
 
-    if (ProfileManager::first_time)
+    if (ProfileManager::first_time && !enabled)
         IntroductionPopup();
 
 
@@ -176,6 +175,7 @@ global define any MainDialog () ``{
         }
         else {
             ProfileManager::selected_profile = selected;
+
             if (!ProfileManager::PrepareSwitch())
             {
                 // Error popup text
@@ -183,7 +183,17 @@ global define any MainDialog () ``{
                 continue;
 
             }
-            ProgressPopup();
+
+            block func = ``{};
+/*            if (!ProfileManager::PrepareSwitch())
+            {
+                // Error popup text
+                UI::ErrorPopup(_("Switching to another profile is not possible."));
+                continue;
+
+            }
+            };*/
+            ProgressPopup( func );
             break;
         }
     }
@@ -233,12 +243,12 @@ global define any OptionsDialog () ``{
                 `SelectionBox(`id(`resources),
 				    // selection box label:
                     _("Choose a &resource set:"), resource_sets),
-                `HSpacing(1),
+/*                `HSpacing(1),
                 `VBox(
                 `PushButton(`id(`cp_button), _("Co&py")),
                 `PushButton(`id(`ed_button), _("Ed&it")),
                 `PushButton(`id(`del_button), _("Dele&te"))
-                ),
+                ),*/
                 `HSpacing(1)
                 ),
             `VSpacing(0.5)
@@ -349,6 +359,8 @@ global define any OptionsDialog () ``{
                     ProfileManager::enabled = false;
                     break;
                 }
+                block func = ``{};
+                ProgressPopup(func);
 
                 ProfileManager::current_resources = selected;
                 ProfileManager::WriteResources(selected);
@@ -374,10 +386,11 @@ global define any OptionsDialog () ``{
 					ProfileManager::WriteResources(selected);
 					ProfileManager::RebuildDB();
 					run_progress = true; // not necessary ?
+                    block func = ``{};
+                    ProgressPopup(func);
 				}
 				else continue;
             }
-            if (run_progress) ProgressPopup();
         }
         else
         {

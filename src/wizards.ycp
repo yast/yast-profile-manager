@@ -106,6 +106,7 @@ global define any MainSequence () ``{
 	    `abort	: `abort,
 		`save_button : "switch", // refresh table ??
 		`drop_button : "switch", // refresh table ??
+		`modified : "switch", // refresh table ??
 		`next	: "main"
 	],
 	"options" :

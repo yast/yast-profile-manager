@@ -198,8 +198,10 @@ global define any ProfileSettingsDialog () ``{
         if (secure)
             ProfileManager::SetFilePermitions();
         if (action != "edit")
-            ProgressPopup();
-
+        {
+            block func = ``{};
+            ProgressPopup(func);
+        }
 	    break;
 	}
     };
@@ -240,7 +242,7 @@ global define any SwitchDialog () ``{
         `Frame(_("Modified Resources of active Profile"), `HBox(`HSpacing(1),
             `VBox(
                 `VSpacing(0.2),
-		        `Table(`id(`modified),
+		        `Table(`id(`modified),`opt(`notify),
                     `header(_("save"),
                             _("flags"),
                             _("Resource"),
@@ -275,6 +277,9 @@ global define any SwitchDialog () ``{
         UI::ChangeWidget(`id(`drop_button), `Enabled, false);
         UI::ChangeWidget(`id(`changes_button), `Enabled, false);
     }
+    else
+        UI::ChangeWidget(`id(`modified), `CurrentItem,
+            ProfileManager::active_resource);
 
     any ret = nil;
     while (true)
@@ -282,6 +287,13 @@ global define any SwitchDialog () ``{
 	    ret = UI::UserInput ();
 	    if (ret == `back)
             break;
+        else if (ret ==`modified)
+        {
+            ProfileManager::active_resource =
+                UI::QueryWidget(`id(`modified), `CurrentItem);
+            ProfileManager::SetSaveFlag();
+            break;
+        }
         else if (ret == `save_button)
 	    {
             ProfileManager::SaveSwitchInfo();
@@ -294,7 +306,8 @@ global define any SwitchDialog () ``{
         }
         else if (ret == `changes_button)
         {
-            integer resource_no = UI::QueryWidget(`id(`modified), `CurrentItem);
+            ProfileManager::active_resource =
+                UI::QueryWidget(`id(`modified), `CurrentItem);
             ShowChangesPopup(resource_no);
             continue;
         }
@@ -306,7 +319,10 @@ global define any SwitchDialog () ``{
                 UI::ErrorPopup(_("Switching was not succesfull."));
             }
             else
-                ProgressPopup();
+            {
+                block func = ``{};
+                ProgressPopup(func);
+            }
 	        break;
 	    }
         };
@@ -400,19 +416,15 @@ profile nor does it start or stop services."))),
 
 /**
  */
-global define boolean ProgressPopup() ``{
+global define boolean ProgressPopup( block function) ``{
 
     boolean close_popups = ProfileManager::close_popups;
-    string log_path = "/var/log/scpm";
-
-    string note_label = sformat(_("(Note: These messages are also logged to %1)"),log_path);
 
     UI::OpenDialog(`opt(`decorated), `HBox(`HSpacing(1.5),
         `VBox(
             `VSpacing(1),
 			// LogView label:
             `LogView(`id(`progress),_("Progress informations"), 10, 0),
-//            `Left(`Label(note_label)),
             `VSpacing(1),
 /*            `ProgressBar(`id(`pb), "", 100, 0),
             `VSpacing(1),*/
@@ -430,11 +442,14 @@ global define boolean ProgressPopup() ``{
     UI::ChangeWidget(`id(`close), `Enabled, false);
     UI::ChangeWidget(`id(`close_ch), `Enabled, false);
 
+    // evaluating function
+    eval ( function );
+
     string progresstext = ProfileManager::GetProgressText();
     UI::ChangeWidget(`id(`progress), `LastLine, progresstext);
 
 
-    /*
+    /* disabled for now
     integer steps = 0;
     while (steps<100)
     {
@@ -461,7 +476,7 @@ global define boolean IntroductionPopup() ``{
 To enable it use the Options button<br></p>") +
 
 	// Inroduction text, part 2/2
- _("<br><p>If you are new to SCPM then please read at least the help texts. Better read the introduction in the info pages. You should know what we mean with 'active profile' or 'current configuration' before you start using SCPM.<br></p>");
+ _("<p>If you are new to SCPM then please read at least the help texts. Better read the introduction in the info pages. You should know what we mean with 'active profile' or 'current configuration' before you start using SCPM.</p>");
 
     UI::OpenDialog(`opt(`decorated), `HBox(`HSpacing(1.5),
         `VSpacing(15),
@@ -502,11 +517,10 @@ global define boolean ShowChangesPopup(integer resource_no) ``{
     UI::OpenDialog(`opt(`decorated), `HBox(`HSpacing(1.5),
         `VSpacing(15),
         `VBox(
-            `HSpacing(40),
+            `HSpacing(50),
             `VSpacing(1),
 			// Popup text, part 1
             `Label(_("Changes of the resource")),
-//            `Label(resource + " :"),
             `VSpacing(1),
             `RichText(changes),
             `VSpacing(1),
