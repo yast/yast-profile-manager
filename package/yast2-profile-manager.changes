@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Fri Aug 02 15:47:30 2002 - jsuchome@suse.cz
+
+- enabled switch to active profile
+- used background agent
+
+-------------------------------------------------------------------
 Wed Jul 31 17:21:35 2002 - jsuchome@suse.cz
 
 - imlemented threads to agent
