@@ -77,19 +77,19 @@ successfully use this program. SCPM itself means
 <strong>system configuration</strong> represents the current status of
 your system settings, such as your network settings, mail
 configuration, and time zone specification. System configurations can
-be captured and saved in <strong>Profiles</strong>. Profiles act as
+be captured and saved in <strong>profiles</strong>. Profiles act as
 containers for a specific state of your system configuration. Because
 it may be undesirable or unreasonable to save every bit of
 configuration data of the system in these profiles, the system
-configuration is organized in <strong>Resources</strong>. Resources
+configuration is organized in <strong>resources</strong>. Resources
 stand for single pieces of configuration data. A bundle of these form
 a profile, so it clearly defines which parts of your system
 configuration are in the profile. Resources may have different
-<strong>Resource Types</strong> to handle different types of
+<strong>resource types</strong> to handle different types of
 configuration data. Configuration data may be a simple file, a whole
 directory, or even a system service (such as the sendmail daemon). You
 are not restricted to a specific predefined bundle of
-resources. Multiple groups, called <strong>Resource Sets</strong>,
+resources. Multiple groups, called <strong>resource sets</strong>,
 exist. Even create your own resource sets if desired.
 </p>
 ") +
@@ -146,8 +146,7 @@ Safely abort the configuration utility by pressing <b>Abort</b> now.</p>
     _("<p>In the table, see the list of available profiles. The currently active profile is marked in the column <b>active</b>.</p>") +
 
     /* Main dialog help 4/6*/
-    _("<p>After selecting a profile in the list, you can <b>Switch</b> your system configuration to this profile. You will be asked what to do with changes in the active profile before switching. If you only want to save changes of the current system configuration to the active profile or undo them, perform a <b>Switch</b> to the active profile. Just like a normal switch, you will be asked what to do with the changes, but you are not going to leave the active
-profile, of course.</p>
+    _("<p>After selecting a profile in the list, you can <b>Switch</b> your system configuration to this profile. You will be asked what to do with changes in the active profile before switching. If you only want to save changes of the current system configuration to the active profile or undo them, perform a <b>Switch</b> to the active profile. Just like a normal switch, you will be asked what to do with the changes.</p>
 ") +
 
     /* Main dialog help 5/6 */
