@@ -365,7 +365,6 @@ global define any SwitchDialog () ``{
         {
             ProfileManager::active_resource =
                 UI::QueryWidget(`id(`modified), `CurrentItem);
-            y2milestone("active:%1", ProfileManager::switch_info["modified_resources", ProfileManager::active_resource]:$[]);
             ShowChangesPopup();
             continue;
         }
@@ -395,15 +394,15 @@ global define boolean AddProfilePopup() ``{
 
     UI::OpenDialog(`opt(`decorated), `HBox(`HSpacing(1.5),
         `VBox(
-//            `HSpacing(15),
             `VSpacing(1),
 			// Popup text, part 1/3
 	        `Left(`Label(_("Add a new profile based"))),
             `VSpacing(1),
             `RadioButtonGroup(`id(`rb),
 	            `VBox(
-					// Popup text, part 2/3
-			        `Left(`RadioButton(`id(`new), _("on the c&urrent system configuration"))),
+			        `Left(`RadioButton(`id(`new), `opt(`notify),
+					    // Popup text, part 2/3
+                        _("on the c&urrent system configuration"))),
                     `VSpacing(0.2),
                     `HBox(
                     `HSpacing(2),
@@ -412,11 +411,12 @@ global define boolean AddProfilePopup() ``{
                     `HBox(
                     `HSpacing(4.5),
 					// Checkbox label, part 2/2
-                 `Label(_("This does not save anything to the old active
+                 `Label(`id(`autol),_("This does not save anything to the old active
 profile nor does it start or stop services."))),
                    `VSpacing(1),
-					// Popup text, part 3/3
-                    `Left(`RadioButton(`id(`copy), _("on an &existing profile:")))
+                    `Left(`RadioButton(`id(`copy), `opt(`notify),
+					    // Popup text, part 3/3
+                        _("on an &existing profile:")))
                     )),
             `SelectionBox(`id(`profiles),
                  "", maplist(`name, `desc, profiles, ``{ return name; })),
@@ -437,7 +437,19 @@ profile nor does it start or stop services."))),
     while (true)
     {
         ret = UI::UserInput();
-        if (ret == `ok)
+        if (ret == `new)
+        {
+            UI::ChangeWidget(`id(`profiles), `Enabled, false);
+            UI::ChangeWidget(`id(`auto), `Enabled, true);
+            UI::ChangeWidget(`id(`autol), `Enabled, true);
+        }
+        else if (ret == `copy)
+        {
+            UI::ChangeWidget(`id(`profiles), `Enabled, true);
+            UI::ChangeWidget(`id(`auto), `Enabled, false);
+            UI::ChangeWidget(`id(`autol), `Enabled, false);
+        }
+        else if (ret == `ok)
         {
             if (UI::QueryWidget(`id(`rb), `CurrentButton) == `copy)
             {
@@ -454,7 +466,7 @@ profile nor does it start or stop services."))),
             else
             {
                 ProfileManager::profile_action = "new";
-                ProfileManager::selected_profile = ProfileManager::active_profile;
+//                ProfileManager::selected_profile = ProfileManager::active_profile;
                 ProfileManager::auto = UI::QueryWidget(`id(`auto), `Value);
             }
             break;

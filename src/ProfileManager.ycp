@@ -507,6 +507,11 @@ global define boolean ReadResourceSets() ``{
  */
 global define boolean GetProfile() ``{
 
+    // the settings of not yet created profile
+    if (profile_action == "new") {
+        profile_settings = $[];
+        return true;
+    }
 
     profile_settings = add (profile_settings, "name", selected_profile);
     profile_settings = add (profile_settings, "description", lookup(profiles, selected_profile,""));
