@@ -211,6 +211,10 @@ global define any MainDialog () ``{
 global define any OptionsDialog () ``{
 
     string separator = "-----";
+
+
+    ProfileManager::ReadResourceSets();
+
     list resource_sets = union( union (ProfileManager::resource_sets_predefined, [ separator ]), ProfileManager::resource_sets_individual);
     boolean close_popups = ProfileManager::close_popups;
 
@@ -308,7 +312,7 @@ global define any OptionsDialog () ``{
             if (ProfileManager::enabled)
             {
                 ProfileManager::enabled = false;
-                ProfileManager::current_resources = nil;
+                ProfileManager::current_resources = "";
                 ProfileManager::WriteStatus(); // show the progress bar ??
             }
         }

@@ -200,7 +200,7 @@ global define boolean ProgressPopup() ``{
             `VSpacing(1),
             `ProgressBar(`id(`pb), "", 100, 0),
             `VSpacing(1),
-            `CheckBox(`id(`close_ch),_("Close progress popups automatically (reenable it in SCPM Setup)"),close_popups),
+            `CheckBox(`id(`close_ch),_("&Close progress popups automatically (reenable it in SCPM Setup)"),close_popups),
             `VSpacing(1),
 	        `HBox(
 	            `Right(`PushButton(`id(`close), `opt(`default), _("&Close"))),

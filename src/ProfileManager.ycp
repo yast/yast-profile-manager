@@ -26,17 +26,18 @@ global boolean first_time = false; // to some file!
 global boolean enabled = false;
 global boolean close_popups = false;
 
-global map profiles = $[ "prvni": "popis prvniho", "zweite":"", "third_profile": "This is the long description of the third profile. It it long, because I would like to see the table with the long descriptions." ];
+global map profiles = $[];
+// global map profiles = $[ "prvni": "popis prvniho", "zweite":"", "third_profile": "This is the long description of the third profile. It it long, because I would like to see the table with the long descriptions." ];
 
 global map profile_settings = $[];
 
 global string active_profile = "";
 global string selected_profile = "";
 
-global string current_resources = "typical";
+global string current_resources = "";//"typical";
 
-global list resource_sets_predefined = [ "typical", "network_only" ];
-global list resource_sets_individual = [ "my_lovely_one" ]; // user cannot create this !
+global list resource_sets_predefined = [];//[ "typical", "network_only" ];
+global list resource_sets_individual = [];//[ "my_lovely_one" ]; // user cannot create this !
 
 global map switch_info = $[];
 global string profile_action = nil;
@@ -79,6 +80,7 @@ global define boolean Read() ``{
     integer sl = 0;
     sleep(sl);
 
+
     Progress::New( caption, " ", steps, [
 	    _("Read the SCPM state"),
 	    _("Read the list of profiles"),
@@ -98,35 +100,6 @@ global define boolean Read() ``{
 /*    first_time = SCR::Read(.target.yast2, "scpm_first.ycp");
     if (first_time)
         SCR::Write(.target.yast2, "scpm_first.ycp",false);*/
-
-    /*
-    y2milestone("-----------------SCR testing");
-    string vystup = SCR::Read(.scpm);
-    y2milestone("vystup=%1",vystup);
-
-    y2milestone("vystup=%1",SCR::Read(.scpm.profiles));
-
-    y2milestone("vystup=%1",SCR::Read(.scpm.resources));
-
-    y2milestone("vystup=%1",SCR::Read(.scpm.status.enabled));
-
-    y2milestone("vystup=%1",SCR::Read(.scpm.profiles.current));
-
-    y2milestone("vystup=%1",SCR::Read(.scpm.profiles.description));
-
-    y2milestone("vystup=%1",SCR::Read(.scpm.profiles.prestart));
-
-    y2milestone("vystup=%1",SCR::Read(.scpm.profiles.poststop));
-
-    y2milestone("vystup=%1",SCR::Read(.scpm.profiles.prestart, "current"));
-
-    y2milestone("vystup=%1",SCR::Read(.scpm.profiles.prestart, "default"));
-
-    y2milestone("vystup=%1",SCR::Read(.scpm.resources.current));
-
-    y2milestone("vystup=%1",vystup);
-    y2milestone("-----------------SCR testing");
-    */
 
     // read
     if(Abort()) return false;
@@ -226,8 +199,13 @@ global define map Export () ``{
  */
 define boolean ReadProfiles() ``{
 
-    // read the profile list via SCR::Read(.scpm.profiles)
-    active_profile = "prvni"; // ReadActiveProfile?
+    list profiles_l = SCR::Read(.scpm.profiles);
+
+    foreach (`profile, profiles_l, ``{
+        profiles = add (profiles, profile, "");
+    });
+
+    active_profile = SCR::Read(.scpm.profiles.current);
     return true;
 }
 
@@ -236,7 +214,13 @@ define boolean ReadProfiles() ``{
  */
 define boolean ReadProfilesDescriptions() ``{
 
-    // read the descriptions of each profile via SCR::Read(.scpm.profiles.description, profile)
+    // read the descriptions of each profile
+    map profilesm = profiles;
+
+    foreach (`profile, `d, profilesm, ``{
+        string desc = SCR::Read(.scpm.profiles.description, profile);
+        profiles = add (profiles, profile, desc);
+    });
     return true;
 }
 
@@ -246,7 +230,6 @@ define boolean ReadProfilesDescriptions() ``{
 define boolean ReadSCPMStatus() ``{
 
     enabled = SCR::Read(.scpm.status.enabled);
-    //    enabled = true;
     return true;
 }
 
@@ -256,9 +239,20 @@ define boolean ReadSCPMStatus() ``{
  */
 define boolean ReadCurrentResources() ``{
 
-    // reads the current res.det via SCR::Read(.scpm.resources.current)
+    // reads the current res
+    current_resources = SCR::Read(.scpm.resources.current);
     return true;
 }
+
+global define boolean ReadResourceSets() ``{
+
+    list sets = [];
+    sets = SCR::Read(.scpm.resources);
+    resource_sets_predefined = select (sets, 0, []);
+    resource_sets_individual = select (sets, 1, []);
+    return true;
+}
+
 
 /**
  * @return true on success
@@ -266,15 +260,19 @@ define boolean ReadCurrentResources() ``{
 global define boolean GetProfile() ``{
 
     // read the profile settings (we already have descriptions)
-    // SCR::Read(.scpm.profiles.<command>, selected_profile)
-    string prestart = "";
 
     profile_settings = add (profile_settings, "name", selected_profile);
     profile_settings = add (profile_settings, "description", lookup(profiles, selected_profile,""));
-    profile_settings = add (profile_settings, "prestart", prestart);
-    profile_settings = add (profile_settings, "poststart", prestart);
-    profile_settings = add (profile_settings, "prestop", prestart);
-    profile_settings = add (profile_settings, "poststop", prestart);
+
+
+    profile_settings = add (profile_settings, "prestart",
+        SCR::Read(.scpm.profiles.prestart, selected_profile));
+    profile_settings = add (profile_settings, "poststart",
+        SCR::Read(.scpm.profiles.poststart, selected_profile));
+    profile_settings = add (profile_settings, "prestop",
+        SCR::Read(.scpm.profiles.prestop, selected_profile));
+    profile_settings = add (profile_settings, "poststop",
+        SCR::Read(.scpm.profiles.poststop, selected_profile));
 
     return true;
 }
@@ -283,7 +281,7 @@ global define boolean AddProfile(string name) ``{
 
     profiles = add (profiles, name, "");
 
-    // SCR::Execute(.scpm.profiles.add, name)
+    SCR::Execute(.scpm.profiles.add, name);
     return true;
 }
 
@@ -291,7 +289,7 @@ global define boolean CopyProfile(string source, string new) ``{
 
     profiles = add (profiles, new, "");
 
-    // SCR::Execute(.scpm.profiles.copy, source, new)
+    SCR::Execute(.scpm.profiles.copy, source, new);
     return true;
 }
 
@@ -303,7 +301,7 @@ global define boolean RenameProfile(string old, string new) ``{
     if (active_profile == old)
         active_profile = new;
 
-    // SCR::Execute(.scpm.profiles.rename, old, new)
+    SCR::Execute(.scpm.profiles.rename, old, new);
     return true;
 }
 
@@ -313,7 +311,15 @@ global define boolean SetProfile(string name) ``{
     string desc = deletechars(lookup(profile_settings, "description",""), "\n");
     profiles = add (profiles, name, desc);
 
-    // SCR::Write(.scpm.profiles.<command>, <argument>, name)
+    SCR::Write(.scpm.profiles.description, desc, name);
+    SCR::Write(.scpm.profiles.prestart,
+        lookup(profile_settings, "prestart",""), name);
+    SCR::Write(.scpm.profiles.poststart,
+        lookup(profile_settings, "poststart",""), name);
+    SCR::Write(.scpm.profiles.prestart,
+        lookup(profile_settings, "prestop",""), name);
+    SCR::Write(.scpm.profiles.prestart,
+        lookup(profile_settings, "poststop",""), name);
 
     return true;
 }
@@ -327,16 +333,16 @@ global define boolean SetSecure() ``{
 }
 
 
-global define boolean DeleteProfile() ``{
+global define boolean DeleteProfile(string to_delete) ``{
 
     profiles = filter (`name, `desc, profiles, ``(name != to_delete));
-    // SCR::Execute(.scpm.profiles.delete, profile)
+    SCR::Execute(.scpm.profiles.delete, to_delete);
     return true;
 }
 
 global define boolean PrepareSwitch() ``{
 
-    // I should get the map like this:
+    /* I should get the map like this:
     map sw_i = $[ "profile_modified": true,
                   "profile_name": selected_profile,
                   "modified_resources": [
@@ -351,11 +357,11 @@ global define boolean PrepareSwitch() ``{
                            "is_deleted": false,
                            "save": true ]
                   ]
-                ];
+                ];*/
 
 
-    // SCR::Execute(.scpm.switch.prepare, selected) ->  switch_info
-    switch_info = sw_i;
+    switch_info = SCR::Execute(.scpm.switch.prepare, selected);
+    y2milestone("switch_info: %1",switch_info);
 
 }
 
@@ -402,13 +408,19 @@ global define boolean Switch() ``{
 
 global define boolean WriteStatus() ``{
 
-    // SCR::Write(.scpm.status.enabled, enabled)
+    SCR::Write(.scpm.status.enabled, enabled);
+    if (enabled) // this should be on some other place
+    {
+        ReadProfiles();
+        ReadProfilesDescriptions();
+        ReadCurrentResources(); //not necessary
+    }
 
 }
 
 global define boolean WriteResources(string resource_set) ``{
 
-    // SCR::Write(.scpm.resources.current, resource_set)
+//    SCR::Write(.scpm.resources.current, resource_set);
 
 }
 

@@ -33,8 +33,8 @@ list l_res = splitstring(lookup(res, "stdout", ""), "\n");
 
 if( size(l_res) > 0 &&  select(l_res, 0, "") != "root")
 {
-//    UI::MessagePopup(_("You need to be logged in as root to run SCPM."));
-//    return;
+    UI::MessagePopup(_("You need to be logged in as root to run SCPM."));
+    return;
 }
 
 
