@@ -362,6 +362,9 @@ global define any OptionsDialog () ``{
 
 				if (!ProfileManager::initialized)
                 {
+                    ProfileManager::current_resources = selected;
+                    ProfileManager::WriteResources(selected);
+
                     ProfileManager::initialized = true;
                     ProfileManager::WriteStatusFirst();
                     ProgressPopup();
@@ -370,13 +373,11 @@ global define any OptionsDialog () ``{
                         // Error popup text
                         UI::ErrorPopup(_("Enabling SCPM was not succesful."));
                         ProfileManager::enabled = false;
+//                        ProfileManager::initialized = false;??
                         //    continue;
                     }
                     else
                     {
-                        ProfileManager::current_resources = selected;
-                        ProfileManager::WriteResources(selected);
-
                         ProfileManager::ReadProfiles();
                         ProfileManager::ReadActiveProfile();
 				        ProfileManager::ReadProfilesDescriptions();
@@ -384,6 +385,9 @@ global define any OptionsDialog () ``{
                 }
                 else
                 {
+                    ProfileManager::current_resources = selected;
+                    ProfileManager::WriteResources(selected);
+
                     if (!ProfileManager::WriteSCPMStatus())
                     {
                         // Error popup text
@@ -392,10 +396,7 @@ global define any OptionsDialog () ``{
                         break;
                     }
 
-                    ProfileManager::current_resources = selected;
-                    ProfileManager::WriteResources(selected);
-
-                    ProfileManager::ReadProfiles(); // on some other place!
+                    ProfileManager::ReadProfiles(); // on some other place?
 	                ProfileManager::ReadActiveProfile();
 		            ProfileManager::ReadProfilesDescriptions();
                 }
