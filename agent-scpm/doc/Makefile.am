@@ -4,7 +4,7 @@
 
 SUBDIRS = autodocs
 
-htmldir = $(docdir)
+htmldir = $(docdir)/agent-scpm
 
-html_DATA = scpm.html Todo.txt
+html_DATA = agent-scpm.html Todo.txt
 EXTRA_DIST = $(html_DATA)
