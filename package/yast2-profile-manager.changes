@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Tue Nov 18 13:31:41 CET 2003 - jsuchome@suse.cz
+
+- migrated to doxygen
+- used UI:: builtins for file selection widgets
+- 2.9.1
+
+-------------------------------------------------------------------
 Mon Oct  6 18:15:33 CEST 2003 - jsuchome@suse.cz
 
 - list profiles even if SCPM is disabled (bug #30503)

@@ -19,7 +19,6 @@ import "Wizard";
 
 import "Popup";
 import "Label";
-include "ui/file_popups.ycp";
 
 include "profile-manager/helps.ycp";
 include "profile-manager/routines.ycp";
@@ -132,7 +131,9 @@ global define any ProfileSettingsDialog () ``{
 	    if (file_s == nil)
 		continue;
 	    string file = UI::QueryWidget(`id(file_s), `Value);
-	    file = PopupFile ((file != "")? "/" : file);
+	    string f = UI::AskForExistingFile ((file != "")? "/":file, "*", "");
+	    if (f != nil)
+		file = f;
 	    UI::ChangeWidget (`id(file_s), `Value, file);
 	}
 	else if (ret == `back || ret == `cancel)
@@ -1358,7 +1359,10 @@ global define string GetFile() ``{
 	}
 	else if (ret == `browse)
 	{
-	    filename = PopupFile ((filename != "")? "/" : filename);
+	    string f = UI::AskForExistingFile (
+		(filename != "")? "/" : filename, "*", "");
+	    if (f != nil)
+		filename = f;
 	    UI::ChangeWidget (`id(`file), `Value, filename);
 	}
 	else if (ret == `ok)
