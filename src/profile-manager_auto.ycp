@@ -15,7 +15,7 @@
  * @param first a map of profile-manager settings
  * @return map edited settings or an empty map if canceled
  * @example map mm = $[ "FAIL_DELAY" : "77" ];
- * @example map ret = CallModule ("profile-manager_auto", [ mm ]);
+ * @example map ret = WFM::CallModule ("profile-manager_auto", [ mm ]);
  */
 
 {
@@ -28,13 +28,13 @@ y2milestone("Profile-manager auto started");
 import "ProfileManager";
 include "profile-manager/ui.ycp";
 
-list args = Args();
+list args = WFM::Args();
 if(size(args) <= 0) {
     y2error("Did not get the settings, probably some mistake...");
     return false;
 }
-if(!is(Args(0), map)) {
-    y2error("Bad argument for profile-manager_auto: %1", Args(0));
+if(!is(WFM::Args(0), map)) {
+    y2error("Bad argument for profile-manager_auto: %1", WFM::Args(0));
     return false;
 }
 
