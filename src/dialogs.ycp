@@ -319,6 +319,7 @@ global define any SwitchDialog () ``{
         UI::ChangeWidget(`id(`save_button), `Enabled, false);
         UI::ChangeWidget(`id(`drop_button), `Enabled, false);
         UI::ChangeWidget(`id(`changes_button), `Enabled, false);
+        UI::ChangeWidget(`id(`select_button), `Enabled, false);
     }
     else
         UI::ChangeWidget(`id(`modified), `CurrentItem,

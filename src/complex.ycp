@@ -236,10 +236,12 @@ global define any OptionsDialog () ``{
             `VSpacing(0.5),
                 `RadioButtonGroup(`id(`rb),
 		            `HBox(
-                    // Push button label (state of SCPM)
-				    `HCenter(`RadioButton(`id(`ena), _("&Enabled") )),
-                    // Push button label (state of SCPM)
-                    `HCenter(`RadioButton(`id(`dis), _("&Disabled") ))
+				    `HCenter(`RadioButton(`id(`ena), `opt(`notify),
+                        // Push button label (state of SCPM)
+                        _("&Enabled") )),
+                    `HCenter(`RadioButton(`id(`dis), `opt(`notify),
+                        // Push button label (state of SCPM)
+                        _("&Disabled") ))
                     )
 				 ),
 		    `VSpacing(0.5)
@@ -291,7 +293,10 @@ global define any OptionsDialog () ``{
         UI::ChangeWidget(`id(`rb), `CurrentButton, `ena);
     }
     else
+    {
         UI::ChangeWidget(`id(`rb), `CurrentButton, `dis);
+        UI::ChangeWidget(`id(`resources), `Enabled, false);
+    }
 
     if (size(ProfileManager::current_resources)>0)
         UI::ChangeWidget(`id(`resources), `CurrentItem,
@@ -301,8 +306,14 @@ global define any OptionsDialog () ``{
     while (true)
     {
 	ret = UI::UserInput ();
-    if (ret == `rb)
+    if (ret == `dis)
     {
+        UI::ChangeWidget(`id(`resources), `Enabled, false);
+        continue;
+    }
+    else if (ret == `ena)
+    {
+        UI::ChangeWidget(`id(`resources), `Enabled, true);
         continue;
     }
     else if (ret == `cp_button)
