@@ -86,21 +86,21 @@ global define any MainDialog () ``{
                     `header(_("active"),
                             _("Name"),
                             _("Description")),
-                    maplist (`name, `descr, profiles, ``{
+/*                    maplist (`name, `descr, profiles, ``{
                         if (name == active)
                             return `item(`id(name),"---->",name,descr);
                         else
                             return `item(`id(name),"",name,descr);
-                    })
-                    //                    ProfileManager::GetList(profiles, active)
+                    })*/
+                    ProfileManager::GetProfilesAsItems()
                     ),
                 `VSpacing(0.2),
 		        `HBox(
+                    `Left(
+                        `PushButton(`id(`switch_button), _("&Switch to..."))),
 		            `PushButton(`id(`add_button), _("&Add")),
 		            `PushButton(`id(`edit_button), _("&Edit")),
-		            `PushButton(`id(`delete_button), _("De&lete")),
-                    `Right(
-                        `PushButton(`id(`switch_button), _("&Switch to...")))
+		            `PushButton(`id(`delete_button), _("&Delete"))
 				    ),
                 `VSpacing(0.2)
                 ),
@@ -120,11 +120,19 @@ global define any MainDialog () ``{
 	`HSpacing(1.5));
 
 
+/*    Wizard::SetContents ( caption,
+				contents,
+                HELPS["main"]:"",
+                false,true);*/
+
     Wizard::SetContentsButtons ( caption,
 				contents,
                 HELPS["main"]:"",
-				BackButtonLabel (),
-				FinishButtonLabel () );
+                BackButtonLabel (),
+				CloseButtonLabel () );
+
+    Wizard::ReplaceBackButton (`HBox());
+    Wizard::ReplaceAbortButton (`HBox());
 
     if (ProfileManager::first_time)
         IntroductionPopup();
@@ -147,15 +155,7 @@ global define any MainDialog () ``{
     while (true)
     {
 	ret = UI::UserInput ();
-	if (ret == `abort)
-	{
-	    // TODO FIXME: check for change of the configuration
-	    if ( UI::ReallyAbortPopup ( true ) )
-		break;
-	    else
-		continue;
-	}
-	else if (ret == `delete_button)
+	if (ret == `delete_button)
 	{
         selected = UI::QueryWidget(`id(`profiles), `CurrentItem);
         if (selected == active)
@@ -164,7 +164,7 @@ global define any MainDialog () ``{
         {
             if (UI::YesNoPopup(sformat(_("Do you really want to delete profile %1?"), selected)))
             {
-                if (!ProfileManager::DeleteProfileFromMap(selected))
+                if (!ProfileManager::DeleteProfile(selected))
                     UI::ErrorPopup(_("Deleting profile was not succesfull.")); // spravny text !
                 break;
             }
@@ -197,11 +197,8 @@ global define any MainDialog () ``{
             break;
         }
     }
-    else
-    {
-	    /* TODO FIXME: your code ... */
+    else if (ret == `next || ret ==`back || ret == `options_button)
 	    break;
-	}
 
     };
 
@@ -247,18 +244,20 @@ global define any OptionsDialog () ``{
             `VSpacing(0.5),
             `HBox(
                 `HSpacing(1),
-		        `Left(`CheckBox(`id(`close_popups_ch), _("&Close progress popups automaticaly"), close_popups))
+		        `Left(`CheckBox(`id(`close_popups_ch), _("Close progress popups &automaticaly"), close_popups))
                 ),
             `VSpacing(0.5)
             )),
 		`VSpacing(1)),
         `HSpacing(1.5));
 
+    Wizard::RestoreBackButton ();
+
     Wizard::SetContentsButtons ( caption,
 				contents,
 	            HELPS["options"]:"",
-				BackButtonLabel (),
-				NextButtonLabel () );
+				CancelButtonLabel (),
+				OKButtonLabel () );
 
     if (ProfileManager::enabled)
     {
@@ -272,15 +271,7 @@ global define any OptionsDialog () ``{
     while (true)
     {
 	ret = UI::UserInput ();
-	if (ret == `abort)
-	{
-	    // TODO FIXME: check for change of the configuration
-	    if ( UI::ReallyAbortPopup ( true ) )
-		break;
-	    else
-		continue;
-	}
-	else if (ret == `rb)
+    if (ret == `rb)
     {
         continue;
     }
@@ -368,11 +359,11 @@ global define any ProfileSettingsDialog () ``{
                 `VSpacing(0.2),
                 `TextEntry(`id(`prestart),_("Pr&e Start Script")),
                 `VSpacing(0.2),
-                `TextEntry(`id(`poststart),_("P&ost Start Script")),
+                `TextEntry(`id(`poststart),_("Po&st Start Script")),
                 `VSpacing(0.2),
                 `TextEntry(`id(`prestop),_("P&re Stop Script")),
                 `VSpacing(0.2),
-                `TextEntry(`id(`poststop),_("Po&st Stop Script")),
+                `TextEntry(`id(`poststop),_("Pos&t Stop Script")),
                 `VSpacing(0.2),
                 `Left(`CheckBox(`id(`secure_ch),
                     _("Set file &permitions of all scripts secure (0700)."))),
@@ -383,11 +374,13 @@ global define any ProfileSettingsDialog () ``{
         `HSpacing(1.5));
 
 
+    Wizard::RestoreBackButton ();
+
     Wizard::SetContentsButtons ( caption,
 				contents,
                 HELPS["profilesettings"]:"",
-				BackButtonLabel (),
-				NextButtonLabel () );
+				CancelButtonLabel (),
+				OKButtonLabel () );
 
     UI::ChangeWidget(`id(`desc), `Value, lookup(settings,"description",""));
     UI::ChangeWidget(`id(`prestart), `Value, lookup(settings,"prestart",""));
@@ -396,20 +389,14 @@ global define any ProfileSettingsDialog () ``{
     UI::ChangeWidget(`id(`poststop), `Value, lookup(settings,"poststop",""));
     if (action == "edit")
         UI::ChangeWidget(`id(`name), `Value, edited);
+    else
+        UI::SetFocus(`id(`name));
 
     any ret = nil;
     while (true)
     {
 	ret = UI::UserInput ();
-	if (ret == `abort)
-	{
-	    // TODO FIXME: check for change of the configuration
-	    if ( UI::ReallyAbortPopup ( true ) )
-		break;
-	    else
-		continue;
-	}
-	else if (ret == `back)
+	if (ret == `back)
     {
         break;
     }
@@ -418,13 +405,27 @@ global define any ProfileSettingsDialog () ``{
         boolean secure = UI::QueryWidget(`id(`secure_ch), `Value);
         string selected = UI::QueryWidget(`id(`name), `Value);
 
-        if (!CheckValidName(selected))
+        if (!ProfileManager::CheckNameValidity(selected))
         {
             UI::MessagePopup(_("You have to choose valid name."));
             continue;
         }
 
-        settings = add (settings, "description", UI::QueryWidget(`id(`desc), `Value));
+        map new_settings = $[];
+        new_settings = add (new_settings, "prestart", UI::QueryWidget(`id(`prestart), `Value));
+        new_settings = add (new_settings, "poststart", UI::QueryWidget(`id(`poststart), `Value));
+        new_settings = add (new_settings, "prestop", UI::QueryWidget(`id(`prestop), `Value));
+        new_settings = add (new_settings, "poststop", UI::QueryWidget(`id(`poststop), `Value));
+
+        if (!ProfileManager::CheckFilesValidity(new_settings))
+        {
+            UI::MessagePopup(_("You have to choose valid paths to scripts."));
+            continue;
+        }
+
+        // we don't need to check description
+        new_settings = add (new_settings, "name", selected);
+        new_settings = add (new_settings, "description", UI::QueryWidget(`id(`desc), `Value));
 
         if (action == "new")
         {
@@ -434,8 +435,7 @@ global define any ProfileSettingsDialog () ``{
                 continue;
             }
             ProfileManager::AddProfile(selected);
-            // kontrola udaju
-            ProfileManager::profile_settings = settings;
+            ProfileManager::profile_settings = new_settings;
             ProfileManager::SetProfile(selected);
         }
         else if (action == "copy")
@@ -446,8 +446,7 @@ global define any ProfileSettingsDialog () ``{
                 continue;
             }
             ProfileManager::CopyProfile(edited, selected);
-            // kontrola udaju
-            ProfileManager::profile_settings = settings;
+            ProfileManager::profile_settings = new_settings;
             ProfileManager::SetProfile(selected);
         }
         else if (action == "edit")
@@ -460,13 +459,16 @@ global define any ProfileSettingsDialog () ``{
                     UI::MessagePopup(_("Profile with this name already exists"));
                     continue;
                 }
-                ProfileManager::RenameProfile(edited, selected); //rename =true
+                ProfileManager::RenameProfile(edited, selected);
             }
-//            if (modified) && ok
-            ProfileManager::profile_settings = settings;
-            ProfileManager::SetProfile(selected);
-            break;
+            if (ProfileManager::ModifiedSettings(new_settings))
+            {
+                ProfileManager::profile_settings = new_settings;
+                ProfileManager::SetProfile(selected);
+            }
         }
+        if (secure)
+            ProfileManager::SetSecure();
 
 	    break;
 	}

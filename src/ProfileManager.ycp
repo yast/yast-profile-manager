@@ -22,16 +22,15 @@ import "Summary";
 //include "./routines.ycp";
 include "profile-manager/routines.ycp";
 
-global boolean first_time = true; // to some file!
+global boolean first_time = false; // to some file!
 global boolean enabled = false;
 global boolean close_popups = false;
 
 global map profiles = $[ "prvni": "popis prvniho", "zweite":"", "third_profile": "This is the long description of the third profile. It it long, because I would like to see the table with the long descriptions." ];
-global list profiles_to_delete = [];
 
 global map profile_settings = $[];
 
-global string active_profile = "prvni";
+global string active_profile = "";
 global string selected_profile = "";
 
 global string current_resources = "typical";
@@ -100,6 +99,35 @@ global define boolean Read() ``{
     if (first_time)
         SCR::Write(.target.yast2, "scpm_first.ycp",false);*/
 
+    /*
+    y2milestone("-----------------SCR testing");
+    string vystup = SCR::Read(.scpm);
+    y2milestone("vystup=%1",vystup);
+
+    y2milestone("vystup=%1",SCR::Read(.scpm.profiles));
+
+    y2milestone("vystup=%1",SCR::Read(.scpm.resources));
+
+    y2milestone("vystup=%1",SCR::Read(.scpm.status.enabled));
+
+    y2milestone("vystup=%1",SCR::Read(.scpm.profiles.current));
+
+    y2milestone("vystup=%1",SCR::Read(.scpm.profiles.description));
+
+    y2milestone("vystup=%1",SCR::Read(.scpm.profiles.prestart));
+
+    y2milestone("vystup=%1",SCR::Read(.scpm.profiles.poststop));
+
+    y2milestone("vystup=%1",SCR::Read(.scpm.profiles.prestart, "current"));
+
+    y2milestone("vystup=%1",SCR::Read(.scpm.profiles.prestart, "default"));
+
+    y2milestone("vystup=%1",SCR::Read(.scpm.resources.current));
+
+    y2milestone("vystup=%1",vystup);
+    y2milestone("-----------------SCR testing");
+    */
+
     // read
     if(Abort()) return false;
     Progress::NextStage();
@@ -146,6 +174,7 @@ global define boolean Write() ``{
     integer sl = 0;
     sleep(sl);
 
+    /*
     Progress::New(caption, " ", steps, [
 	    _("Write the settings"), // we should also save "close popups" check
 	], [
@@ -158,15 +187,14 @@ global define boolean Write() ``{
     // write settings
     if(Abort()) return false;
     Progress::NextStage();
-    if (size(profiles_to_delete)>0)
-        if(!DeleteProfile()) Report::Error (_("Can not write settings!"));
+    if(false) Report::Error (_("Can not write settings!"));
     sleep(sl);
 
     if(Abort()) return false;
     ProgressNextStage(_("Finished"));
     sleep(sl);
 
-    if(Abort()) return false;
+    if(Abort()) return false;*/
     return true;
 }
 
@@ -194,30 +222,12 @@ global define map Export () ``{
 }
 
 /**
- * Create a textual summary and a list of unconfigured cards
- * @param split split configured and unconfigured?
- * @return summary of the current configuration
- */
-global define list Summary() ``{
-    // TODO FIXME: your code here...
-    return [ _("Configuration summary ..."), [] ];
-}
-
-/**
- * Create an overview table with all configured cards
- * @return table items
- */
-global define list Overview() ``{
-    // TODO FIXME: your code here...
-    return [];
-}
-
-/**
  * @return true on success
  */
 define boolean ReadProfiles() ``{
 
     // read the profile list via SCR::Read(.scpm.profiles)
+    active_profile = "prvni"; // ReadActiveProfile?
     return true;
 }
 
@@ -235,7 +245,7 @@ define boolean ReadProfilesDescriptions() ``{
  */
 define boolean ReadSCPMStatus() ``{
 
-    // reads the state of SCPM via SCR::Read(.scpm.status.enabled)
+    enabled = SCR::Read(.scpm.status.enabled);
     //    enabled = true;
     return true;
 }
@@ -262,6 +272,9 @@ global define boolean GetProfile() ``{
     profile_settings = add (profile_settings, "name", selected_profile);
     profile_settings = add (profile_settings, "description", lookup(profiles, selected_profile,""));
     profile_settings = add (profile_settings, "prestart", prestart);
+    profile_settings = add (profile_settings, "poststart", prestart);
+    profile_settings = add (profile_settings, "prestop", prestart);
+    profile_settings = add (profile_settings, "poststop", prestart);
 
     return true;
 }
@@ -287,6 +300,8 @@ global define boolean RenameProfile(string old, string new) ``{
     string desc = lookup(profiles, old, "");
     profiles = filter (`name, `desc, profiles, ``(name != old));
     profiles = add (profiles, new, desc);
+    if (active_profile == old)
+        active_profile = new;
 
     // SCR::Execute(.scpm.profiles.rename, old, new)
     return true;
@@ -300,27 +315,22 @@ global define boolean SetProfile(string name) ``{
 
     // SCR::Write(.scpm.profiles.<command>, <argument>, name)
 
-    // if (secure) ... (file permitions)
-
     return true;
 }
 
 
-global define boolean DeleteProfileFromMap(string to_delete) ``{
+global define boolean SetSecure() ``{
 
-    // deletes the selected profile from the map
-    profiles = filter (`name, `desc, profiles, ``(name != to_delete));
-    profiles_to_delete = add(profiles_to_delete, to_delete);
+    // set file permitions
 
     return true;
 }
+
 
 global define boolean DeleteProfile() ``{
 
-    foreach (`profile, profiles_to_delete, ``{
-        y2milestone("Deleting profile %1",profile);
+    profiles = filter (`name, `desc, profiles, ``(name != to_delete));
     // SCR::Execute(.scpm.profiles.delete, profile)
-    });
     return true;
 }
 
@@ -405,6 +415,84 @@ global define boolean WriteResources(string resource_set) ``{
 global define boolean RunIntro() ``{
 
     SCR::Execute(.target.bash,"konqueror info:/scpm/introduction &");
+}
+
+global define string ShowChanges(integer resource_no) ``{
+
+    list resources = lookup (switch_info, "modified_resources", []);
+
+    map resource = select (resources, resource_no, $[]);
+
+    string name = lookup(resource, "resource_name","");
+    string type = lookup(resource, "resource_type","");
+
+    // SCR::Execute(.scpm.profiles.changes, name, type)
+    // read -> string (ze streamu!)
+
+    return name + "<br>(" + type + ")";
+}
+
+global define list GetProfilesAsItems() ``{
+
+    return maplist (`name, `descr, profiles, ``{
+        if (name == active_profile)
+            return `item(`id(name),"---->",name,descr);
+        else
+            return `item(`id(name),"",name,descr);
+    });
+}
+
+global define list GetResourcesAsItems() ``{
+
+    list resources = lookup (switch_info, "modified_resources", []);
+    list items = [];
+    integer i = 0;
+
+    foreach (`resource, resources, ``{
+        string flag = "";
+        if (lookup(resource,"is_new",false))
+            flag = "NEW";
+        else if(lookup(resource,"is_deleted",false))
+            flag = "DELETED";
+
+
+        items = add(items, `item(`id(i),
+                                 lookup(resource,"save",false)? "X":"",
+                                 flag,
+                                 lookup(resource,"resource_name",""),
+                                 lookup(resource,"resource_type","")));
+        i = i + 1;
+    });
+    return items;
+}
+
+global define boolean CheckNameValidity(string name) ``{
+
+    if (size(name) < 1)
+        return false;
+    if (name != filterchars(name,"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-_."))
+        return false;
+    string first = substring(name,0,1);
+    if (size(deletechars(first,"-_.")) <1)
+        return false;
+    return true;
+}
+
+global define boolean CheckFilesValidity(map new_settings) ``{
+
+    return true;
+}
+
+global define boolean ModifiedSettings(map new_settings) ``{
+
+    boolean ret = false;
+
+    foreach (`type, `value, profile_settings, ``{
+        if (type != "name")
+            if (value != lookup(new_settings, type, "")) ret = true;
+    });
+
+    return ret;
 }
 
 /* EOF */

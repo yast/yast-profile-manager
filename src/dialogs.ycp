@@ -57,13 +57,13 @@ global define any SwitchDialog () ``{
                             _("flags"),
                             _("Resource"),
                             _("type")),
-                    GetResourcesAsItems()
+                    ProfileManager::GetResourcesAsItems()
                     ),
                 `VSpacing(0.2),
 		        `HBox(
 		            `PushButton(`id(`save_button), _("&Save all")),
-		            `Left(`PushButton(`id(`drop_button), _("&Drop all")))
-/*                    `Right( `PushButton(`id(`changes_button), _("Show &changes")))*/
+		            `PushButton(`id(`drop_button), _("&Drop all")),
+                    `Right( `PushButton(`id(`changes_button), _("Show c&hanges")))
 				    ),
                 `VSpacing(0.2)
                 ),
@@ -73,25 +73,21 @@ global define any SwitchDialog () ``{
 		),
 	`HSpacing(1.5));
 
+    Wizard::RestoreBackButton ();
+
     Wizard::SetContentsButtons ( caption,
 				contents,
 	            HELPS["switch"]:"",
-				BackButtonLabel (),
-				NextButtonLabel () );
+				CancelButtonLabel (),
+				OKButtonLabel () );
 
 
     any ret = nil;
     while (true)
     {
 	    ret = UI::UserInput ();
-	    if (ret == `abort)
-	    {
-	        // TODO FIXME: check for change of the configuration
-	        if ( UI::ReallyAbortPopup ( true ) )
-		    break;
-	        else
-		    continue;
-	    }
+	    if (ret == `back)
+            break;
         else if (ret == `save_button)
 	    {
             ProfileManager::SaveSwitchInfo();
@@ -102,15 +98,19 @@ global define any SwitchDialog () ``{
             ProfileManager::DropSwitchInfo();
             break;
         }
+        else if (ret == `changes_button)
+        {
+            integer resource_no = UI::QueryWidget(`id(`modified), `CurrentItem);
+            ShowChangesPopup(resource_no);
+            continue;
+        }
         else if (ret == `next)
 	    {
             ProfileManager::Switch();
             ProgressPopup();
 	        break;
 	    }
-        else if (ret == `back)
-            break;
-    };
+        };
 
     return ret;
 }
@@ -195,8 +195,8 @@ global define boolean ProgressPopup() ``{
     UI::OpenDialog(`opt(`decorated), `HBox(`HSpacing(1.5),
         `VBox(
             `VSpacing(1),
-            `LogView(`id(`log),_("Log informations"), 10, 0),
-            `Left(`Label(note_label)),
+            `LogView(`id(`log),_("Progress informations"), 10, 0),
+//            `Left(`Label(note_label)),
             `VSpacing(1),
             `ProgressBar(`id(`pb), "", 100, 0),
             `VSpacing(1),
@@ -216,7 +216,6 @@ global define boolean ProgressPopup() ``{
     integer steps = 0;
     while (steps<100)
     {
-//        sleep(2);
         steps = steps + 1;
         UI::ChangeWidget(`id(`pb), `Value, steps);
     }
@@ -266,7 +265,33 @@ To enable it use the Options button<br></p>") +
     }
 
     ProfileManager::first_time = false;
-    return false;
+    return true;
+}
+
+/**
+ */
+global define boolean ShowChangesPopup(integer resource_no) ``{
+
+    string changes = ProfileManager::ShowChanges(resource_no);
+    UI::OpenDialog(`opt(`decorated), `HBox(`HSpacing(1.5),
+        `VSpacing(15),
+        `VBox(
+            `HSpacing(40),
+            `VSpacing(1),
+            `Label(_("Changes of the resource")),
+//            `Label(resource + " :"),
+            `VSpacing(1),
+            `RichText(changes),
+            `VSpacing(1),
+            `PushButton(`id(`ok), `opt(`default), _("&OK")),
+            `VSpacing(1)),
+        `HSpacing(1.5)
+        ));
+
+    any ret = UI::UserInput();
+    UI::CloseDialog();
+
+    return true;
 }
 
 

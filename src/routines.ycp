@@ -48,41 +48,5 @@ global define void ProgressNextStage(string title) ``{
     Progress::Title(title);
 }
 
-global define boolean CheckValidName(string name) ``{
-
-    if (size(name) < 1)
-        return false;
-    if (name != filterchars(name,"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-_."))
-        return false;
-    string first = substring(name,0,1);
-    if (size(deletechars(first,"-_.")) <1)
-        return false;
-    return true;
-}
-
-global define list GetResourcesAsItems() ``{
-
-    map sw_info = ProfileManager::switch_info;
-    list resources = lookup (sw_info, "modified_resources", []);
-    list items = [];
-    integer i=0;
-
-    foreach (`resource, resources, ``{
-        string flag = "";
-        if (lookup(resource,"is_new",false))
-            flag = "NEW";
-        else if(lookup(resource,"is_deleted",false))
-            flag = "DELETED";
-
-        items = add(items, `item(`id(i),
-                                 lookup(resource,"save",false)? "X":"",
-                                 flag,
-                                 lookup(resource,"resource_name",""),
-                                 lookup(resource,"resource_type","")));
-        i=i+1;
-    });
-    return items;
-}
-
 /* EOF */
 }

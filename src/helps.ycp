@@ -24,18 +24,8 @@ Please wait for a while...<br></p>") +
     _("<p><b><big>Aborting the initialization:</big></b><br>
 Safely abort the configuration utility by pressing the <b>Abort</b> now.</p>"),
 
-    /* Write dialog help 1/2 */
-    "write" : _("<p><b><big>Saving profile-manager configuration</big></b><br>
-Please wait for a while...<br></p>") +
-
-    /* Write dialog help 2/2 */
-_("<p><b><big>Aborting the saving:</big></b><br>
-You can abort the saving by pressing the <b>Abort</b> button.
-An additional dialog will inform you whether it is safe to do so or not.
-</p>"),
-
     /* Main dialog help 1/6 */
-    "main" : _("<p>SCPM allows you to store different profiles of your system configuration and to switch between them. If you are not familiar with SCPM, read the introduction to SCPM in <b>info scpm</b>.</p>") +
+    "main" : _("<p>SCPM allows you to store different profiles of your system configuration and to switch between them. If you are not familiar with SCPM, read the introduction to SCPM in the administration guide or in <b>info scpm</b>.</p>") +
 
     /* Main dialog help 2/6 */
     _("<p>If SCPM is not enabled, use <b>Options</b></p>") +
@@ -68,7 +58,7 @@ An additional dialog will inform you whether it is safe to do so or not.
 <br><i>Everything:</i> all installed services, all files below /etc and any other important file for any service") +
 
     /* Options dialog help 4/5 */
-    _("<p>You may create your own individual resource set, but currently not with YaST2. See info scpm for information. Your manually created resource sets will then be available in this list as well. If you change the used resource set, all resources that will be deleted from the profiles are backed up below /var/lib/scpm/backup/.</p>") +
+    _("<p>You may create your own individual resource set, but currently not with YaST2. See info scpm or administration guide for information. Your manually created resource sets will then be available in this list as well. If you change the used resource set, all resources that will be deleted from the profiles are backed up below /var/lib/scpm/backup/.</p>") +
 
     /* Options dialog help 5/5 */
     _("<p>For progress windows to close automatically, check <b>Close progress pop-ups automatically</b>. This box is also available in the progress pop-ups themselves.</p>"),
@@ -100,11 +90,10 @@ These scripts are executed as the user root. Make sure no users can change or ev
     _("<p>The <b>flags</b> DELETED or NEW show that a resource will be deleted or added to the profile. This only happens if you changed the resource set in the SCPM options or if packages have been installed or removed from the system.</p>") +
 
     /* Switch dialog help 3/4 */
-    _("<p>The resource <b>type</b> <i>file</i> explains itself. The resource type <i>service</i> means that there are changes in the runlevel links of this service, which decide if a service has to be started in a runlevel.</p>")
+    _("<p>The resource <b>type</b> <i>file</i> explains itself. The resource type <i>service</i> means that there are changes in the runlevel links of this service, which decide if a service has to be started in a runlevel.</p>") +
 
-    /* Switch dialog help 4/4
-    _("<p>If you are unsure what was changed in a resource, select it and use Show changes. This will show you the changes in the selected resource.</p>"),*/
-
+    /* Switch dialog help 4/4 */
+    _("<p>If you are unsure what was changed in a resource, select it and use Show changes. This will show you the changes in the selected resource.</p>")
 
 
 ];
