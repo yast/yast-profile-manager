@@ -15,4 +15,4 @@
 
 typedef Y2AgentComp <SCPMAgent> Y2SCPMAgentComp;
 
-Y2CCAgentComp <Y2SCPMAgentComp> g_y2ccag_SCPM ("ag_scpm");
+Y2CCAgentComp <Y2SCPMAgentComp> g_y2ccag_scpm ("ag_scpm");
