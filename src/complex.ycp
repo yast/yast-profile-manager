@@ -116,9 +116,13 @@ global define any MainDialog () ``{
     Wizard::SetContentsButtons ( caption,
 				contents,
                 HELPS["main"]:"",
-                _("&Introduction to SCPM"),
+//                _("&Introduction to SCPM"),
+                BackButtonLabel (),
 				CloseButtonLabel () );
 
+    Wizard::ReplaceBackButton (`PushButton (`id(`intro), `opt(`key_F2),
+        // pushbutton
+        _("&Introduction to SCPM")));
     Wizard::ReplaceAbortButton (`Empty());
 
     UI::ChangeWidget(`id(`profiles), `Items, ProfileManager::GetProfilesAsItems());
@@ -199,7 +203,7 @@ global define any MainDialog () ``{
 
         break;
     }
-    else if (ret == `back) // help button
+    else if (ret == `intro) // help button
     {
         IntroductionTextPopup();
         continue;

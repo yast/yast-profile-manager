@@ -429,7 +429,7 @@ profile nor does it start or stop services."))),
             `VSpacing(1),
 	        `HBox(
 	            `HSpacing(1),
-	            `Left(`PushButton(`id(`cancel), `opt (`key_F8),
+	            `Left(`PushButton(`id(`cancel), `opt (`key_F9),
                     CancelButtonLabel())),
 	            `Right(`PushButton(`id(`ok), `opt(`default, `key_F10),
                     OKButtonLabel())),

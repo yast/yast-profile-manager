@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Mon Jan 20 15:30:17 CET 2003 - jsuchome@suse.de
+
+- fixed shortcuts
+- 2.7.2
+
+-------------------------------------------------------------------
 Fri Jan 17 16:10:52 CET 2003 - jsuchome@suse.de
 
 - added ncurses f-keys shortcuts
