@@ -26,8 +26,8 @@ Please wait...<br></p>
 Safely abort the configuration utility by pressing <b>Abort</b> now.</p>
 "),
 
-    /* Main dialog help 1/6 */
-    "main" : _("<p>SCPM allows you to store different profiles of your system configuration and to switch between them. If you are not familiar with SCPM, read the introduction to SCPM in the administration guide or in <b>info scpm</b>.</p>") +
+    /* Main dialog help 1/6 ---changed 23.8.*/
+    "main" : _("<p>SCPM allows you to store different profiles of your system configuration and to switch between them. If you are not familiar with SCPM, read the <b>Introduction to SCPM</b> in the administration guide or in info scpm.</p>") +
 
     /* Main dialog help 2/6 */
     _("<p>If SCPM is not enabled, use <b>Options</b></p>") +
@@ -35,8 +35,9 @@ Safely abort the configuration utility by pressing <b>Abort</b> now.</p>
     /* Main dialog help 3/6 */
     _("<p>In the table, see the list of available profiles. The currently active profile is marked in the column <b>active</b>.</p>") +
 
-    /* Main dialog help 4/6 */
-    _("<p>After selecting a profile, you can <b>Switch</b> your system configuration to this profile. You will be asked what to do with changes in the active profile before switching. To save changes made to the current system configuration or to undo them, switch to the currently active profile.</p>") +
+    /* Main dialog help 4/6 ---changed 23.8.*/
+    _("<p>After selecting a profile in the list, you can <b>Switch</b> your system configuration to this profile. You will be asked what to do with changes in the active profile before switching. In case you only want to save changes of the current system configuration to the active profile or undo them, perform a <b>Switch</b> to the active profile. Just like a normal switch, you will be asked what to do with the changes, but you are not going to leave the active
+profile, of course.</p>") +
 
     /* Main dialog help 5/6 */
     _("<p><b>Add</b> a new profile or <b>Edit</b> or <b>Delete</b> the selected one. Editing a profile does not mean changing the system configuration for this profile, but setting some special actions when entering or leaving this profile. To change the system configuration in a profile, switch to it. Then change your system configuration as usual.</p>") +
@@ -44,23 +45,26 @@ Safely abort the configuration utility by pressing <b>Abort</b> now.</p>
     /* Main dialog help 6/6 */
     _("<p>To configure SCPM itself, use <b>Options</b>.</p>"),
 
-
     /* Options dialog help 1/5 */
     "options" : _("<p>First, <b>enable</b> SCPM. If disabled later, none of your configuration data in the profiles will be lost. It just keeps the current configuration of your system and you cannot switch to any other profile until you enable it again.</p>") +
 
-    /* Options dialog help 2/5 */
-    _("<p>A configuration profile covers only the files and services to change when switching to another profile. In SCPM terminology, these files and services are called resources. Choose a resource set from the list.<br>
-     There are some predefined resource sets:
+    /* Options dialog help 2/5 ---changed 23.8.*/
+    _("<p>A configuration profile covers only a part of the system
+configuration. You can choose which files and services are affected.
+In SCPM terminology files and services are called resources. There are
+so called resource sets, which contain a predefined list of
+resources. Choose a resource set that suits your needs best from the list.<br>
+The following resource sets are available: 
     </p>") +
 
-    /* Options dialog help 3/5 */
-    _("<p><i>Typical:</i> networking, mail, printing, nis, nfs
-<br><i>Network only:</i> networking
-<br><i>FooBar:</i> services foo and bar
-<br><i>Everything:</i> all installed services, all files below /etc and any other important file for any service</p>") +
+    /* Options dialog help 3/5 ---changed 23.8.*/
+    _("<p><i>typical:</i> networking, mail, printing, nis, nfs, autofs
+<br><i>network_only:</i> only basic network settings
+<br><i>extended:</i> typical plus all reasonable stuff
+<br><i>everything:</i> handles nearly all configuration files and services</p>") +
 
-    /* Options dialog help 4/5 */
-    _("<p>You may create your own individual resource set, but currently not with YaST2. See info scpm or the administration guide for information. Your manually created resource sets will then be available in this list as well. If you change the used resource set, all resources that will be deleted from the profiles are backed up below /var/lib/scpm/backup/.</p>") +
+    /* Options dialog help 4/5 ---changed 23.8.*/
+    _("<p>You may create your own individual resource set, but currently not with YaST2. See info scpm or the administration guide for information. Your manually created resource sets will then be available in this list as well. If you change the used resource set, some resource may get obsolete and will be deleted from the profiles.</p>") +
 
     /* Options dialog help 5/5 */
     _("<p>For progress windows to close automatically, check <b>Close progress pop-ups automatically</b>. This box is also available in the progress pop-ups themselves.</p>"),
@@ -85,14 +89,14 @@ Safely abort the configuration utility by pressing <b>Abort</b> now.</p>
     _("<p><b>Security Warning:</b><br>
 These scripts are executed as the user root. Make sure no users can change or even read them without authorization. For YaST to set the appropriate file permissions, check the box at the bottom of the dialog.</p>"),
 
-    /* Switch dialog help 1/4 */
-    "switch" : _("<p>When you leave a profile, there might be changes in resources covered by SCPM. You have to decide what to do with these changes. <b>Save</b> them to the profile or <b>Drop</b> them.</p>") +
+    /* Switch dialog help 1/4 ---changed 23.8.*/
+    "switch" : _("<p>When you leave a profile, there might be changes in resources covered by SCPM. You have to decide what to do with these changes. By default, all changes get saved, but you can freely <b>select</b> and <b>unselect</b> resources, so only the changes you want to preserve get written to the active profile.</p>") +
 
     /* Switch dialog help 2/4 */
     _("<p>The <b>flags</b> DELETED or NEW show that a resource will be deleted or added to the profile. This only happens if you changed the resource set in the SCPM options or if packages have been installed or removed from the system.</p>") +
 
-    /* Switch dialog help 3/4 */
-    _("<p>The resource <b>type</b> <i>file</i> explains itself. The resource type <i>service</i> means that there are changes in the runlevel links of this service, which decide if a service has to be started in a runlevel.</p>") +
+    /* Switch dialog help 3/4 ---changed 23.8.*/
+    _("<p>The resource <b>type</b> <i>file</i> indicates changes in a file or a directory. The resource type <i>service</i> means that there are changes in the runlevel links of this service, which decide if a service has to be started in a runlevel.</p>") +
 
     /* Switch dialog help 4/4 */
     _("<p>If you are unsure what was changed in a resource, select it and use Show changes. This will show you the changes in the selected resource.</p>"),

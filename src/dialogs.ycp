@@ -282,12 +282,16 @@ global define any SwitchDialog () ``{
                     ),
                 `VSpacing(0.2),
 		        `HBox(
-                    // Push button label
+                    // Push button label ---new 23.8.
 		            `PushButton(`id(`select_button), _("&Select or unselect")),
-                    // Push button label
+                    // Push button label ---changed 23.8.
 		            `PushButton(`id(`save_button), _("Select &all")),
-                    // Push button label
+                    /* original
+		            `PushButton(`id(`save_button), _("&Save all")), */
+                    // Push button label ---changed 23.8.
 		            `PushButton(`id(`drop_button), _("&Unselect all")),
+                    /* original
+		            `PushButton(`id(`save_button), _("&Drop all")), */
                     // Push button label
                     `Right( `PushButton(`id(`changes_button), _("Show c&hanges")))
 				    ),
@@ -589,10 +593,40 @@ To enable it, use the Options button.<br></p>
 
     if (ret == `intro)
     {
-        ProfileManager::RunIntro();
+        IntroductionTextPopup();
+//        ProfileManager::RunIntro();
     }
 
     ProfileManager::first_time = false;
+    return true;
+}
+
+/**
+ * @return boolean true on success
+ */
+global define boolean IntroductionTextPopup() ``{
+
+    string info_text = ProfileManager::RunIntroApplication();
+
+    if (info_text == "")
+        return true;
+
+    UI::OpenDialog(`opt(`decorated), `HBox(`HSpacing(1.5),
+        `VSpacing(35),
+        `VBox(
+            `HSpacing(80),
+            `VSpacing(1),
+            `VSpacing(1),
+            `LogView(`id(`info),"", 5, 0),
+         //   `RichText(info_text),
+            `VSpacing(1),
+            `PushButton(`id(`ok), `opt(`default), OKButtonLabel()),
+            `VSpacing(1)),
+        `HSpacing(1.5)
+        ));
+    UI::ChangeWidget(`id(`info), `Value, info_text);
+    any ret = UI::UserInput();
+    UI::CloseDialog();
     return true;
 }
 

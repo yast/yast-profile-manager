@@ -159,6 +159,9 @@ string progresspath = "";
 string hashpath = "";
 string changespath = "";
 string tmppath = "";
+string tmpdir = "";
+
+global boolean text_mode = true;
 
 global boolean proposal_valid = false;
 global boolean write_only = false;
@@ -222,6 +225,9 @@ global define boolean Read() ``{
     );
 
 
+    // get display mode
+    map display_info = UI::GetDisplayInfo();
+    text_mode = display_info["TextMode"]:true;
 
     // initialize
     if(Abort()) return false;
@@ -433,7 +439,7 @@ global define boolean WriteUserSettings() ``{
  */
 define boolean Initialize() ``{
 
-    string tmpdir = SCR::Read(.target.tmpdir);
+    tmpdir = SCR::Read(.target.tmpdir);
     progresspath = tmpdir + progressfile;
     hashpath = tmpdir + hashfile;
     changespath = tmpdir + changesfile;
@@ -770,26 +776,37 @@ global define boolean CopyResourceSet(string set, string newset) ``{
 
 /**
  * Runs application with an info page
- * @return true
+ * @return
  */
-global define boolean RunIntro() ``{
+global define string RunIntroApplication() ``{
 
+    y2debug("textmode = %1", text_mode);
+    string ret = "";
+
+    if (text_mode)
+    {
+        if (SCR::Execute (.target.bash, "/usr/bin/test -x /usr/bin/info") == 0)
+        {
+            string output = tmpdir + "/info.out";
+            SCR::Execute(.target.bash_output,"info scpm >" + output + " 2>/dev/null");
+            ret = SCR::Read(.target.string, output);
+        }
+        else
+            SCR::Execute(.target.bash,"man scpm > output 2>/dev/null");
+    }
+    else
+    {
 /*
     if (IsPackageInstalled("kdebase3") || IsPackageInstalled("kdebase3-konqueror"))
-        SCR::Execute(.background.run,"konqueror info:/scpm/introduction");
-    else if (IsPackageInstalled("texinfo"))
-        SCR::Execute(.background.run,"xterm -e info scpm");
-    else
-        SCR::Execute(.background.run,"xterm -e man scpm");
 */
-	if (SCR::Execute (.target.bash, "/usr/bin/test -x /opt/kde3/bin/konqueror") == 0)
-        SCR::Execute(.background.run,"konqueror info:/scpm/introduction");
-    else if (SCR::Execute (.target.bash, "/usr/bin/test -x /usr/bin/info") == 0)
-        SCR::Execute(.background.run,"xterm -e info scpm");
-    else
-        SCR::Execute(.background.run,"xterm -e man scpm");
-
-    return true;
+	    if (SCR::Execute (.target.bash, "/usr/bin/test -x /opt/kde3/bin/konqueror") == 0)
+            SCR::Execute(.target.bash_background,"konqueror info:/scpm/introduction");
+        else if (SCR::Execute (.target.bash, "/usr/bin/test -x /usr/bin/info") == 0)
+            SCR::Execute(.target.bash_background,"xterm -e info scpm");
+        else
+            SCR::Execute(.target.bash_background,"xterm -e man scpm");
+    }
+    return ret;
 }
 
 /**
