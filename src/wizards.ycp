@@ -17,6 +17,8 @@ include "ui/common_popups.ycp";
 include "ui/common_messages.ycp";
 include "wizard/sequencer.ycp";
 
+//include "./complex.ycp";
+//include "./dialogs.ycp";
 include "profile-manager/complex.ycp";
 include "profile-manager/dialogs.ycp";
 
@@ -83,10 +85,9 @@ global define symbol ProfileManagerAutoSequence() ``{
 /**
  * Main workflow of the profile-manager configuration
  * @return sequence result
- */
+ *
 global define symbol MainSequence() ``{
 
-    /* FIXME: adapt to your needs */
     map aliases = $[
 	"summary"	:   ``( SummaryDialog() ),
 	"overview"	:   ``( OverviewDialog() ),
@@ -95,7 +96,6 @@ global define symbol MainSequence() ``{
 	"edit"		: [ ``( AddSequence() ), true ]
     ];
 
-    /* FIXME: adapt to your needs */
     map sequence = $[
 	"ws_start" : "summary",
 	"summary" : $[
@@ -128,7 +128,52 @@ global define symbol MainSequence() ``{
     any ret = WizardSequencer(aliases, sequence);
 
     return ret;
+}*/
+
+global define any MainSequence () ``{
+    map aliases =
+	$[
+	    "main"	:   ``( MainDialog () ),
+	    "options"	:  ``( OptionsDialog () ),
+	    "switch"	:  ``( SwitchDialog () ),
+	    "edit"	:  ``( ProfileSettingsDialog () )
+	];
+
+    map sequence = $[
+	"ws_start" : "main",
+	"main" :
+	$[
+	    `abort	: `abort,
+	    `next	: `next,
+		`switch_button : "switch",
+	    `options_button: "options",
+        `delete_button: "main", // refresh table after deleting profile
+	    `edit_button: "edit",
+	],
+	"switch" :
+	$[
+	    `abort	: `abort,
+		`save_button : "switch", // refresh table ??
+		`drop_button : "switch", // refresh table ??
+		`next	: "main"
+	],
+	"options" :
+	$[
+	    `abort	: `abort,
+	    `next	: "main"
+	],
+	"edit" :
+	$[
+	    `abort	: `abort,
+	    `next	: "main"
+	]
+    ];
+
+    any ret = WizardSequencer (aliases, sequence);
+
+    return ret;
 }
+
 
 /**
  * Add a configuration of profile-manager

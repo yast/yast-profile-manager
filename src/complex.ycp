@@ -14,13 +14,19 @@ textdomain "profile-manager";
 import "Wizard";
 import "Wizard_hw";
 
+//import "./ProfileManager";
 import "ProfileManager";
 
 include "ui/common_popups.ycp";
 include "ui/common_messages.ycp";
 
+//include "./helps.ycp";
+//include "./routines.ycp";
+
+
 include "profile-manager/helps.ycp";
 include "profile-manager/routines.ycp";
+
 
 /**
  * Return a modification status
@@ -53,126 +59,422 @@ global define symbol WriteDialog() ``{
     return ret ? `next : `abort;
 }
 
+
+
 /**
- * Summary dialog
- * @return dialog result
+ * Main dialog
+ * @return any Returned value from UserInput() call
  */
-global define symbol SummaryDialog() ``{
+global define any MainDialog () ``{
+    string caption = _("System configuration profile management");
 
-    /* ProfileManager summary dialog caption */
-    string caption = _("ProfileManager configuration");
+	map profiles = ProfileManager::profiles;
+    string active = ProfileManager::active_profile;
+    boolean enabled = ProfileManager::enabled;
 
-    /* FIXME */
-    list summary = ProfileManager::Summary();
-    list unconfigured = summary[1]:[];
-    string configured = summary[0]:"";
+	string state_label = (enabled)? _("SCPM is enabled with Resource Set \"")+ProfileManager::current_resources+"\"." : _("SCPM is disabled.");
+    string selected = "";
 
-    /* Frame label */
-    term contents = Wizard_hw::DetectedContent(_("ProfileManager to configure"),
-	    unconfigured, false, configured);
+    term contents = `HBox(
+	`HSpacing(1.5),
+	`VBox(
+        `VSpacing(1),
+        `Frame(_("Profile management"), `HBox(`HSpacing(1),
+            `VBox(
+                `VSpacing(0.2),
+		        `Table(`id(`profiles),
+                    `header(_("active"),
+                            _("Name"),
+                            _("Description")),
+                    maplist (`name, `descr, profiles, ``{
+                        if (name == active)
+                            return `item(`id(name),"---->",name,descr);
+                        else
+                            return `item(`id(name),"",name,descr);
+                    })
+                    //                    ProfileManager::GetList(profiles, active)
+                    ),
+                `VSpacing(0.2),
+		        `HBox(
+		            `PushButton(`id(`add_button), _("&Add")),
+		            `PushButton(`id(`edit_button), _("&Edit")),
+		            `PushButton(`id(`delete_button), _("De&lete")),
+                    `Right(
+                        `PushButton(`id(`switch_button), _("&Switch to...")))
+				    ),
+                `VSpacing(0.2)
+                ),
+            `HSpacing(1)
+                )),
+        `VSpacing(1),
+        `Frame(_("General Setup"), `VBox(`VSpacing(0.2),
+            `HBox(
+                `HSpacing(1),
+			    `Label (state_label),
+		        `Right(`PushButton(`id(`options_button), _("&Options"))),
+                `HSpacing(1)
+                ),
+            `VSpacing(0.2))),
+        `VSpacing(1)
+		),
+	`HSpacing(1.5));
 
-    Wizard::SetContentsButtons(caption, contents, HELPS["summary"]:"",
-	    BackButtonLabel(), FinishButtonLabel());
+
+    Wizard::SetContentsButtons ( caption,
+				contents,
+                HELPS["main"]:"",
+				BackButtonLabel (),
+				FinishButtonLabel () );
+
+    if (ProfileManager::first_time)
+        IntroductionPopup();
+
+    UI::ChangeWidget(`id(`profiles), `CurrentItem, ProfileManager::active_profile);
+
+    if (enabled)
+        UI::SetFocus(`id(`profiles));
+/*    else
+        UI::SetFocus(`id(`options_button));*/
+
+    UI::ChangeWidget(`id(`profiles), `Enabled, enabled);
+    UI::ChangeWidget(`id(`add_button), `Enabled, enabled);
+    UI::ChangeWidget(`id(`edit_button), `Enabled, enabled);
+    UI::ChangeWidget(`id(`delete_button), `Enabled, enabled);
+    UI::ChangeWidget(`id(`switch_button), `Enabled, enabled);
+
 
     any ret = nil;
-    while(true) {
-
-	ret = UI::UserInput();
-
-	/* abort? */
-	if(ret == `abort || ret == `cancel) {
-	    if(ReallyAbort()) break;
-	    else continue;
-	}
-        /* overview dialog */
-        else if(ret == `edit_button) {
-            ret = `overview;
-            break;
-        }
-        /* configure the selected device */
-        else if(ret == `configure_button) {
+    while (true)
+    {
+	ret = UI::UserInput ();
+	if (ret == `abort)
+	{
 	    // TODO FIXME: check for change of the configuration
-            any selected = UI::QueryWidget(`id(`detected_selbox), `CurrentItem);
-            if(selected == `other) {
-                ret = `other;
+	    if ( UI::ReallyAbortPopup ( true ) )
+		break;
+	    else
+		continue;
+	}
+	else if (ret == `delete_button)
+	{
+        selected = UI::QueryWidget(`id(`profiles), `CurrentItem);
+        if (selected == active)
+            UI::MessagePopup(_("You cannot delete the active profile."));
+        else
+        {
+            if (UI::YesNoPopup(sformat(_("Do you really want to delete profile %1?"), selected)))
+            {
+                if (!ProfileManager::DeleteProfileFromMap(selected))
+                    UI::ErrorPopup(_("Deleting profile was not succesfull.")); // spravny text !
+                break;
             }
-            else {
-                ret = `configure;
-            }
-            break;
         }
-        else if(ret == `next || ret == `back) {
-            break;
-        }
-        else {
-            y2error("unexpected retcode: %1", ret);
+		continue;
+	}
+    else if (ret == `add_button)
+	{
+		if (AddProfilePopup())
+			return `edit_button;
+		else continue;
+	}
+    else if (ret == `edit_button)
+	{
+        ProfileManager::selected_profile = UI::QueryWidget(`id(`profiles), `CurrentItem);
+        ProfileManager::profile_action = "edit";
+        break;
+	}
+    else if (ret == `switch_button)
+    {
+        selected = UI::QueryWidget(`id(`profiles), `CurrentItem);
+        if (selected == active) {
+            UI::MessagePopup(_("It does not make a sense to switch to the active profile."));
             continue;
         }
+        else {
+            ProfileManager::selected_profile = selected;
+            ProfileManager::PrepareSwitch();
+            ProgressPopup();
+            break;
+        }
     }
+    else
+    {
+	    /* TODO FIXME: your code ... */
+	    break;
+	}
+
+    };
+
+    return ret;
+}
+
+
+/**
+ */
+global define any OptionsDialog () ``{
+
+    string separator = "-----";
+    list resource_sets = union( union (ProfileManager::resource_sets_predefined, [ separator ]), ProfileManager::resource_sets_individual);
+    boolean close_popups = ProfileManager::close_popups;
+
+    string caption = _("SCPM Options");
+    term contents = `HBox(`HSpacing(1.5),
+        `VBox(
+        `VSpacing(1),
+        `Frame(_("Enable SCPM"), `VBox(
+            `VSpacing(0.5),
+                `RadioButtonGroup(`id(`rb),
+		            `HBox(
+				    `HCenter(`RadioButton(`id(`ena), _("&Enabled") )),
+                    `HCenter(`RadioButton(`id(`dis), _("&Disabled") ))
+                    )
+				 ),
+		    `VSpacing(0.5)
+            )),
+        `VSpacing(1),
+		`Frame(_("Resource Sets"), `VBox(
+            `VSpacing(0.2),
+            `HBox(
+                `HSpacing(1),
+                `SelectionBox(`id(`resources), _("Choose a &resource set:"), resource_sets),
+//                `Left(`HSquash(`SelectionBox(`id(`resources), _("Choose a &resource set:"), resource_sets))),
+                `HSpacing(1)
+                ),
+            `VSpacing(0.5)
+            )),
+        `VSpacing(1),
+		`Frame(_("Other settings"), `VBox(
+            `VSpacing(0.5),
+            `HBox(
+                `HSpacing(1),
+		        `Left(`CheckBox(`id(`close_popups_ch), _("&Close progress popups automaticaly"), close_popups))
+                ),
+            `VSpacing(0.5)
+            )),
+		`VSpacing(1)),
+        `HSpacing(1.5));
+
+    Wizard::SetContentsButtons ( caption,
+				contents,
+	            HELPS["options"]:"",
+				BackButtonLabel (),
+				NextButtonLabel () );
+
+    if (ProfileManager::enabled)
+    {
+        UI::ChangeWidget(`id(`rb), `CurrentButton, `ena);
+        UI::ChangeWidget(`id(`resources), `CurrentItem, ProfileManager::current_resources);
+    }
+    else
+        UI::ChangeWidget(`id(`rb), `CurrentButton, `dis);
+
+    any ret = nil;
+    while (true)
+    {
+	ret = UI::UserInput ();
+	if (ret == `abort)
+	{
+	    // TODO FIXME: check for change of the configuration
+	    if ( UI::ReallyAbortPopup ( true ) )
+		break;
+	    else
+		continue;
+	}
+	else if (ret == `rb)
+    {
+        continue;
+    }
+    else if (ret == `next)
+    {
+        ProfileManager::close_popups = UI::QueryWidget(`id(`close_popups_ch), `Value);
+        boolean run_progress = false;
+
+        if (UI::QueryWidget(`id(`rb), `CurrentButton) == `ena) {
+
+            string selected = UI::QueryWidget(`id(`resources), `CurrentItem);
+            if (selected == separator || selected == nil)
+            {
+                UI::MessagePopup(_("You should choose a resource set first."));
+                continue;
+            }
+
+            if (!ProfileManager::enabled)
+            {
+                ProfileManager::enabled = true;
+                ProfileManager::WriteStatus();
+                run_progress = true;
+            }
+            if (ProfileManager::current_resources != selected)
+            {
+                ProfileManager::current_resources = selected;
+                ProfileManager::WriteResources(selected);
+                run_progress = true;
+            }
+            if (run_progress) ProgressPopup();
+        }
+        else
+        {
+            if (ProfileManager::enabled)
+            {
+                ProfileManager::enabled = false;
+                ProfileManager::current_resources = nil;
+                ProfileManager::WriteStatus(); // show the progress bar ??
+            }
+        }
+
+        y2debug("enabled=%1",ProfileManager::enabled);
+        y2debug("close_popups=%1",ProfileManager::close_popups);
+        y2debug("current_resources=%1",ProfileManager::current_resources);
+
+	    break;
+	}
+    else if (ret == `back) break;
+
+    else {
+        y2error("Undefined return value");
+        continue;
+    }
+    };
 
     return ret;
 }
 
 /**
- * Overview dialog
- * @return dialog result
  */
-global define symbol OverviewDialog() ``{
+global define any ProfileSettingsDialog () ``{
 
-    /* ProfileManager overview dialog caption */
-    string caption = _("ProfileManager overview");
+    string edited = ProfileManager::selected_profile;
+    string action = ProfileManager::profile_action;
+    map profiles = ProfileManager::profiles;
 
-    list overview = ProfileManager::Overview();
+    ProfileManager::GetProfile();
 
-    /* FIXME table header */
-    term contents = Wizard_hw::ConfiguredContent(
-	/* Table header */
-	`header(_("Number"), _("Profile manager")),
-	overview, nil, nil, nil, nil );
+    map settings = ProfileManager::profile_settings;
 
-    contents = Wizard_hw::SpacingAround(contents, 1.5, 1.5, 1.0, 1.0);
+    string caption = _("Special profile settings");
+    term contents = `HBox(`HSpacing(1.5),
+        `VBox(
+        `VSpacing(1),
+        `Frame(_("Special profile settings"), `HBox(`HSpacing(1),
+            `VBox(
+                `VSpacing(0.2),
+                `TextEntry(`id(`name),_("Pro&file Name")),
+                `VSpacing(0.2),
+                `HBox(
+                    `HSpacing(0.5), // proc???
+                    `MultiLineEdit(`id(`desc),_("&Description")),
+                    `HSpacing(0.5)
+                    ),
+                `VSpacing(0.2),
+                `TextEntry(`id(`prestart),_("Pr&e Start Script")),
+                `VSpacing(0.2),
+                `TextEntry(`id(`poststart),_("P&ost Start Script")),
+                `VSpacing(0.2),
+                `TextEntry(`id(`prestop),_("P&re Stop Script")),
+                `VSpacing(0.2),
+                `TextEntry(`id(`poststop),_("Po&st Stop Script")),
+                `VSpacing(0.2),
+                `Left(`CheckBox(`id(`secure_ch),
+                    _("Set file &permitions of all scripts secure (0700)."))),
+                `VSpacing(0.2)
+            ),
+            `HSpacing(1))),
+	    `VSpacing(1)),
+        `HSpacing(1.5));
 
-    Wizard::SetContentsButtons(caption, contents, HELPS["overview"]:"",
-	    BackButtonLabel(), FinishButtonLabel());
+
+    Wizard::SetContentsButtons ( caption,
+				contents,
+                HELPS["profilesettings"]:"",
+				BackButtonLabel (),
+				NextButtonLabel () );
+
+    UI::ChangeWidget(`id(`desc), `Value, lookup(settings,"description",""));
+    UI::ChangeWidget(`id(`prestart), `Value, lookup(settings,"prestart",""));
+    UI::ChangeWidget(`id(`poststart), `Value, lookup(settings,"poststart",""));
+    UI::ChangeWidget(`id(`prestop), `Value, lookup(settings,"prestop",""));
+    UI::ChangeWidget(`id(`poststop), `Value, lookup(settings,"poststop",""));
+    if (action == "edit")
+        UI::ChangeWidget(`id(`name), `Value, edited);
 
     any ret = nil;
-    while(true) {
-
-	ret = UI::UserInput();
-
-	/* abort? */
-	if(ret == `abort || ret == `cancel) {
-	    if(ReallyAbort()) break;
-	    else continue;
+    while (true)
+    {
+	ret = UI::UserInput ();
+	if (ret == `abort)
+	{
+	    // TODO FIXME: check for change of the configuration
+	    if ( UI::ReallyAbortPopup ( true ) )
+		break;
+	    else
+		continue;
 	}
-        /* add */
-        else if(ret == `add_button) {
-	    /* FIXME */
-            ret = `add;
-            break;
-        }
-        /* edit */
-        else if(ret == `edit_button) {
-	    /* FIXME */
-            ret = `edit;
-            break;
-        }
-        /* delete */
-        else if(ret == `delete_button) {
-	    /* FIXME */
-            continue;
-        }
-        else if(ret == `next || ret == `back) {
-            break;
-        }
-        else {
-            y2error("unexpected retcode: %1", ret);
-            continue;
-        }
+	else if (ret == `back)
+    {
+        break;
     }
+    else if (ret == `next)
+	{
+        boolean secure = UI::QueryWidget(`id(`secure_ch), `Value);
+        string selected = UI::QueryWidget(`id(`name), `Value);
+
+        if (!CheckValidName(selected))
+        {
+            UI::MessagePopup(_("You have to choose valid name."));
+            continue;
+        }
+
+        settings = add (settings, "description", UI::QueryWidget(`id(`desc), `Value));
+
+        if (action == "new")
+        {
+            if (lookup(profiles, selected, nil) != nil)
+            {
+                UI::MessagePopup(_("Profile with this name already exists"));
+                continue;
+            }
+            ProfileManager::AddProfile(selected);
+            // kontrola udaju
+            ProfileManager::profile_settings = settings;
+            ProfileManager::SetProfile(selected);
+        }
+        else if (action == "copy")
+        {
+            if (lookup(profiles, selected, nil) != nil)
+            {
+                UI::MessagePopup(_("Profile with this name already exists"));
+                continue;
+            }
+            ProfileManager::CopyProfile(edited, selected);
+            // kontrola udaju
+            ProfileManager::profile_settings = settings;
+            ProfileManager::SetProfile(selected);
+        }
+        else if (action == "edit")
+        {
+            if (selected != edited)
+            {
+
+                if (lookup(profiles, selected, nil) != nil)
+                {
+                    UI::MessagePopup(_("Profile with this name already exists"));
+                    continue;
+                }
+                ProfileManager::RenameProfile(edited, selected); //rename =true
+            }
+//            if (modified) && ok
+            ProfileManager::profile_settings = settings;
+            ProfileManager::SetProfile(selected);
+            break;
+        }
+
+	    break;
+	}
+    };
 
     return ret;
 }
+
 
 /* EOF */
 }

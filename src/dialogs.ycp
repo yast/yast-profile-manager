@@ -11,87 +11,264 @@
 
 textdomain "profile-manager";
 
+//import "./ProfileManager";
 import "ProfileManager";
 
 include "ui/common_popups.ycp";
 include "ui/common_messages.ycp";
 
+//include "./helps.ycp";
+//include "./routines.ycp";
 include "profile-manager/helps.ycp";
 include "profile-manager/routines.ycp";
 
+
 /**
- * Configure1 dialog
- * @return dialog result
  */
-global define symbol Configure1Dialog () ``{
+global define any SwitchDialog () ``{
 
-    /* ProfileManager configure1 dialog caption */
-    string caption = _("ProfileManager configuration");
+    string active = ProfileManager::active_profile;
+    string selected = ProfileManager::selected_profile;
 
-    /* XXPkg configure1 dialog contents */
-    term contents = `Label (_("First part of configuration of profile-manager"));
+    string caption = _("Confirm Switch");
+    term contents = `HBox(
+	`HSpacing(1.5),
+	`VBox(
+        `VSpacing(1),
+        `HBox(
+            `HSpacing(1),
+            `Label(_("active Profile:")),
+            `Right(`Heading(active)),
+            `HSpacing(2)
+            ),
+        `VSpacing(0.2),
+        `HBox(
+            `HSpacing(1),
+            `Label(_("new Profile:")),
+            `Right(`Heading(selected)),
+            `HSpacing(2)
+            ),
+        `VSpacing(1),
+        `Frame(_("Modified Resources of active Profile"), `HBox(`HSpacing(1),
+            `VBox(
+                `VSpacing(0.2),
+		        `Table(`id(`modified),
+                    `header(_("save"),
+                            _("flags"),
+                            _("Resource"),
+                            _("type")),
+                    GetResourcesAsItems()
+                    ),
+                `VSpacing(0.2),
+		        `HBox(
+		            `PushButton(`id(`save_button), _("&Save all")),
+		            `Left(`PushButton(`id(`drop_button), _("&Drop all")))
+/*                    `Right( `PushButton(`id(`changes_button), _("Show &changes")))*/
+				    ),
+                `VSpacing(0.2)
+                ),
+            `HSpacing(1)
+                )),
+        `VSpacing(1)
+		),
+	`HSpacing(1.5));
 
-    Wizard::SetContentsButtons(caption, contents, HELPS["c1"]:"",
-	    BackButtonLabel(), NextButtonLabel());
+    Wizard::SetContentsButtons ( caption,
+				contents,
+	            HELPS["switch"]:"",
+				BackButtonLabel (),
+				NextButtonLabel () );
+
 
     any ret = nil;
-    while(true) {
-
-	ret = UI::UserInput();
-
-	/* abort? */
-	if(ret == `abort || ret == `cancel) {
-	    if(ReallyAbort()) break;
-	    else continue;
-	}
-        else if(ret == `next || ret == `back) {
+    while (true)
+    {
+	    ret = UI::UserInput ();
+	    if (ret == `abort)
+	    {
+	        // TODO FIXME: check for change of the configuration
+	        if ( UI::ReallyAbortPopup ( true ) )
+		    break;
+	        else
+		    continue;
+	    }
+        else if (ret == `save_button)
+	    {
+            ProfileManager::SaveSwitchInfo();
             break;
         }
-        else {
-            y2error("unexpected retcode: %1", ret);
-            continue;
+        else if (ret == `drop_button)
+        {
+            ProfileManager::DropSwitchInfo();
+            break;
         }
-    }
+        else if (ret == `next)
+	    {
+            ProfileManager::Switch();
+            ProgressPopup();
+	        break;
+	    }
+        else if (ret == `back)
+            break;
+    };
 
     return ret;
 }
 
 /**
- * Configure2 dialog
- * @return dialog result
  */
-global define symbol Configure2Dialog () ``{
+global define boolean AddProfilePopup() ``{
 
-    /* ProfileManager configure2 dialog caption */
-    string caption = _("ProfileManager configuration");
+    map profiles = ProfileManager::profiles;
 
-    /* XXPkg configure2 dialog contents */
-    term contents = `Label (_("Second part of configuration of profile-manager"));
+    UI::OpenDialog(`opt(`decorated), `HBox(`HSpacing(1.5),
+        `VBox(
+            `VSpacing(1),
+	        `Left(`Label(_("Add a new profile based"))),
+            `VSpacing(1),
+            `RadioButtonGroup(`id(`rb),
+	            `VBox(
+			        `Left(`RadioButton(`id(`new), _("on the c&urrent system configuration"))),
+                    `VSpacing(1),
+                    `Left(`RadioButton(`id(`copy), _("on an &existing profile:")))
+                    )),
+            `SelectionBox(`id(`profiles),
+                 "", maplist(`name, `desc, profiles, ``{ return name; })),
+            `VSpacing(1),
+	        `HBox(
+	            `HSpacing(1),
+	            `Left(`PushButton(`id(`cancel), _("&Cancel"))),
+	            `Right(`PushButton(`id(`ok), `opt(`default), _("&OK"))),
+	            `HSpacing(1)
+	            ),
+            `VSpacing(1)),
+        `HSpacing(1.5)
+        ));
 
-    Wizard::SetContentsButtons(caption, contents, HELPS["c2"]:"",
-	    BackButtonLabel(), NextButtonLabel());
+    UI::ChangeWidget(`id(`rb), `CurrentButton, `new);
 
     any ret = nil;
-    while(true) {
-
-	ret = UI::UserInput();
-
-	/* abort? */
-	if(ret == `abort || ret == `cancel) {
-	    if(ReallyAbort()) break;
-	    else continue;
-	}
-        else if(ret == `next || ret == `back) {
+    while (true)
+    {
+        ret = UI::UserInput();
+        if (ret == `ok)
+        {
+            if (UI::QueryWidget(`id(`rb), `CurrentButton) == `copy)
+            {
+                string selected = UI::QueryWidget(`id(`profiles), `CurrentItem);
+                if (selected == nil)
+                {
+                    UI::MessagePopup(_("Please select a profile which you want to copy."));
+                    continue;
+                }
+                ProfileManager::profile_action = "copy";
+                ProfileManager::selected_profile = selected;
+            }
+            else
+            {
+                ProfileManager::profile_action = "new";
+                ProfileManager::selected_profile = ProfileManager::active_profile;
+            }
             break;
         }
-        else {
-            y2error("unexpected retcode: %1", ret);
-            continue;
-        }
+        if (ret == `cancel)
+            break;
     }
 
-    return ret;
+    UI::CloseDialog();
+
+	if (ret == `ok)
+		return true;
+	else
+		return false;
 }
+
+/**
+ */
+global define boolean ProgressPopup() ``{
+
+    boolean close_popups = ProfileManager::close_popups;
+    string log_path = "/var/log/scpm";
+
+    string note_label = sformat(_("(Note: These messages are also logged to %1)"),log_path);
+
+    UI::OpenDialog(`opt(`decorated), `HBox(`HSpacing(1.5),
+        `VBox(
+            `VSpacing(1),
+            `LogView(`id(`log),_("Log informations"), 10, 0),
+            `Left(`Label(note_label)),
+            `VSpacing(1),
+            `ProgressBar(`id(`pb), "", 100, 0),
+            `VSpacing(1),
+            `CheckBox(`id(`close_ch),_("Close progress popups automatically (reenable it in SCPM Setup)"),close_popups),
+            `VSpacing(1),
+	        `HBox(
+	            `Right(`PushButton(`id(`close), `opt(`default), _("&Close"))),
+	            `HSpacing(1)
+	            ),
+            `VSpacing(1)),
+        `HSpacing(1.5)
+        ));
+
+    UI::ChangeWidget(`id(`close), `Enabled, false);
+    UI::ChangeWidget(`id(`close_ch), `Enabled, false);
+
+    integer steps = 0;
+    while (steps<100)
+    {
+//        sleep(2);
+        steps = steps + 1;
+        UI::ChangeWidget(`id(`pb), `Value, steps);
+    }
+
+    if (!close_popups)
+    {
+        UI::ChangeWidget(`id(`close), `Enabled, true);
+        any ret = UI::UserInput();
+    }
+    UI::CloseDialog();
+    return true;
+}
+
+/**
+ */
+global define boolean IntroductionPopup() ``{
+
+    string intro_text = _("<p>SCPM is currently disabled.<br>
+To enable it use the Options button<br></p>") +
+
+    _("<br><p>If you are new to SCPM then please read at least the help texts. Better read the introduction in the info pages. You should know what we mean with 'active profile' or 'current configuration' before you start using SCPM.<br></p>");
+
+    UI::OpenDialog(`opt(`decorated), `HBox(`HSpacing(1.5),
+        `VSpacing(15),
+        `VBox(
+            `HSpacing(40),
+            `VSpacing(1),
+            `RichText(intro_text),
+            `VSpacing(1),
+	        `HBox(
+	            `HSpacing(1),
+	            `PushButton(`id(`intro),`opt(`default), _("&Show introduction")),
+	            `PushButton(`id(`cont), _("Let's &go")),
+	            `HSpacing(1)
+	            ),
+            `VSpacing(1)),
+        `HSpacing(1.5)
+        ));
+
+    any ret = nil;
+    ret = UI::UserInput();
+    UI::CloseDialog();
+
+    if (ret == `intro)
+    {
+        ProfileManager::RunIntro();
+    }
+
+    ProfileManager::first_time = false;
+    return false;
+}
+
 
 /* EOF */
 }
