@@ -1,6 +1,6 @@
 {
-
-    include "testsuite.ycp";
+    // testedfiles: ProfileManager.ycp
+    import "Testsuite";
 
     import "ProfileManager";
 
@@ -49,17 +49,17 @@
 
     ProfileManager::selected_profile = "default";
 
-	TEST (``(ProfileManager::GetProfile()), [ READ_nil, $[], $[] ], nil);
+    Testsuite::Test (``(ProfileManager::GetProfile()), [ READ_nil, $[], $[] ], nil);
 
-    DUMP(ProfileManager::profile_settings);
+    Testsuite::Dump(ProfileManager::profile_settings);
 
-	TEST (``(ProfileManager::GetProfile()), [ READ_default, $[], $[] ], nil);
+    Testsuite::Test (``(ProfileManager::GetProfile()), [ READ_default, $[], $[] ], nil);
 
-    DUMP(ProfileManager::profile_settings);
+    Testsuite::Dump(ProfileManager::profile_settings);
 
     ProfileManager::selected_profile = "home";
-	TEST (``(ProfileManager::GetProfile()), [ READ_home, $[], $[] ], nil);
+    Testsuite::Test (``(ProfileManager::GetProfile()), [ READ_home, $[], $[] ], nil);
 
-    DUMP(ProfileManager::profile_settings);
+    Testsuite::Dump(ProfileManager::profile_settings);
 
 }

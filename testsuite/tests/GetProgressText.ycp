@@ -1,7 +1,6 @@
 {
-
-    include "testsuite.ycp";
-
+    // testedfiles: ProfileManager.ycp
+    import "Testsuite";
     import "ProfileManager";
 
 
@@ -27,17 +26,17 @@ Finished" ]
     ProfileManager::progress_size = 0;
     ProfileManager::last_ret = "";
 
-	TEST (``(ProfileManager::GetProgressText(false)), [ READ_nil, $[], $[] ], nil);
+    Testsuite::Test (``(ProfileManager::GetProgressText(false)), [ READ_nil, $[], $[] ], nil);
 
-	TEST (``(ProfileManager::GetProgressText(false)), [ READ, $[], $[] ], nil);
+    Testsuite::Test (``(ProfileManager::GetProgressText(false)), [ READ, $[], $[] ], nil);
 
     // in fact, the function has another settings than following one, but
     // it returns string with newlines - and this I cannot print from test (?)
     ProfileManager::last_ret = "";
 
-	TEST (``(ProfileManager::GetProgressText(false)), [ READ, $[], $[] ], nil);
+    Testsuite::Test (``(ProfileManager::GetProgressText(false)), [ READ, $[], $[] ], nil);
 
-	TEST (``(ProfileManager::GetProgressText(false)), [ READ_continue, $[], $[] ], nil);
+    Testsuite::Test (``(ProfileManager::GetProgressText(false)), [ READ_continue, $[], $[] ], nil);
     ProfileManager::last_ret = "";
-	TEST (``(ProfileManager::GetProgressText(false)), [ READ_continue, $[], $[] ], nil);
+    Testsuite::Test (``(ProfileManager::GetProgressText(false)), [ READ_continue, $[], $[] ], nil);
 }

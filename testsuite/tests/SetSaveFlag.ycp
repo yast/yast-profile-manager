@@ -1,7 +1,6 @@
 {
-
-    include "testsuite.ycp";
-
+    // testedfiles: ProfileManager.ycp
+    import "Testsuite";
     import "ProfileManager";
 
 
@@ -24,18 +23,17 @@
        ]
     ];
 
-    DUMP(ProfileManager::switch_info);
-    DUMP("---------");
+    Testsuite::Dump(ProfileManager::switch_info);
+    Testsuite::Dump("---------");
 
     ProfileManager::active_resource = 0;
-    DUMP("changing 'save' flag of resource 0");
-	TEST (``(ProfileManager::SetSaveFlag()), [ $[], $[], $[] ], nil);
-    DUMP(ProfileManager::switch_info);
-    DUMP("---------");
+    Testsuite::Dump("changing 'save' flag of resource 0");
+    Testsuite::Test (``(ProfileManager::SetSaveFlag()), [ $[], $[], $[] ], nil);
+    Testsuite::Dump(ProfileManager::switch_info);
+    Testsuite::Dump("---------");
 
     ProfileManager::active_resource = 1;
-    DUMP("changing 'save' flag of resource 1");
-	TEST (``(ProfileManager::SetSaveFlag()), [ $[], $[], $[] ], nil);
-    DUMP(ProfileManager::switch_info);
-
+    Testsuite::Dump("changing 'save' flag of resource 1");
+    Testsuite::Test (``(ProfileManager::SetSaveFlag()), [ $[], $[], $[] ], nil);
+    Testsuite::Dump(ProfileManager::switch_info);
 }

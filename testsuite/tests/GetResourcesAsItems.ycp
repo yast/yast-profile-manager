@@ -1,33 +1,24 @@
 {
-
-    include "testsuite.ycp";
-
-    /*
-    map READ = $[
-	"etc" : $[ "install_inf" : $[] ],
-	"target" : $[ "ycp" : $[] ],
-	"probe" : $[ "system" : []],
-    ];
-
-    TESTSUITE_INIT([READ], nil);*/
+    // testedfiles: ProfileManager.ycp
+    import "Testsuite";
     import "ProfileManager";
 
     ProfileManager::switch_info = nil;
 
-    DUMP("switch_info:");
-    DUMP(ProfileManager::switch_info);
-    DUMP("table items list:");
+    Testsuite::Dump("switch_info:");
+    Testsuite::Dump(ProfileManager::switch_info);
+    Testsuite::Dump("table items list:");
 
-	TEST (``(ProfileManager::GetResourcesAsItems()), [ $[], $[], $[] ], nil);
-    DUMP("---------");
+	Testsuite::Test (``(ProfileManager::GetResourcesAsItems()), [ $[], $[], $[] ], nil);
+    Testsuite::Dump("---------");
     ProfileManager::switch_info = $[];
 
-    DUMP("switch_info:");
-    DUMP(ProfileManager::switch_info);
-    DUMP("table items list:");
+    Testsuite::Dump("switch_info:");
+    Testsuite::Dump(ProfileManager::switch_info);
+    Testsuite::Dump("table items list:");
 
-	TEST (``(ProfileManager::GetResourcesAsItems()), [ $[], $[], $[] ], nil);
-    DUMP("---------");
+	Testsuite::Test (``(ProfileManager::GetResourcesAsItems()), [ $[], $[], $[] ], nil);
+    Testsuite::Dump("---------");
 
     ProfileManager::switch_info =
     $[ "profile_name": "home",
@@ -54,9 +45,9 @@
        ]
     ];
 
-    DUMP("switch_info:");
-    DUMP(ProfileManager::switch_info);
-    DUMP("table items list:");
+    Testsuite::Dump("switch_info:");
+    Testsuite::Dump(ProfileManager::switch_info);
+    Testsuite::Dump("table items list:");
 
-	TEST (``(ProfileManager::GetResourcesAsItems()), [ $[], $[], $[] ], nil);
+    Testsuite::Test (``(ProfileManager::GetResourcesAsItems()), [ $[], $[], $[] ], nil);
 }

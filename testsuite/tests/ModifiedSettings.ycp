@@ -1,7 +1,6 @@
 {
-
-    include "testsuite.ycp";
-
+    // testedfiles: ProfileManager.ycp
+    import "Testsuite";
     import "ProfileManager";
 
     ProfileManager::profile_settings =
@@ -23,9 +22,9 @@
     ];
 
 
-    DUMP(new_settings);
+    Testsuite::Dump(new_settings);
 
-	TEST (``(ProfileManager::ModifiedSettings(new_settings)), [ $[], $[], $[] ], nil);
+    Testsuite::Test (``(ProfileManager::ModifiedSettings(new_settings)), [ $[], $[], $[] ], nil);
 
     new_settings =
     $[ "name": "default",
@@ -36,8 +35,8 @@
        "poststop": "/var/scpm/default/ps"
     ];
 
-    DUMP(new_settings);
+    Testsuite::Dump(new_settings);
 
-	TEST (``(ProfileManager::ModifiedSettings(new_settings)), [ $[], $[], $[] ], nil);
+    Testsuite::Test (``(ProfileManager::ModifiedSettings(new_settings)), [ $[], $[], $[] ], nil);
 
 }

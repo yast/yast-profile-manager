@@ -1,7 +1,6 @@
 {
-
-    include "testsuite.ycp";
-
+    // testedfiles: ProfileManager.ycp
+    import "Testsuite";
     import "ProfileManager";
 
     map EX_nil =
@@ -26,9 +25,9 @@
        "poststop": "/var/scpm/default/ps"
     ];
 
-    DUMP(new_settings);
+    Testsuite::Dump (new_settings);
 
-	TEST (``(ProfileManager::CheckFilesValidity(new_settings)), [ $[], $[], EX0 ], nil);
+    Testsuite::Test (``(ProfileManager::CheckFilesValidity(new_settings)), [ $[], $[], EX0 ], nil);
 
-	TEST (``(ProfileManager::CheckFilesValidity(new_settings)), [ $[], $[], EX1 ], nil);
+    Testsuite::Test (``(ProfileManager::CheckFilesValidity(new_settings)), [ $[], $[], EX1 ], nil);
 }

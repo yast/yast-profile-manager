@@ -1,7 +1,6 @@
 {
-
-    include "testsuite.ycp";
-
+    // testedfiles: ProfileManager.ycp
+    import "Testsuite";
     import "ProfileManager";
 
 
@@ -50,17 +49,17 @@
        ]
     ];
 
-    DUMP(ProfileManager::switch_info);
-    DUMP("---------");
+    Testsuite::Dump(ProfileManager::switch_info);
+    Testsuite::Dump("---------");
 
     ProfileManager::active_resource = 0;
-	TEST (``(ProfileManager::ShowChanges()), [ READ_nil, $[], EX_true ], nil);
-    DUMP("---------");
+    Testsuite::Test (``(ProfileManager::ShowChanges()), [ READ_nil, $[], EX_true ], nil);
+    Testsuite::Dump("---------");
 
-	TEST (``(ProfileManager::ShowChanges()), [ READ_ok, $[], EX_true ], nil);
-    DUMP("---------");
+    Testsuite::Test (``(ProfileManager::ShowChanges()), [ READ_ok, $[], EX_true ], nil);
+    Testsuite::Dump("---------");
 
     ProfileManager::active_resource = 1;
-	TEST (``(ProfileManager::ShowChanges()), [ READ_ok, $[], EX_true ], nil);
+    Testsuite::Test (``(ProfileManager::ShowChanges()), [ READ_ok, $[], EX_true ], nil);
 
 }

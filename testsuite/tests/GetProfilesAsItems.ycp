@@ -1,30 +1,29 @@
 {
-
-    include "testsuite.ycp";
+    // testedfiles: ProfileManager.ycp
+    import "Testsuite";
 
     import "ProfileManager";
 
     ProfileManager::profiles = $[];
 
-    DUMP("profiles:");
-    DUMP(ProfileManager::profiles);
+    Testsuite::Dump("profiles:");
+    Testsuite::Dump(ProfileManager::profiles);
 
-    DUMP("table items list:");
-	TEST (``(ProfileManager::GetProfilesAsItems()), [ $[], $[], $[] ], nil);
+    Testsuite::Dump("table items list:");
+	Testsuite::Test (``(ProfileManager::GetProfilesAsItems()), [ $[], $[], $[] ], nil);
 
-    ProfileManager::profiles =
-    $[ "default" : "default profile description",
-       "home" : "My private configuration",
-       "train" : "Maximum power savings"
+    ProfileManager::profiles = $[
+	"default" : "default profile description",
+	"home"	: "My private configuration",
+	"train" : "Maximum power savings"
     ];
 
-    DUMP("profiles:");
-    DUMP(ProfileManager::profiles);
+    Testsuite::Dump("profiles:");
+    Testsuite::Dump(ProfileManager::profiles);
     ProfileManager::active_profile = "default";
-    DUMP("active profile:");
-    DUMP(ProfileManager::active_profile);
+    Testsuite::Dump("active profile:");
+    Testsuite::Dump(ProfileManager::active_profile);
 
-    DUMP("table items list:");
-	TEST (``(ProfileManager::GetProfilesAsItems()), [ $[], $[], $[] ], nil);
-
+    Testsuite::Dump("table items list:");
+    Testsuite::Test (``(ProfileManager::GetProfilesAsItems()), [ $[], $[], $[] ], nil);
 }
