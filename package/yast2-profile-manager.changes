@@ -1,4 +1,15 @@
 -------------------------------------------------------------------
+Mon Aug 12 10:38:04 CEST 2002 - jsuchome@suse.de
+
+- simplified map operations
+- more checks to use info application 
+
+-------------------------------------------------------------------
+Tue Aug  6 19:01:53 CEST 2002 - jsuchome@suse.de
+
+- updated testsuite
+
+-------------------------------------------------------------------
 Fri Aug 02 15:47:30 2002 - jsuchome@suse.cz
 
 - enabled switch to active profile
