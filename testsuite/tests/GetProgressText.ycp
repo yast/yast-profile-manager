@@ -1,3 +1,7 @@
+/**
+ * Author:	Jiri Suchomel <jsuchome@suse.cz>
+ * $Id$
+ */
 {
     // testedfiles: ProfileManager.ycp
     import "Testsuite";
