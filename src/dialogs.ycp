@@ -480,7 +480,7 @@ define any SwitchDialog () ``{
 	{
 	    active_group = ProfileManager::current_resource_group;
 	    if (active_group == "")
-		active_group = (string) select (resources_as_items[0]:`item(),2,"");
+		active_group = resources_as_items[0,2]:"";
 	    UI::ChangeWidget(`id(`modified), `CurrentItem,
 		active_group);
 	}
@@ -1226,12 +1226,12 @@ define map ResourceGroupPopup (map group) ``{
 	if (ret == `resources)
 	{
 	    items = maplist (term i, items, ``{
-		if ((select(i,2,"") != selected))
+		if (i[2]:"" != selected)
 		    return i;
-		if ((select(i,1,"") == "X"))
-		    return `item(`id(selected), "", selected, select (i,3,""));
+		if (i[1]:"" == "X")
+		    return `item(`id(selected), "", selected, i[3]:"");
 		else
-		    return `item(`id(selected), "X", selected, select (i,3,""));
+		    return `item(`id(selected), "X", selected, i[3]:"");
 	    });
 	    UI::ChangeWidget(`id(`resources), `Items, items);
 	    UI::ChangeWidget(`id(`resources), `CurrentItem, selected);
@@ -1270,7 +1270,7 @@ _("Really delete resource \'%1\' from this group?"),
 	    {
 		y2debug ("deleting %1 from group %2", selected, groupname);
 		// delete entry from local items
-		items = filter (term i, items, ``(select(i,2,"") != selected));
+		items = filter (term i, items, ``(i[2]:"" != selected));
 		UI::ChangeWidget(`id(`resources), `Items, items);
 	    }
 	}
@@ -1328,10 +1328,10 @@ Choose another name."), groupname));
 	    group["description"]	= UI::QueryWidget (`id(`descr), `Value);
 	    group["resources"]		= maplist (term i, items, ``{
 		return $[
-		    "active":	select (i,1,"") == "X",
-		    "name":	select (i,2,""),
-		    "type":	select (i,3,""),
-		    "user_defined": user_defined[select (i,2,"")]:false
+		    "active"		: i[1]:"" == "X",
+		    "name"		: i[2]:"",
+		    "type"		: i[3]:"",
+		    "user_defined"	: user_defined [ i[2]:""]:false
 		];
 	    });
 	    if (what == "added")
