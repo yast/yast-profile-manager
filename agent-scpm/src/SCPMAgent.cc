@@ -165,11 +165,7 @@ YCPValue SCPMAgent::Read(const YCPPath &path, const YCPValue& arg)
         }
 
     }
-   	if (PC(0) == "wait")  {
-            
-        ret = YCPInteger(waitpid(0, NULL,WNOHANG));
-    }
-   	if (PC(0) == "status") {
+  	if (PC(0) == "status") {
         scpm_status_t scpm_status;
             
         if (!scpm->Status(scpm_status)) {
@@ -391,7 +387,6 @@ YCPValue SCPMAgent::Execute(const YCPPath &path, const YCPValue& value,
             pthread_create( &pt, NULL, (void*(*)(void*))&call_switch, this );
         }
     }
-    
     
     }
     
