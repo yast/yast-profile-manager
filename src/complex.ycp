@@ -137,6 +137,8 @@ global define any MainDialog () ``{
         UI::ChangeWidget(`id(`profiles), `CurrentItem, ProfileManager::active_profile);
         UI::SetFocus(`id(`profiles));
     }
+    else
+        UI::SetFocus(`id(`options_button));
 
     UI::ChangeWidget(`id(`profiles), `Enabled, enabled);
     UI::ChangeWidget(`id(`add_button), `Enabled, enabled);
@@ -442,7 +444,9 @@ global define any OptionsDialog () ``{
     {
         close_popups = UI::QueryWidget(`id(`close_popups_ch), `Value);
 
-        if (UI::QueryWidget(`id(`rb), `CurrentButton) == `ena) {
+	// SCPM will be enabled
+        if (UI::QueryWidget(`id(`rb), `CurrentButton) == `ena)
+	{
 
 	    if (use_rg)
 		selected = ProfileManager::current_resources;
@@ -516,6 +520,7 @@ global define any OptionsDialog () ``{
 		else continue;
             }
         }
+	// SCPM will be disabled
         else
         {
             if (ProfileManager::enabled)
@@ -533,7 +538,6 @@ global define any OptionsDialog () ``{
                     ProfileManager::enabled = true;
                     break;
                 }
-		ProfileManager::profiles = $[];
 	    }
         }
 	ProfileManager::close_popups = close_popups;

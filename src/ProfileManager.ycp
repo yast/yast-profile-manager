@@ -782,7 +782,7 @@ global define boolean Read() ``{
 
         return false;
     }
-    if (needs_reinit)
+    if (needs_reinit) // FIXME: data will be lost! -> better solution!
     {
 	// yes/no popup
 	if (Popup::YesNo (_("SCPM is currently locked because your system
@@ -802,21 +802,24 @@ Perform the reinitialization now?
     // read profiles
     if(Abort()) return false;
     Progress::NextStage();
-    if (enabled && !ReadProfiles())
+
+    if (initialized && !ReadProfiles())
 	// Error message: %1 is special error message, should be translated
 	Report::Error(sformat(_("Cannot read profiles:\n%1"), scpm_error));
 
     // read active profile
     if(Abort()) return false;
     Progress::NextStage();
-    if (enabled && !ReadActiveProfile())
+
+    if (initialized && !ReadActiveProfile())
 	// Error message: %1 is special error message, should be translated
 	Report::Error(sformat(_("Cannot read active profile:\n%1"),scpm_error));
 
     // read profile descriptions
     if(Abort()) return false;
     Progress::NextStep();
-    if (enabled && !ReadProfilesDescriptions())
+
+    if (initialized && !ReadProfilesDescriptions())
 	// Error message: %1 is special error message, should be translated
 	Report::Error(sformat(_("Cannot read profile descriptions:\n%1"),
             scpm_error));
@@ -961,7 +964,7 @@ global define boolean ReadProfilesDescriptions() ``{
     // read the descriptions of each profile
     map profilesm = profiles;
 
-    foreach (`profile, `d, profilesm, ``{
+    foreach (string profile, string d, profilesm, ``{
         string desc = SCR::Read(.scpm.profiles.description, profile);
         if (desc == nil)
         {
