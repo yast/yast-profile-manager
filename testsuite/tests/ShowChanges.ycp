@@ -1,0 +1,71 @@
+{
+
+    include "testsuite.ycp";
+
+    map READ = $[
+	"etc" : $[ "install_inf" : $[] ],
+	"target" : $[ "ycp" : $[] ],
+	"probe" : $[ "system" : []],
+    ];
+
+    TESTSUITE_INIT([READ], nil);
+    import "ProfileManager";
+
+
+    map EX_true =
+    $[ "scpm":
+        $[ "profiles" :
+            $[ "changes": true ]
+        ]
+    ];
+
+    map EX_false =
+    $[ "scpm":
+        $[ "profiles" :
+            $[ "changes": false ]
+        ]
+    ];
+
+    map READ_ok =
+    $[ "target":
+		$[ "string": "Changes" ]
+	];
+
+    map READ_nil =
+    $[ "target":
+		$[ "string": nil ]
+	];
+
+    ProfileManager::changespath = "/tmp/changes.out";
+
+    ProfileManager::switch_info =
+    $[ "profile_name": "home",
+       "profile_modified": true,
+       "modified_resources":
+       [ $[ "resource_name": "/etc/X11/XF86Config",
+            "resource_type": "file",
+            "is_new": false,
+            "is_deleted": true,
+            "save": true
+         ],
+         $[ "resource_name": "sendmail",
+            "resource_type": "service",
+            "is_new": false,
+            "is_deleted": true,
+            "save": false
+         ],
+       ]
+    ];
+
+    DUMP(ProfileManager::switch_info);
+    DUMP("---------");
+
+	TEST (``(ProfileManager::ShowChanges(0)), [ READ_nil, $[], EX_true ], nil);
+    DUMP("---------");
+
+	TEST (``(ProfileManager::ShowChanges(0)), [ READ_ok, $[], EX_true ], nil);
+    DUMP("---------");
+
+	TEST (``(ProfileManager::ShowChanges(1)), [ READ_ok, $[], EX_true ], nil);
+
+}

@@ -1,0 +1,14 @@
+Read	.target.ycp ["/var/lib/YaST2/installmap.ycp", $[]] $[]
+Dump	$["default":"default description", "home":"My private configuration"]
+Write	.scpm.profiles.description "New description for default profile" "default" true
+Write	.scpm.profiles.prestart "/tmp/default/p1" "default" true
+Write	.scpm.profiles.poststart "" "default" false
+Return	false
+Dump	$["default":"default description", "home":"My private configuration"]
+Write	.scpm.profiles.description "New description for default profile" "default" true
+Write	.scpm.profiles.prestart "/tmp/default/p1" "default" true
+Write	.scpm.profiles.poststart "" "default" true
+Write	.scpm.profiles.prestop "" "default" true
+Write	.scpm.profiles.poststop "/var/scpm/default/ps" "default" true
+Return	true
+Dump	$["default":"New description for default profile", "home":"My private configuration"]

@@ -1,0 +1,70 @@
+{
+
+    include "testsuite.ycp";
+
+    map READ = $[
+	"etc" : $[ "install_inf" : $[] ],
+	"target" : $[ "ycp" : $[] ],
+	"probe" : $[ "system" : []],
+    ];
+
+    TESTSUITE_INIT([READ], nil);
+    import "ProfileManager";
+
+
+    map READ_nil =
+    $[ "scpm":
+		$[ "profiles":
+            $[ "prestart": nil,
+               "poststart": nil,
+               "prestop": nil,
+               "poststop": nil
+            ]
+        ]
+	];
+
+    map READ_default =
+    $[ "scpm":
+		$[ "profiles":
+            $[ "prestart": "/tmp/default/p1",
+               "poststart": "",
+               "prestop": "",
+               "poststop": "/var/scpm/default/ps"
+            ]
+        ]
+	];
+
+    map READ_home =
+    $[ "scpm":
+		$[ "profiles":
+            $[ "prestart": "/tmp/p1",
+               "poststart": "",
+               "prestop": "/tmp/p2",
+               "poststop": ""
+            ]
+        ]
+	];
+
+
+    ProfileManager::profiles =
+    $[ "default" : "default profile description",
+       "home" : "My private configuration",
+       "train" : "Maximum power savings"
+    ];
+
+
+    ProfileManager::selected_profile = "default";
+	TEST (``(ProfileManager::GetProfile()), [ READ_nil, $[], $[] ], nil);
+
+    DUMP(ProfileManager::profile_settings);
+
+	TEST (``(ProfileManager::GetProfile()), [ READ_default, $[], $[] ], nil);
+
+    DUMP(ProfileManager::profile_settings);
+
+    ProfileManager::selected_profile = "home";
+	TEST (``(ProfileManager::GetProfile()), [ READ_home, $[], $[] ], nil);
+
+    DUMP(ProfileManager::profile_settings);
+
+}

@@ -1,0 +1,19 @@
+Read	.target.ycp ["/var/lib/YaST2/installmap.ycp", $[]] $[]
+Read	.scpm.profiles.prestart "default" nil
+Read	.scpm.profiles.poststart "default" nil
+Read	.scpm.profiles.prestop "default" nil
+Read	.scpm.profiles.poststop "default" nil
+Return	true
+Dump	$["description":"default profile description", "name":"default", "poststart":nil, "poststop":nil, "prestart":nil, "prestop":nil]
+Read	.scpm.profiles.prestart "default" "/tmp/default/p1"
+Read	.scpm.profiles.poststart "default" ""
+Read	.scpm.profiles.prestop "default" ""
+Read	.scpm.profiles.poststop "default" "/var/scpm/default/ps"
+Return	true
+Dump	$["description":"default profile description", "name":"default", "poststart":"", "poststop":"/var/scpm/default/ps", "prestart":"/tmp/default/p1", "prestop":""]
+Read	.scpm.profiles.prestart "home" "/tmp/p1"
+Read	.scpm.profiles.poststart "home" ""
+Read	.scpm.profiles.prestop "home" "/tmp/p2"
+Read	.scpm.profiles.poststop "home" ""
+Return	true
+Dump	$["description":"My private configuration", "name":"home", "poststart":"", "poststop":"", "prestart":"/tmp/p1", "prestop":"/tmp/p2"]

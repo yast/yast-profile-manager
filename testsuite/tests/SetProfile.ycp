@@ -1,0 +1,65 @@
+{
+
+    include "testsuite.ycp";
+
+    map READ = $[
+	"etc" : $[ "install_inf" : $[] ],
+	"target" : $[ "ycp" : $[] ],
+	"probe" : $[ "system" : []],
+    ];
+
+    TESTSUITE_INIT([READ], nil);
+    import "ProfileManager";
+
+
+    map WRITE_true =
+    $[ "scpm":
+		$[ "profiles":
+            $[ "prestart": true,
+               "poststart": true,
+               "prestop": true,
+               "poststop": true,
+               "description": true
+            ]
+        ]
+	];
+
+    map WRITE_false =
+    $[ "scpm":
+		$[ "profiles":
+            $[ "prestart": true,
+               "poststart": false,
+               "prestop": true,
+               "poststop": true,
+               "description": true
+            ]
+        ]
+	];
+
+
+    ProfileManager::profiles =
+    $[ "default" : "default description",
+       "home" : "My private configuration",
+    ];
+
+    ProfileManager::profile_settings =
+    $[ "name": "default",
+       "description": "New description for default profile",
+       "prestart": "/tmp/default/p1",
+       "posttart": "",
+       "prestop": "",
+       "poststop": "/var/scpm/default/ps"
+    ];
+
+    DUMP(ProfileManager::profiles);
+
+	TEST (``(ProfileManager::SetProfile("default")), [ $[], WRITE_false, $[] ], nil);
+
+    DUMP(ProfileManager::profiles);
+
+	TEST (``(ProfileManager::SetProfile("default")), [ $[], WRITE_true, $[] ], nil);
+
+    DUMP(ProfileManager::profiles);
+
+
+}
