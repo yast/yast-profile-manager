@@ -147,7 +147,7 @@ map state = $[];
 integer progress_size = 0;
 
 // how many times was progress bar used
-integer hash_size = 0;
+global integer hash_size = 0;
 
 /**
  * The name of the file, where the progress state is beeing written.
@@ -1032,7 +1032,6 @@ global define string GetProgressText(boolean everything) ``{
             progress_size = progress_size + 1;
             current = select(all_l,progress_size,"");
         }
-        hash_size = hash_size + 1;
     }
     return ret;
 }

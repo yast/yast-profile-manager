@@ -140,7 +140,7 @@ global define any ProfileSettingsDialog () ``{
                 continue;
             }
             ProfileManager::AddProfile(selected);
-            ProgressPopup("");
+            ProgressPopup("", 0, 100);
             if (!ProfileManager::Wait())
             {
                 // Error popup text, %1 is additional translated error message
@@ -178,7 +178,7 @@ global define any ProfileSettingsDialog () ``{
                 continue;
             }
             ProfileManager::CopyProfile(edited, selected);
-            ProgressPopup("");
+            ProgressPopup("",0,100);
             if (!ProfileManager::Wait())
             {
                 // Error popup text, %1 is additional translated error message
@@ -389,7 +389,7 @@ global define any SwitchDialog () ``{
 	    {
             // saving changes: check for "drop all"
             ProfileManager::Save();
-            ProgressPopup("first");
+            ProgressPopup("first",0,15);
             if (!ProfileManager::Wait())
             {
                 // Error popup text, %1 is additional translated error message
@@ -400,7 +400,7 @@ global define any SwitchDialog () ``{
                 break;
             }
             ProfileManager::Switch();
-            ProgressPopup("last");
+            ProgressPopup("last",15,100);
             if (!ProfileManager::Wait())
                 // Error popup text, %1 is additional translated error message
                 UI::ErrorPopup (sformat(_("Switching was not successful:
@@ -519,11 +519,13 @@ profile nor does it start or stop services."))),
 
 /**
  * Popup for showing progress informations
- * @param postition of this progress:
+ * @param position of this progress:
  *  (if "first", popup is not closed, for "last" popup is not created)
+ * @param start start of progress (mainly 0)
+ * @param end end of progress (mainly 100)
  * @return boolean true
  */
-global define boolean ProgressPopup(string position) ``{
+global define boolean ProgressPopup(string position, integer start, integer end) ``{
 
     boolean close_popups = ProfileManager::close_popups;
 
@@ -553,14 +555,14 @@ global define boolean ProgressPopup(string position) ``{
     }
 
     string progresstext = "";
-    integer hashmarks = 0;
+    integer hashmarks = start;
     ProfileManager::last_ret = "";
 
     UI::BusyCursor();
     do
     {
+        sleep(5);
         hashmarks = ProfileManager::GetHashMarks();
-        sleep(10);
         UI::ChangeWidget(`id(`pb), `Value, hashmarks);
 
         progresstext = ProfileManager::GetProgressText(false);
@@ -569,7 +571,11 @@ global define boolean ProgressPopup(string position) ``{
             UI::ChangeWidget(`id(`progress), `LastLine, recoded);
         }
     }
-    while (hashmarks<100);
+    while (hashmarks < end);
+
+    // next hundred of hash marks
+    if (hashmarks >= 100)
+        ProfileManager::hash_size = ProfileManager::hash_size + 1;
 
     // read to the end of file
     progresstext = ProfileManager::GetProgressText(true);
@@ -577,7 +583,7 @@ global define boolean ProgressPopup(string position) ``{
         string recoded = UI::Recode(Console::encoding,"UTF-8",progresstext);
         UI::ChangeWidget(`id(`progress), `LastLine, recoded);
     }
-    else if (position == "first") // hack: missing newline
+    if (position == "first") // hack: missing newline
         UI::ChangeWidget(`id(`progress), `LastLine, "\n");
 
     UI::NormalCursor();
