@@ -673,7 +673,7 @@ global define boolean ShowChangesPopup() ``{
 }
 
 /* not impl.yet
-global define string CopyResourcePopup() ``{
+efine string CopyResourcePopup() ``{
 
     return "new";
 }

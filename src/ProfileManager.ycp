@@ -749,12 +749,8 @@ global define boolean RebuildDB() ``{
 
 }
 
-/**
- * Not implemented yet
- * @param set
- * @return true on success
- */
-global define boolean DeleteResourceSet(string set) ``{
+/*
+global efine boolean DeleteResourceSet(string set) ``{
 
     boolean ret = SCR::Execute(.scpm.resources.delete, set);
     if (ret)
@@ -763,13 +759,7 @@ global define boolean DeleteResourceSet(string set) ``{
     return ret;
 }
 
-/**
- * Not implemented yet
- * @param set
- * @param newset
- * @return true on success
- */
-global define boolean CopyResourceSet(string set, string newset) ``{
+global efine boolean CopyResourceSet(string set, string newset) ``{
 
     boolean ret = SCR::Execute(.scpm.resources.copy, set, newset);
 
@@ -777,11 +767,11 @@ global define boolean CopyResourceSet(string set, string newset) ``{
         resource_sets_individual = add (resource_sets_individual, newset);
 
     return ret;
-}
+}*/
 
 /**
  * Runs application with an info page
- * @return
+ * @return intro text for ncurses, empty string otherwise
  */
 global define string RunIntroApplication() ``{
 
@@ -966,7 +956,8 @@ global define boolean ModifiedSettings(map new_settings) ``{
 }
 
 /**
- * @return
+ * Gets the hash marks (to show in ProgressPopup) from the hashfile
+ * @return number of characters in hashfile
  */
 global define integer GetHashMarks() ``{
 
@@ -976,7 +967,8 @@ global define integer GetHashMarks() ``{
 
 /**
  * Reads the file with the progress informations.
- * @return string One line of the text to show in ProgressPopup()
+ * @param everything if set to true, returns the entire rest of file
+ * @return string the text to show in ProgressPopup (one line in normal case)
  */
 global define string GetProgressText(boolean everything) ``{
 
