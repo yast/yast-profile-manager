@@ -1,0 +1,55 @@
+[Desktop Entry]
+Type=Application
+Categories=Qt;X-SuSE-YaST-System;
+
+X-KDE-ModuleType=Library
+X-KDE-RootOnly=true
+X-KDE-HasReadOnlyMode=true
+X-KDE-Library=yast2
+X-KDE-FactoryName=profile_manager
+
+X-SuSE-YaST-Group=System
+X-SuSE-YaST-Argument=
+X-SuSE-YaST-RootOnly=true
+X-SuSE-YaST-AutoInst=
+X-SuSE-YaST-Geometry=
+X-SuSE-YaST-SortKey=
+X-SuSE-YaST-AutoinstResource=
+
+Icon=profile-manager
+Exec=/sbin/yast2 profile-manager 
+
+Name=Profile manager
+GenericName=Configure profiles
+Name[cs]=Správce profilů
+GenericName[cs]=Konfigurovat profily
+Name[de]=Profil-Manager
+GenericName[de]=Profile konfigurieren
+Name[es]=Gestor de perfiles
+GenericName[es]=Configurar perfiles
+Name[hu]=Profilkezelő
+GenericName[hu]=Profilok beállítása
+Name[it]=Gestione profili
+GenericName[it]=Configura profili
+Name[ko]=프로파일 메니저
+GenericName[ko]=프로파일 설정
+Name[nl]=Profiel-beheerder
+GenericName[nl]=Configureer profielen
+Name[pt]=Gerenciador de Perfil
+GenericName[pt]=Configurar Perfis
+Name[sk]=Správca profilov
+GenericName[sk]=Konfigurovať profily
+Name[sv]=Profilhanterare
+GenericName[sv]=Ställ in profiler
+Name[el]=Διαχείριση προφίλ
+GenericName[el]=Ρυθμίσεις προφίλ
+Name[fr]=Gestionnaire de profils
+GenericName[fr]=Configurer les profils
+Name[ja]=プロフィール・マネージャー
+GenericName[ja]=プロフィールの設定
+Name[lt]=Profailo tvarkyklė
+GenericName[lt]=Konfigūruoti profailus
+Name[sl]=Upravnik profilov
+GenericName[sl]=Nastavi profile
+Name[tr]=Profil düzenleyicisi
+GenericName[tr]=Profilleri yapılandır
