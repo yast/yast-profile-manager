@@ -12,19 +12,19 @@ The SCPM agent (<TT>ag_scpm</TT>) is used to access SCPM library.
 
 <P>
 <H2>Implementation</H2>
-The agent creates a SCPM object and calls the functions from SCPM library (=SCPM object methods). Look at these methods at <A HREF="/usr/include/scpm.h"><TT>/usr/include/scpm.h</TT></a>.
+The agent creates a SCPM object and calls the functions from SCPM library (=SCPM object methods). Look at these methods at <A HREF="/usr/include/scpm.h"><TT>/usr/include/scpm.h</TT></a>. It is also good to check <tt>info scpm</tt>.
 
+<p>
+Some functions called from SCPM library generate the "progress output" - the text which has to be shown in some YCP widget. These functions are called from agents's separate thread, so the progress output can be read from YCP client while the functions are still running. After the end of output is reached (this also means that threads exited), Read(.scpm.exit_status) must be read.
+<p>
+Functions generating output are Add, Copy, PrepareSwitch, Switch, Enable (only from uninitialized state).
 <P>
-<I><B>Note:</B> The complete development documentation is available in the
-<A HREF="autodocs/index.html"><TT>autodocs/</TT></A> directory.</I>
+<I>Check the development documentation in the <A HREF="autodocs/index.html"><TT>autodocs/</TT></A> directory.</I>
 
 <P>
 <H2>Interface for SCPM-agent</H2>
 The interface is implemented as a SCR agent with the usual <TT>Read()</TT>,
-<TT>Write()</TT> and <TT>Dir()</TT> interface. The path prefix used is
-
-<UL><TT>.scpm</TT></UL>
-<TT>...</TT>
+<TT>Write()</TT> and <TT>Dir()</TT> interface. The path prefix used is <TT>.scpm</TT>. For more see the paths tables.
 
 <P>
 <H2>Restrictions, limits and future enhancements</H2>
@@ -32,8 +32,7 @@ The interface is implemented as a SCR agent with the usual <TT>Read()</TT>,
 <b>Important:</b>If you want to use SCPM, don't forget to call <tt>Execute(.scpm)</tt> at first and <tt>Write(.scpm, nil)</tt> at the end. These calls do necessary initialization work (creating and destroying SCPM object).
 
 <P>
-See the <A HREF="Todo.txt">Todo.txt</A> file for the current status of support
-and also for the list of possible future enhancements.
+See the <A HREF="Todo.txt">Todo.txt</A> file for the list of possible future enhancements.
 
 <P>
 <H2>Complete Read paths table</H2>
@@ -60,22 +59,70 @@ and also for the list of possible future enhancements.
 	<TD>list contaning two list of available resource sets, predefined and individual (e.g. [ [ "default" ], [ "my_set" ] ]</TD></TR>
 	<TR><TD><TT>.scpm.resources.current</TD><td></td><TD ALIGN="left">YCPString</TD>
 	<TD>name of the current resource set</TD></TR>
+	<TR><TD><TT>.scpm.exit_status</TD><td></td><TD ALIGN="left">YCPBoolean</TD>
+	<TD>true if function called in thread finished successfully</TD></TR>
 </TABLE>
 
 <P>
 <H2>Complete Write paths table</H2>
 Return values are YCPBoolean (the success of the library call) or YCPVoid (no/bad argument).
+<p>
 <TABLE>
 	<TR><TH WIDTH="20%" ALIGN="left">Path</TH><th WIDTH="15%" align="left">Argument</th><TH ALIGN="left">Result</TH></TR>
-	<TR><TD><TT>.scpm</TD><td></td>
-	<TD>calls a destructor of the SCPM object</TD></TR>
+	<TR><TD><TT>.scpm</TD><TD ALIGN="left">YCPValue</TD>
+	<TD>calls a destructor of the SCPM object (as argument use anything)</TD></TR>
 	<TR><TD><TT>.scpm.status.enabled</TD><TD ALIGN="left">YCPBoolean</TD>
 	<TD>enables/disables SCPM</TD></TR>
 	<TR><TD><TT>.scpm.resources.current</TD><TD ALIGN="left">YCPString</TD>
 	<TD>changes the active resource set to the given one</TD></TR>
 	<TR><TD><TT>.scpm.profiles.description</TD><td align="left">YCPString</td>
 	<TD>sets the new description of the given profile; if nil argument is given, active profile is used (also in following calls)</TD></TR>
+	<TR><TD><TT>.scpm.profiles.prestart</TD><td align="left">YCPString</td>
+	<TD>sets the new prestart script of the given profile</TD></TR>
+	<TR><TD><TT>.scpm.profiles.poststart</TD><td align="left">YCPString</td>
+	<TD>sets the new poststart script of the given profile</TD></TR>
+	<TR><TD><TT>.scpm.profiles.prestop</TD><td align="left">YCPString</td>
+	<TD>sets the new prestop script of the given profile</TD></TR>
+	<TR><TD><TT>.scpm.profiles.poststop</TD><td align="left">YCPString</td>
+	<TD>sets the new poststop script of the given profile</TD></TR>
 </TABLE>
+
+<P>
+<H2>Complete Execute paths table</H2>
+Return values are YCPBoolean  - the success of the library call. 
+<p>
+<TABLE>
+	<TR><TH WIDTH="20%" ALIGN="left">Path</TH><th WIDTH="15%" align="left">1st argument</th><th WIDTH="15%" align="left">2nd argument</th><TH ALIGN="left">Result</TH></TR>
+	<TR><TD><TT>.scpm</TD><td align="left">YCPString</td><td></td>
+	<TD>calls a constructor of the SCPM object; argument is path to the temporary directory, where outfile, hashfile, changesfile and tmpfile are created</TD></TR>
+	<TR><TD><TT>.switch.prepare</TD><td align="left">YCPString</td><td></td>
+	<TD>prepares switch to the profile given as argument; dumps switch_info_t struct to tmpfile</TD></TR>
+	<TR><TD><TT>.switch</TD><td align="left">YCPMap</td><td></td>
+	<TD>switchs to the selected profile; argument is switch_info_t struct</TD></TR>
+	<TR><TD><TT>.enable.first</TD><td></td><td></td>
+	<TD>enables SCPM for the first time - this is different from Write(.scpm.status.enabled) by generating output</TD></TR>
+	<TR><TD><TT>.profiles.add</TD><td align="left">YCPString</td><td></td>
+	<TD>adds a new profile</TD></TR>
+	<TR><TD><TT>.profiles.delete</TD><td align="left">YCPString</td><td></td>
+	<TD>deletes a profile given as parameter</TD></TR>
+	<TR><TD><TT>.profiles.copy</TD><td align="left">YCPString</td><td align="left">YCPString</td>
+	<TD>copies a profile (given as 1st argument) to the new profile (2nd argument)</TD></TR>
+    
+	<TR><TD><TT>.profiles.rename</TD><td align="left">YCPString</td><td align="left">YCPString</td>
+	<TD>renames a profile</TD></TR>
+ 
+	<TR><TD><TT>.profiles.changes</TD><td align="left">YCPString</td><td align="left">YCPString</td>
+	<TD>checks the changes of the selected resource (1st argument is ist name, the 2nd its type) and dumps the output to changesfile</TD></TR>
+
+	<TR><TD><TT>.resources.rebuild</TD><td></td><td></td>
+	<TD>rebuilds the resources database</TD></TR>
+	<TR><TD><TT>.resources.delete</TD><td align="left">YCPString</td><td></td>
+	<TD>[not implemented yet]</TD></TR>
+	<TR><TD><TT>.resources.copy</TD><td align="left">YCPString</td><td align="left">YCPString</td>
+	<TD>[not implemented yet]</TD></TR>
+</TABLE>
+<p>
+The calls from <tt>switch</tt>, <tt>switch.prepare</tt>, <tt>add</tt>, <tt>copy</tt> and <tt>enable.first</tt> paths generate output to outfile so they are started in separate thread.
 
 
 <P>
