@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Fri Jan 17 16:10:52 CET 2003 - jsuchome@suse.de
+
+- added ncurses f-keys shortcuts
+
+-------------------------------------------------------------------
 Tue Jan 14 10:28:30 CET 2003 - jsuchome@suse.de
 
 - checking and displaying scpm errors

@@ -286,18 +286,18 @@ global define any SwitchDialog () ``{
                     ),
                 `VSpacing(0.2),
 		        `HBox(
-                    // Push button label ---new 23.8.
-		            `PushButton(`id(`select_button), _("&Select or unselect")),
-                    // Push button label ---changed 23.8.
-		            `PushButton(`id(`save_button), _("Select &all")),
-                    /* original
-		            `PushButton(`id(`save_button), _("&Save all")), */
-                    // Push button label ---changed 23.8.
-		            `PushButton(`id(`drop_button), _("&Unselect all")),
-                    /* original
-		            `PushButton(`id(`save_button), _("&Drop all")), */
-                    // Push button label
-                    `Right( `PushButton(`id(`changes_button), _("Show c&hanges")))
+		            `PushButton(`id(`select_button), `opt(`key_F3),
+                        // Push button label
+                        _("&Select or unselect")),
+		            `PushButton(`id(`save_button), `opt(`key_F4),
+                        // Push button label
+                        _("Select &all")),
+		            `PushButton(`id(`drop_button), `opt(`key_F5),
+                        // Push button label
+                        _("&Unselect all")),
+                    `Right( `PushButton(`id(`changes_button), `opt(`key_F2),
+                        // Push button label
+                        _("Show c&hanges")))
 				    ),
                 `VSpacing(0.2)
                 ),
@@ -429,8 +429,10 @@ profile nor does it start or stop services."))),
             `VSpacing(1),
 	        `HBox(
 	            `HSpacing(1),
-	            `Left(`PushButton(`id(`cancel), CancelButtonLabel())),
-	            `Right(`PushButton(`id(`ok), `opt(`default), OKButtonLabel())),
+	            `Left(`PushButton(`id(`cancel), `opt (`key_F8),
+                    CancelButtonLabel())),
+	            `Right(`PushButton(`id(`ok), `opt(`default, `key_F10),
+                    OKButtonLabel())),
 	            `HSpacing(1)
 	            ),
             `VSpacing(1)),
@@ -509,7 +511,8 @@ global define boolean ProgressPopup() ``{
             `CheckBox(`id(`close_ch), `opt(`notify),_("Close progress pop-ups &automatically (reenable it in SCPM Setup)"),close_popups),
             `VSpacing(1),
 	        `HBox(
-	            `Right(`PushButton(`id(`close), `opt(`default), CloseButtonLabel())),
+	            `Right(`PushButton(`id(`close), `opt(`default, `key_F10),
+                    CloseButtonLabel())),
 	            `HSpacing(1)
 	            ),
             `VSpacing(1)),
@@ -637,7 +640,7 @@ global define boolean IntroductionTextPopup() ``{
             `VSpacing(1),
             `RichText(`id(`info),""),
             `VSpacing(1),
-            `PushButton(`id(`ok), `opt(`default), OKButtonLabel()),
+            `PushButton(`id(`ok), `opt(`default, `key_F10), OKButtonLabel()),
             `VSpacing(1)),
         `HSpacing(1.5)
         ));
@@ -667,7 +670,7 @@ global define boolean ShowChangesPopup() ``{
             `VSpacing(1),
             `RichText(recoded),
             `VSpacing(1),
-            `PushButton(`id(`ok), `opt(`default), OKButtonLabel()),
+            `PushButton(`id(`ok), `opt(`default, `key_F10), OKButtonLabel()),
             `VSpacing(1)),
         `HSpacing(1.5)
         ));
