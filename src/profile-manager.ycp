@@ -34,7 +34,7 @@ if (size(args) > 0) {
 	}
     }
     if (is(WFM::Args(0), string) && WFM::Args(0) == "help") {
-	string error = _("Command line interface for Profile Manager is not available - use 'scpm' tool instead.");
+	string error = _("A command line interface for the profile manager is not available. Use the 'scpm' tool instead.");
 
 	y2warning (error + " If you want to switch to some profile and see the list of modified resources, it is possible to call Profile Manager with parameters 'switch <profile_name>'. This will invoke 'Confirm Switch' dialog.");
 	return `abort;
