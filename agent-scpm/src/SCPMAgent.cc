@@ -105,6 +105,7 @@ switch_info_t frommap_sw(YCPMap map) {
 SCPMAgent::SCPMAgent() : SCRAgent()
 {
 	options = 0;
+    initialized = false;
 	scpm = NULL;
 }
 
@@ -132,18 +133,27 @@ YCPValue SCPMAgent::Read(const YCPPath &path, const YCPValue& arg)
     y2debug("Path in Read(): %s", path->toString().c_str());
     YCPValue ret = YCPVoid(); 
 
+    if (!initialized)
+    {
+        y2error ("SCPM not initialized yet!");
+        return ret;
+    }
+
     if (path->length() == 0) {
     	ret = YCPString("0");
     }
     
     if (path->length() == 1) {
         
+    if (PC(0) == "error") {
+        // return the last error message
+        ret = YCPString (scpm_error);
+    }
    	if (PC(0) == "profiles") {
 
     	vector<string> l;
 	    if ( !scpm->List( l ) ) {
-            y2error( scpm_error);
-            ret = YCPList();
+            y2error( scpm_error );
         }
         else
             ret = YCPList(tolist(l));
@@ -221,13 +231,11 @@ YCPValue SCPMAgent::Read(const YCPPath &path, const YCPValue& arg)
         if (!arg.isNull ()) profile = arg->asString()->value();
         else {
             if (!scpm->Active(profile)) {
-                ret = YCPString(""); // I do not check void value in module
                 y2error ( scpm_error );
             }
         }
         
         if (!scpm->Get(PC(1), result, profile)) {
-            ret = YCPString("");
             y2error (scpm_error);
         }
         else
@@ -261,12 +269,21 @@ YCPValue SCPMAgent::Write(const YCPPath &path, const YCPValue& value,
     y2debug("Path in Write(): %s", path->toString().c_str());
     YCPValue ret = YCPBoolean(false);
 
+    if (!initialized)
+    {
+        y2error ("SCPM not initialized yet!");
+        return ret;
+    }
+
     if (path->length() == 0) {
         y2debug("---------- destructing SCPM object");
     //    hash.close();
         output.close();
-        if (scpm) delete scpm;
-        ret = YCPBoolean(true);
+        if (scpm)
+        {
+           delete scpm;
+           ret = YCPBoolean(true);
+        }
     }
 
     if (path->length() == 2) {
@@ -277,7 +294,6 @@ YCPValue SCPMAgent::Write(const YCPPath &path, const YCPValue& value,
 
         if (value.isNull ()) {
             y2error ( scpm_error );
-            ret = YCPVoid();
         }
 
         if (!value->isBoolean ()) {
@@ -357,7 +373,6 @@ YCPValue SCPMAgent::Execute(const YCPPath &path, const YCPValue& value,
         string tmpdir = value->asString()->value();
         
         string outfile = tmpdir + "/scpm.progress";
-//        string 
         hashfile = tmpdir + "/scpm.hash";
         changesfile = tmpdir + "/scpm.changes";
         tmpfile = tmpdir + "/scpm.tmp";
@@ -371,16 +386,25 @@ YCPValue SCPMAgent::Execute(const YCPPath &path, const YCPValue& value,
 //    	hash.open (hashf);
         scpm = new SCPM (options, output);//, hash);
         if (scpm)
+        {
             ret = YCPBoolean(true);
+            initialized = true;
+        }
     }
-    
+
+    if (!initialized)
+    {
+        y2error ("SCPM not initialized!");
+        return ret;
+    }
+ 
     if (path->length() == 1) {
     
    	if (PC(0) == "switch") {
         
         if ((value.isNull ()) || (!value->isMap())) {
             y2error ( scpm_error );
-            ret = YCPVoid();
+            ret = YCPVoid(); // why not false?
         }
         else {
             switch_info = frommap_sw(value->asMap());

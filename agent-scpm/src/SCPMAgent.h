@@ -49,6 +49,11 @@ private:
     static void *call_copy( SCPMAgent *);
     static void *call_enable( SCPMAgent *);
     bool auto_switch;
+
+    /**
+     * forbid any scpm calls, when not initilaized (Execute(.scpm))
+     */
+    bool initialized;
     pthread_t pt;
     switch_info_t switch_info;
     string profile, dest_profile;
