@@ -1,7 +1,7 @@
 /**
  * File:	modules/ProfileManager.ycp
  * Package:	Configuration of profile-manager
- * Summary:	Data for configuration of profile-manager, input and output functions.
+ * Summary:	Data for configuration of profile-manager, input and output funcs.
  * Authors:	Jiri Suchomel <jsuchome@suse.cz>
  *
  * $Id$
@@ -137,9 +137,20 @@ global map state = $[];
 
 global integer progress_size = 0;
 global integer active_resource = 0;
+global string active_resource_name = "";
 
-global string progressfile = "/scpm.progress"; // same name uses agent!
+/**
+ * The name of the file, where the progress state is beeing written.
+ * (The same name must use the scpm agent!)
+ */
+global string progressfile = "/scpm.progress";
 global string hashfile = "/scpm.hash";
+
+/**
+ * The name of the file, where are written the resource changes.
+ * This file is checked after pushing "Show changes" button.
+ * (The same name must use the scpm agent!)
+ */
 global string changesfile = "/scpm.changes";
 global string progresspath = "";
 global string hashpath = "";
@@ -312,7 +323,7 @@ global define boolean Write() ``{
 	""
     );
 
-//    if(Abort()) return false; ... abort is disabled
+//    if(Abort()) return false; ... abort is disabled here
     Progress::NextStage();
     if(!SCR::Write(.scpm, nil))
 	    // Error message:
@@ -325,6 +336,7 @@ global define boolean Write() ``{
         Report::Error (_("Can not write user settings!"));
     sleep(sl);
 
+    // progress stage:
     ProgressNextStage(_("Finished"));
     sleep(sl);
 
@@ -629,6 +641,8 @@ global define boolean DeleteProfile(string to_delete) ``{
 global define boolean PrepareSwitch() ``{
 
     switch_info = SCR::Execute(.scpm.switch.prepare, selected_profile);
+//    switch_info = SCR::Read(.scpm.switch.prepare);
+
     if (switch_info == nil)
         return false;
 
@@ -708,7 +722,7 @@ global define boolean WriteSCPMStatus() ``{
 
 /**
  * Changes the current resources.
- * @param string resource_set Name of new resource set
+ * @param resource_set Name of new resource set
  * @return true on success
  */
 global define boolean WriteResources(string resource_set) ``{
@@ -763,28 +777,32 @@ global define integer RunIntro() ``{
  * @param resource_no Number of the resource in the list of modified resources.
  * @return string The changes.
  */
-global define string ShowChanges(integer resource_no) ``{
+global define string ShowChanges() ``{
 
     list resources = lookup (switch_info, "modified_resources", []);
 
     map resource = select (resources, active_resource, $[]);
 
-    string name = lookup(resource, "resource_name","");
+    active_resource_name = lookup(resource, "resource_name","");
     string type = lookup(resource, "resource_type","");
 
-    SCR::Execute(.scpm.profiles.changes, type, name);
+    SCR::Execute(.scpm.profiles.changes, type, active_resource_name);
     string changes = SCR::Read(.target.string, changespath); //check for error?
 
     if (changes == "" || changes == nil)
-        return name + "(" + type + ")" + "<br> not implemented yet";
+        changes = "";
     else
     {
         list lines = splitstring (changes, "\n");
         changes = mergestring (lines, "<br>");
-        return changes;
     }
+    return changes;
 }
 
+/**
+ * Sets the "save" flag of selected resource to the opposite value.
+ * @return true on success
+ */
 global define boolean SetSaveFlag() ``{
 
     list resources = lookup(switch_info, "modified_resources",[]);
@@ -802,7 +820,7 @@ global define boolean SetSaveFlag() ``{
     }
     new_resources = add (new_resources, resource);
     i = i + 1;
-    while (i<size(resources))
+    while (i < size(resources))
     {
         new_resources = add(new_resources, select(resources,i,$[]));
         i = i + 1;
@@ -927,7 +945,8 @@ global define boolean ModifiedSettings(map new_settings) ``{
 }
 
 /**
- * @return
+ * Reads the file with the progress informations.
+ * @return string The text to show in ProgressPopup()
  */
 global define string GetProgressText() ``{
 

@@ -105,6 +105,7 @@ SCPMAgent::SCPMAgent() : SCRAgent()
 {
 	options = 0;
 	scpm = NULL;
+//    global_ret = YCPVoid();
 }
 
 /**
@@ -232,6 +233,11 @@ YCPValue SCPMAgent::Read(const YCPPath &path, const YCPValue& arg)
         }
         else
             ret = YCPString(set);
+    }
+   	if ((PC(0) == "switch") && (PC(1) == "prepare")) {
+            
+        y2error("kontrola");
+        wait(0);
     }
     
     } 
@@ -397,12 +403,20 @@ YCPValue SCPMAgent::Execute(const YCPPath &path, const YCPValue& value,
         else {
             profile = value->asString()->value();
 
+/*            int id = fork();
+            if (id == 0) {
+            y2error("syn");*/
+                
             if (!scpm->PrepareSwitch(profile, switch_info)) {
                 y2error ( scpm_error );
                 ret = YCPVoid();
             }
             else
                 ret = YCPMap(tomap_sw(switch_info));
+/*            exit(0);
+            }
+            y2error("otec");*/
+            
             
         }
     }

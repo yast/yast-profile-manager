@@ -41,20 +41,26 @@ global define any ProfileSettingsDialog () ``{
         `Frame(_("Special profile settings"), `HBox(`HSpacing(1),
             `VBox(
                 `VSpacing(0.2),
+                // Text entry label
                 `TextEntry(`id(`name),_("Pro&file Name")),
                 `VSpacing(0.2),
                 `HBox(
-                    `HSpacing(0.5), // proc???
+                    `HSpacing(0.5),
+                    // Text entry label (profile description)
                     `MultiLineEdit(`id(`desc),_("&Description")),
                     `HSpacing(0.5)
                     ),
                 `VSpacing(0.2),
+                // Text entry label
                 `TextEntry(`id(`prestart),_("Pr&e Start Script")),
                 `VSpacing(0.2),
+                // Text entry label
                 `TextEntry(`id(`poststart),_("Po&st Start Script")),
                 `VSpacing(0.2),
+                // Text entry label
                 `TextEntry(`id(`prestop),_("P&re Stop Script")),
                 `VSpacing(0.2),
+                // Text entry label
                 `TextEntry(`id(`poststop),_("Pos&t Stop Script")),
                 `VSpacing(0.2),
 				// checkbox label
@@ -226,6 +232,7 @@ global define any SwitchDialog () ``{
         `VSpacing(1),
         `HBox(
             `HSpacing(1),
+            // Label text
             `Label(_("active Profile:")),
             `Right(`Heading(active)),
             `HSpacing(2)
@@ -233,6 +240,7 @@ global define any SwitchDialog () ``{
         `VSpacing(0.2),
         `HBox(
             `HSpacing(1),
+            // Label text
             `Label(_("new Profile:")),
             `Right(`Heading(selected)),
             `HSpacing(2)
@@ -243,16 +251,24 @@ global define any SwitchDialog () ``{
             `VBox(
                 `VSpacing(0.2),
 		        `Table(`id(`modified),`opt(`notify),
-                    `header(_("save"),
+                    `header(
+                            // Header of the table with modified resources 1/4
+                            _("save"),
+                            // Header of the table with modified resources 2/4
                             _("flags"),
+                            // Header of the table with modified resources 3/4
                             _("Resource"),
+                            // Header of the table with modified resources 4/4
                             _("type")),
                     resources_as_items
                     ),
                 `VSpacing(0.2),
 		        `HBox(
+                    // Push button label
 		            `PushButton(`id(`save_button), _("&Save all")),
+                    // Push button label
 		            `PushButton(`id(`drop_button), _("&Drop all")),
+                    // Push button label
                     `Right( `PushButton(`id(`changes_button), _("Show c&hanges")))
 				    ),
                 `VSpacing(0.2)
@@ -308,7 +324,7 @@ global define any SwitchDialog () ``{
         {
             ProfileManager::active_resource =
                 UI::QueryWidget(`id(`modified), `CurrentItem);
-            ShowChangesPopup(resource_no);
+            ShowChangesPopup();
             continue;
         }
         else if (ret == `next)
@@ -432,6 +448,7 @@ global define boolean ProgressPopup( block function) ``{
             `CheckBox(`id(`close_ch),_("Close progress popups &automatically (reenable it in SCPM Setup)"),close_popups),
             `VSpacing(1),
 	        `HBox(
+                // Push button label
 	            `Right(`PushButton(`id(`close), `opt(`default), _("&Close"))),
 	            `HSpacing(1)
 	            ),
@@ -487,7 +504,10 @@ To enable it use the Options button<br></p>") +
             `VSpacing(1),
 	        `HBox(
 	            `HSpacing(1),
+                // Push button label (read the intrduction before starting)
+
 	            `PushButton(`id(`intro),`opt(`default), _("&Show introduction")),
+                // Push button label (start without reading the intrduction)
 	            `PushButton(`id(`cont), _("Let's &go")),
 	            `HSpacing(1)
 	            ),
@@ -510,17 +530,18 @@ To enable it use the Options button<br></p>") +
 
 /**
  */
-global define boolean ShowChangesPopup(integer resource_no) ``{
+global define boolean ShowChangesPopup() ``{
 
-    string changes = ProfileManager::ShowChanges(resource_no);
+    string changes = ProfileManager::ShowChanges();
 
     UI::OpenDialog(`opt(`decorated), `HBox(`HSpacing(1.5),
         `VSpacing(15),
         `VBox(
             `HSpacing(50),
             `VSpacing(1),
-			// Popup text, part 1
+			// Popup text
             `Label(_("Changes of the resource")),
+            `Label(ProfileManager::active_resource_name),
             `VSpacing(1),
             `RichText(changes),
             `VSpacing(1),

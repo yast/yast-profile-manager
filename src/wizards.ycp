@@ -48,7 +48,9 @@ global define symbol ProfileManagerSequence() ``{
 	]
     ];
 
+    // Caption of the initialize process
     string caption = _("Profile-manager configuration");
+    // Lable of the initialize process
     term contents = `Label(_("Initializing ..."));
 
     Wizard::CreateDialog();
@@ -67,7 +69,9 @@ global define symbol ProfileManagerSequence() ``{
  * @return sequence result
  */
 global define symbol ProfileManagerAutoSequence() ``{
+    // Caption of the initialize process
     string caption = _("Profile-manager configuration");
+    // Lable of the initialize process
     term contents = `Label(_("Initializing ..."));
 
     Wizard::CreateDialog();

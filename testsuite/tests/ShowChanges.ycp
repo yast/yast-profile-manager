@@ -60,12 +60,14 @@
     DUMP(ProfileManager::switch_info);
     DUMP("---------");
 
-	TEST (``(ProfileManager::ShowChanges(0)), [ READ_nil, $[], EX_true ], nil);
+    ProfileManager::active_resource = 0;
+	TEST (``(ProfileManager::ShowChanges()), [ READ_nil, $[], EX_true ], nil);
     DUMP("---------");
 
-	TEST (``(ProfileManager::ShowChanges(0)), [ READ_ok, $[], EX_true ], nil);
+	TEST (``(ProfileManager::ShowChanges()), [ READ_ok, $[], EX_true ], nil);
     DUMP("---------");
 
-	TEST (``(ProfileManager::ShowChanges(1)), [ READ_ok, $[], EX_true ], nil);
+    ProfileManager::active_resource = 1;
+	TEST (``(ProfileManager::ShowChanges()), [ READ_ok, $[], EX_true ], nil);
 
 }

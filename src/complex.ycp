@@ -56,7 +56,10 @@ global define any MainDialog () ``{
     string active = ProfileManager::active_profile;
     boolean enabled = ProfileManager::enabled;
 
-	string state_label = (enabled)? _("SCPM is enabled with Resource Set \"")+ProfileManager::current_resources+"\"." : _("SCPM is disabled.");
+    // State label text (continues with the name of the resource set):
+	string state_label = (enabled)? _("SCPM is enabled with Resource Set \"")+ProfileManager::current_resources+"\"." :
+    // Alternative state label text:
+    _("SCPM is disabled.");
     string selected = "";
 
     term contents = `HBox(
@@ -68,17 +71,25 @@ global define any MainDialog () ``{
             `VBox(
                 `VSpacing(0.2),
 		        `Table(`id(`profiles),
-                    `header(_("active"),
+                    `header(
+                            // Header of the table with the aviable profiles 1/3
+                            _("active"),
+                            // Header of the table with the aviable profiles 2/3
                             _("Name"),
+                            // Header of the table with the aviable profiles 3/3
                             _("Description")),
                     ProfileManager::GetProfilesAsItems()
                     ),
                 `VSpacing(0.2),
 		        `HBox(
                     `Left(
+                        // Push button label
                         `PushButton(`id(`switch_button), _("&Switch to..."))),
+                    // Push button label
 		            `PushButton(`id(`add_button), _("&Add")),
+                    // Push button label
 		            `PushButton(`id(`edit_button), _("&Edit")),
+                    // Push button label
 		            `PushButton(`id(`delete_button), _("&Delete"))
 				    ),
                 `VSpacing(0.2)
@@ -91,6 +102,7 @@ global define any MainDialog () ``{
             `HBox(
                 `HSpacing(1),
 			    `Label (state_label),
+                // Push button label
 		        `Right(`PushButton(`id(`options_button), _("O&ptions"))),
                 `HSpacing(1)
                 ),
@@ -99,11 +111,6 @@ global define any MainDialog () ``{
 		),
 	`HSpacing(1.5));
 
-
-/*    Wizard::SetContents ( caption,
-				contents,
-                HELPS["main"]:"",
-                false,true);*/
 
     Wizard::SetContentsButtons ( caption,
 				contents,
@@ -228,7 +235,9 @@ global define any OptionsDialog () ``{
             `VSpacing(0.5),
                 `RadioButtonGroup(`id(`rb),
 		            `HBox(
+                    // Push button label (state of SCPM)
 				    `HCenter(`RadioButton(`id(`ena), _("&Enabled") )),
+                    // Push button label (state of SCPM)
                     `HCenter(`RadioButton(`id(`dis), _("&Disabled") ))
                     )
 				 ),

@@ -2,9 +2,7 @@
 # neededforbuild gpp libgpp libxcrypt libxcrypt-devel yast2-devel-packages scpm
 
 @HEADER@
-Requires:	yast2 
-
-#BuildArchitectures:	noarch
+Requires:	yast2 scpm
 
 Summary:	Configuration of profile-manager
 
