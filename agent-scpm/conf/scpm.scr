@@ -22,5 +22,5 @@
 .scpm
 
 `ag_scpm(
-  SCPMAgent()
+  `SCPMAgent()
 )
