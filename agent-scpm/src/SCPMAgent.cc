@@ -128,8 +128,7 @@ YCPValue SCPMAgent::Dir(const YCPPath& path)
  */
 YCPValue SCPMAgent::Read(const YCPPath &path, const YCPValue& arg)
 {
-    y2milestone("Path in Read(): %s", path->toString().c_str());
-    
+    y2debug("Path in Read(): %s", path->toString().c_str());
     YCPValue ret = YCPVoid(); 
 
     if (path->length() == 0) {
@@ -208,12 +207,16 @@ YCPValue SCPMAgent::Read(const YCPPath &path, const YCPValue& arg)
         
         if (!arg.isNull ()) profile = arg->asString()->value();
         else {
-            if (!scpm->Active(profile)) 
+            if (!scpm->Active(profile)) {
+                ret = YCPString(""); // I do not check void value in module
                 y2error ( scpm_error );
+            }
         }
         
-        if (!scpm->Get(PC(1), result, profile)) 
+        if (!scpm->Get(PC(1), result, profile)) {
+            ret = YCPString("");
             y2error (scpm_error);
+        }
         else
             ret = YCPString(result);
       }
@@ -237,11 +240,13 @@ YCPValue SCPMAgent::Read(const YCPPath &path, const YCPValue& arg)
 }
 
 
+/**
+ * Write(.scpm, nil) mast be run finally
+ */
 YCPValue SCPMAgent::Write(const YCPPath &path, const YCPValue& value,
 			     const YCPValue& arg)
 {
-    y2milestone("Path in Write(): %s", path->toString().c_str());
-
+    y2debug("Path in Write(): %s", path->toString().c_str());
     YCPValue ret = YCPBoolean(false);
 
     if (path->length() == 0) {
@@ -330,13 +335,12 @@ YCPValue SCPMAgent::Write(const YCPPath &path, const YCPValue& value,
  
 
 /**
- * 
+ * Execute(.scpm) must be run first to initialize
  */
 YCPValue SCPMAgent::Execute(const YCPPath &path, const YCPValue& value,
 			     const YCPValue& arg)
 {
-    y2milestone("Path in Execute(): %s", path->toString().c_str());
-    
+    y2debug("Path in Execute(): %s", path->toString().c_str());
     YCPValue ret = YCPBoolean(false);
     
     if (path->length() == 0) {
@@ -399,6 +403,7 @@ YCPValue SCPMAgent::Execute(const YCPPath &path, const YCPValue& value,
             }
             else
                 ret = YCPMap(tomap_sw(switch_info));
+            
         }
     }
 	
@@ -526,7 +531,7 @@ YCPValue SCPMAgent::Execute(const YCPPath &path, const YCPValue& value,
             type = value->asString()->value(); 
             name = arg->asString()->value(); 
             changes.open (chgf);
-            y2milestone("----------- changes to: %s", chgf);
+            y2debug("----------- changes to: %s", chgf);
         
             if (!scpm->ShowChanges(changes, type, name)) 
                 y2error ( scpm_error );
