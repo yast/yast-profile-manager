@@ -942,10 +942,11 @@ define symbol AskForRecoveryPopup () {
     // popup text
 _("SCPM is currently locked and needs recovery. This may be
 the result of an aborted profile switch or similar. You
-can have SCPM <b>recover</b> the last command, that means your
+can have SCPM <b>recover</b> the last command, which means your
 database will be updated and outstanding actions will be
-performed. You can also have SCPM <b>rollback</b> the command, in
-that case the old system status will be restored (if possible).");
+performed. You can also have SCPM <b>rollback</b> the command, which means
+the old system status will be restored (if possible).
+");
 
     UI::OpenDialog(`opt(`decorated), `HBox (`HSpacing(1.5),
         `VSpacing (14),
