@@ -29,7 +29,7 @@ include "profile-manager/wizards.ycp";
  */
 
 map res = (map) SCR::Execute(.target.bash_output, "/usr/bin/whoami", $[]);
-list l_res = splitstring(lookup(res, "stdout", ""), "\n");
+list l_res = splitstring(res["stdout"]:"", "\n");
 
 if( size(l_res) > 0 &&  select(l_res, 0, "") != "root")
 {

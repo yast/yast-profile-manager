@@ -30,7 +30,7 @@ include "profile-manager/helps.ycp";
  * @param end end of progress (mainly 100)
  * @return boolean true
  */
-global define boolean ProgressPopup(string position, integer start, integer end) ``{
+define boolean ProgressPopup(string position, integer start, integer end) ``{
 
     boolean close_popups = ProfileManager::close_popups;
 
@@ -118,7 +118,7 @@ global define boolean ProgressPopup(string position, integer start, integer end)
  * Profile settings dialog
  * @return any Returned value from UserInput() call
  */
-global define any ProfileSettingsDialog () ``{
+define any ProfileSettingsDialog () ``{
 
     string edited = ProfileManager::selected_profile;
     string action = ProfileManager::profile_action;
@@ -384,7 +384,7 @@ global define any ProfileSettingsDialog () ``{
  * Popup which shows changes of selected resource
  * @return boolean true on success
  */
-global define boolean ShowChangesPopup() ``{
+define boolean ShowChangesPopup() ``{
 
     string changes = ProfileManager::ShowChanges();
     string recoded = (string) UI::Recode(Encoding::console,"UTF-8", changes);
@@ -416,7 +416,7 @@ global define boolean ShowChangesPopup() ``{
  * Switch dialog
  * @return any Returned value from UserInput() call
  */
-global define any SwitchDialog () ``{
+define any SwitchDialog () ``{
 
     boolean use_rg = ProfileManager::use_rg;
     string active_group = "";
@@ -683,7 +683,7 @@ global define any SwitchDialog () ``{
  * Dialog with switch details of one resource group
  * @return any Returned value from UserInput() call
  */
-global define symbol DetailsSwitchDialog () ``{
+define symbol DetailsSwitchDialog () ``{
 
     string groupname	= ProfileManager::current_resource_group;
     map resources	= ProfileManager::GetModifiedGroupResources(groupname);
@@ -864,14 +864,15 @@ global define symbol DetailsSwitchDialog () ``{
 	}
 	else if (ret == `all_action_b)
 	{
-	    foreach (any i, map resource, resources, ``{
+	    foreach (any i, any resource, resources, ``{
 		if (!is(i, integer) || ! is(resource,map))
 		    return;
-		resource["save"] = !(resource["save"]:false);
-		resource["save_mode"] = "normal";
+		map r_map = (map)resource;
+		r_map["save"] = !(r_map["save"]:false);
+		r_map["save_mode"] = "normal";
 		UI::ChangeWidget (`id(`resources), `Item (i,0),
 		    // action to do with resource
-		    resource["save"]:true ? _("save") : _("ignore"));
+		    r_map["save"]:true ? _("save") : _("ignore"));
 	    });
 	}
 	else if (ret == `show_ch)
@@ -903,7 +904,7 @@ global define symbol DetailsSwitchDialog () ``{
  * Popup for adding new profile
  * @return boolean true if user confirms action
  */
-global define boolean AddProfilePopup() ``{
+define boolean AddProfilePopup() ``{
 
     map profiles = ProfileManager::profiles;
 
@@ -1005,7 +1006,7 @@ profile nor does it start or stop services."))),
  * Shows the text of scpm introduciton
  * @return boolean true on success
  */
-global define boolean IntroductionTextPopup() ``{
+define boolean IntroductionTextPopup() ``{
 
     UI::OpenDialog(`opt(`decorated), `HBox(`HSpacing(1.5),
         `VSpacing(30),
@@ -1029,7 +1030,7 @@ global define boolean IntroductionTextPopup() ``{
  * Introduction popup
  * @return boolean true on success
  */
-global define boolean IntroductionPopup() ``{
+define boolean IntroductionPopup() ``{
 
 	// Inroduction text, part 1/2
     string intro_text = _("<p>SCPM is currently disabled.<br>
@@ -1075,7 +1076,7 @@ To enable it, use the Options button.<br></p>
  * popup for entering new service for resource group
  * @return service name; empty string on cancel
  */
-global define string GetService() ``{
+define string GetService() ``{
 
     // read the list of services...
     map services	= (map) SCR::Read (.init.scripts.comments);
@@ -1136,7 +1137,7 @@ Are you sure?"), service)))
  * popup for entering new file for resource group
  * @return file name; empty string on cancel
  */
-global define string GetFile() ``{
+define string GetFile() ``{
 
     string filename = "";
     UI::OpenDialog( `opt(`decorated), `HBox(
@@ -1202,7 +1203,7 @@ global define string GetFile() ``{
  * @param group map with info of the group
  * @return modified group
  */
-global define map ResourceGroupPopup (map group) ``{
+define map ResourceGroupPopup (map group) ``{
 
     string groupname	= group["name"]:"";
     string descr	= group["description"]:"";
@@ -1458,7 +1459,7 @@ Choose another name."), groupname));
  * Resource configuration dialog
  * @return any Returned value from UserInput() call
  */
-global define symbol ConfigureResourcesDialog () ``{
+define symbol ConfigureResourcesDialog () ``{
 
     /**
      * helper function for building table items with resource groups

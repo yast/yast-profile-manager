@@ -26,7 +26,7 @@ include "profile-manager/dialogs.ycp";
  * Read settings dialog
  * @return `abort if aborted and `next otherwise
  */
-global define symbol ReadDialog() ``{
+define symbol ReadDialog() ``{
     Wizard::RestoreHelp(HELPS["read"]:"");
     ProfileManager::AbortFunction = ``{ return UI::PollInput() == `abort;};
     boolean ret = ProfileManager::Read();
@@ -37,7 +37,7 @@ global define symbol ReadDialog() ``{
  * Write settings dialog
  * @return `abort if aborted and `next otherwise
  */
-global define symbol WriteDialog() ``{
+define symbol WriteDialog() ``{
     Wizard::RestoreHelp(HELPS["write"]:"");
     boolean ret = ProfileManager::Write();
     return ret ? `next : `abort;
@@ -47,7 +47,7 @@ global define symbol WriteDialog() ``{
  * Main dialog
  * @return any Returned value from UserInput() call
  */
-global define any MainDialog () ``{
+define any MainDialog () ``{
 	// Caption of the dialog:
     string caption = _("System configuration profile management");
 
@@ -234,7 +234,7 @@ global define any MainDialog () ``{
  * Options dialog
  * @return any Returned value from UserInput() call
  */
-global define any OptionsDialog () ``{
+define any OptionsDialog () ``{
 
     string separator = "-----";
     string selected = "";

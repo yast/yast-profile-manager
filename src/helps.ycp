@@ -14,7 +14,7 @@ textdomain "profile-manager";
 /**
  * All helps are here
  */
-global map HELPS = $[
+map HELPS = $[
 
     /* SCPM introduction text 1/10 */
     "intro": _("<h1>Introduction</h1>

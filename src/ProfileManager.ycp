@@ -1273,7 +1273,7 @@ global define void PrepareSwitch() ``{
  */
 global define boolean SaveSwitchInfo() ``{
 
-    list resources = lookup(switch_info, "modified_resources",[]);
+    list resources = switch_info["modified_resources"]:[];
 
     integer i = 0;
     while (i<size (resources)) {
@@ -1291,7 +1291,7 @@ global define boolean SaveSwitchInfo() ``{
  */
 global define boolean DropSwitchInfo() ``{
 
-    list resources = lookup(switch_info, "modified_resources",[]);
+    list resources = switch_info["modified_resources"]:[];
 
     integer i = 0;
     while (i<size (resources)) {
@@ -1441,25 +1441,24 @@ global define list GetProfilesAsItems() ``{
  */
 global define list GetResourcesAsItems() ``{
 
-    list resources = lookup (switch_info, "modified_resources", []);
+    list resources = switch_info["modified_resources"]:[];
     list items = [];
     integer i = 0;
 
     foreach (map resource, resources, ``{
         string flag = "";
-        if (lookup(resource,"is_new",false))
+        if (resource["is_new"]:false)
             // flag
             flag = _("NEW");
-        else if(lookup(resource,"is_deleted",false))
+        else if(resource["is_deleted"]:false)
             // flag
             flag = _("DELETED");
 
-
         items = add(items, `item(`id(i),
-                                 lookup(resource,"save",false)? "X":"",
+                                 resource["save"]:false ? "X":"",
                                  flag,
-                                 lookup(resource,"resource_name",""),
-                                 lookup(resource,"resource_type","")));
+                                 resource["resource_name"]:"",
+                                 resource["resource_type"]:""));
         i = i + 1;
     });
     return items;
@@ -1530,7 +1529,7 @@ global define boolean ModifiedSettings(map new_settings) ``{
 
     foreach (string type, any value, profile_settings, ``{
         if (type != "name")
-            if (value != lookup(new_settings, type, "")) ret = true;
+            if (value != new_settings[type]:"") ret = true;
     });
 
     return ret;

@@ -24,7 +24,7 @@ include "profile-manager/complex.ycp";
  * Finishing module after clicking windowmanager "close window" button
  * @return symbol next (-> write all)
  */
-global define symbol Cancel() ``{
+define symbol Cancel() ``{
 
     ProfileManager::canceled = true;
     return `next; //FIXME cancel should really cancel!!
@@ -35,7 +35,7 @@ global define symbol Cancel() ``{
  * Main sequence of profile-manager
  * @return sequence result
  */
-global define any MainSequence () ``{
+define any MainSequence () ``{
     map aliases =
 	$[
 	    "main"	:	``( MainDialog () ),
@@ -105,7 +105,7 @@ global define any MainSequence () ``{
  * Whole configuration of profile-manager
  * @return sequence result
  */
-global define symbol ProfileManagerSequence() ``{
+define symbol ProfileManagerSequence() ``{
 
     map aliases = $[
 	"read"	: [ ``( ReadDialog() ), true ],
@@ -141,7 +141,7 @@ global define symbol ProfileManagerSequence() ``{
  * For use with autoinstallation.
  * @return sequence result
  */
-global define symbol ProfileManagerAutoSequence() ``{
+define symbol ProfileManagerAutoSequence() ``{
     // Caption of the initialize process
     string caption = _("Profile Manager Configuration");
     // Lable of the initialize process
