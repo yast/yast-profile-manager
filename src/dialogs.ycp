@@ -12,7 +12,6 @@
 textdomain "profile-manager";
 
 import "ProfileManager";
-import "Encoding";
 import "Runlevel";
 import "Report";
 import "Wizard";
@@ -74,7 +73,7 @@ define boolean ProgressPopup(string position, integer start, integer end) ``{
         progresstext = ProfileManager::GetProgressText(false);
         if (progresstext != "") {
 	    string recoded = (string)
-		UI::Recode(Encoding::console,"UTF-8",progresstext);
+		UI::Recode(WFM::GetEnvironmentEncoding(),"UTF-8",progresstext);
             UI::ChangeWidget(`id(`progress), `LastLine, recoded);
         }
     }
@@ -88,7 +87,7 @@ define boolean ProgressPopup(string position, integer start, integer end) ``{
     progresstext = ProfileManager::GetProgressText(true);
     if (progresstext != "") {
 	string recoded = (string)
-	    UI::Recode(Encoding::console,"UTF-8",progresstext);
+	    UI::Recode (WFM::GetEnvironmentEncoding(),"UTF-8",progresstext);
         UI::ChangeWidget(`id(`progress), `LastLine, recoded);
     }
     if (position == "first") // hack: missing newline
@@ -387,7 +386,8 @@ define any ProfileSettingsDialog () ``{
 define boolean ShowChangesPopup() ``{
 
     string changes = ProfileManager::ShowChanges();
-    string recoded = (string) UI::Recode(Encoding::console,"UTF-8", changes);
+    string recoded = (string)
+	UI::Recode (WFM::GetEnvironmentEncoding(),"UTF-8", changes);
 
     UI::OpenDialog(`opt(`decorated), `HBox(`HSpacing(1.5),
         `VSpacing(25),
@@ -1470,12 +1470,11 @@ define symbol ConfigureResourcesDialog () ``{
 	foreach (string name, map group, ProfileManager::GetResourceGroups(),``{
 	    if (group["what"]:"" == "deleted")
 		return;
+	    string desc = group["description"]:"";
 	    if (group["active"]:false)
-		items = add (items,
-		    `item(`id(name),"X", name, group["description"]:""));
+		items = add (items, `item(`id(name),"X", name, desc));
 	    else
-		items = add (items,
-		    `item(`id(name),"", name, group["description"]:""));
+		items = add (items, `item(`id(name),"", name, desc));
 	});
 	return items;
     }

@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Fri Feb 27 15:27:12 CET 2004 - jsuchome@suse.cz
+
+- use WFM::GetEnvironmentEncoding instead of Encoding::console
+
+-------------------------------------------------------------------
 Mon Feb  9 17:27:22 CET 2004 - jsuchome@suse.cz
 
 - removed y2cc file
