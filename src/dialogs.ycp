@@ -813,7 +813,7 @@ define symbol DetailsSwitchDialog () ``{
     Wizard::SetContentsButtons ( caption, contents, HELPS["switchdetails"]:"",
                 Label::BackButton (), Label::OKButton () );
 
-    Wizard::ReplaceAbortButton (`Empty());
+    Wizard::HideAbortButton();
 
     list items = resources_items();
     UI::ChangeWidget(`id(`resources), `Items, items);
@@ -1532,7 +1532,7 @@ define symbol ConfigureResourcesDialog () ``{
     Wizard::SetContentsButtons ( caption, contents, HELPS["resources"]:"",
                 Label::CancelButton (), Label::OKButton () );
 
-    Wizard::ReplaceAbortButton (`Empty());
+    Wizard::HideAbortButton();
 
     list items = resource_groups_items();
     UI::ChangeWidget(`id(`rgroups), `Items, items);

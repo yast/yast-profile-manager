@@ -128,7 +128,7 @@ define any MainDialog () ``{
     Wizard::ReplaceBackButton (`PushButton (`id(`intro), `opt(`key_F2),
         // pushbutton
         _("&Introduction to SCPM")));
-    Wizard::ReplaceAbortButton (`Empty());
+    Wizard::HideAbortButton();
 
     UI::ChangeWidget(`id(`profiles), `Items,
 	ProfileManager::GetProfilesAsItems());
