@@ -283,7 +283,7 @@ global define any OptionsDialog () ``{
                 `HSpacing(1),
 		`Left(`CheckBox(`id(`close_popups_ch),
 		    // checkbox label
-                    _("Close progress pop-ups &automaticaly"), close_popups))
+                    _("Close Progress Pop-ups &Automaticaly"), close_popups))
             ),
             `VSpacing(0.5)
         )),
@@ -316,7 +316,7 @@ global define any OptionsDialog () ``{
 		`VSpacing(0.5),
 		`Left(`CheckBox(`id(`close_popups_ch),
 		    // checkbox label
-                    _("Close progress pop-ups &automaticaly"), close_popups)),
+                    _("Close Progress Pop-ups &Automaticaly"), close_popups)),
 		`VSpacing(0.5),
 		`Left(`CheckBox(`id("verbose"),
 		    // checkbox label
@@ -331,9 +331,9 @@ global define any OptionsDialog () ``{
 			    // radiobutton label
 			    `Left(`RadioButton (`id(`swn), _("&Normal"))),
 			    // radiobutton label
-			    `Left(`RadioButton (`id(`sws), _("&Save changes"))),
+			    `Left(`RadioButton (`id(`sws), _("&Save Changes"))),
 			    // radiobutton label
-			    `Left(`RadioButton (`id(`swd), _("Dro&p changes")))
+			    `Left(`RadioButton (`id(`swd), _("Dro&p Changes")))
 			))),
 			`VSpacing (0.5)
 		    )),
@@ -343,9 +343,9 @@ global define any OptionsDialog () ``{
 			`VSpacing (0.5),
 			`RadioButtonGroup (`id(`rb_bo), `VBox (
 			    // radiobutton label
-			    `Left(`RadioButton (`id(`bs), _("Save &changes"))),
+			    `Left(`RadioButton (`id(`bs), _("Save &Changes"))),
 			    // radiobutton label
-			    `Left(`RadioButton (`id(`bd), _("Drop c&hanges")))
+			    `Left(`RadioButton (`id(`bd), _("Drop C&hanges")))
 			)),
 			`Label (""),
 			`VSpacing (0.5)

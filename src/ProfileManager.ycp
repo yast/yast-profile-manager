@@ -785,13 +785,14 @@ global define boolean Read() ``{
     if (needs_reinit)
     {
 	// yes/no popup
-	if (Popup::YesNo (_("SCPM is currently locked because you system
+	if (Popup::YesNo (_("SCPM is currently locked because your system
 installation has changed.
-This is usually caused by a system update. Therefore the data saved in
-your profiles may be inconsistent, which makes it necessary to reininitialize
-SCPM. This also means the saved profiles get lost and need to be
-setup up again from scratch.
-Perform the reinitialization now?")))
+This is usually caused by a system update. Therefore, the data saved in
+your profiles may be inconsistent, making it necessary to reininitialize
+SCPM. This also means the saved profiles will be lost and need to be
+set up up again from scratch.
+Perform the reinitialization now?
+")))
 	{
 	    // force enabling
 	    SCR::Write(.scpm.status.enabled.force, true);
@@ -1011,8 +1012,9 @@ global define boolean WriteUserSettings() ``{
 define boolean Initialize() ``{
 
     // popup label, %1 is required application
-    if (!Require::RequireAndConflict (["scpm"], [], _("<p>To use the profile manager, the package <b>%1</b> is necessary.<br>
-Install it now?</p>")))
+    if (!Require::RequireAndConflict (["scpm"], [], _("<p>To use the profile manager, the package <b>%1</b> is required.<br>
+Install it now?</p>
+")))
          return false;
 
     tmpdir = SCR::Read(.target.tmpdir);

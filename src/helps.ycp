@@ -162,32 +162,36 @@ Safely abort the configuration utility by pressing <b>Abort</b> now.</p>
     _("<p>A configuration profile covers only the files and services to change
 when switching to another profile. In SCPM terminology, these files and
 services are called resources. Those resources are group into logical units,
-which are called <b>Resource Groups</b>. SCPM comes with a predefined set of
-groups which are handled by default. This is sufficient for most systems. If
-you want to have a more detailed resource setup, then click the
-<b>Configure Resources</b> button.</p>") +
+called <b>resource groups</b>. SCPM comes with a predefined set of
+groups handled by default. This is sufficient for most systems. 
+For a more detailed resource setup, click 
+<b>Configure Resources</b>.</p>
+") +
 
     // Options dialog help 3/6
-    _("<p>The <b>Switch Mode</b> defines the behaviour of SCPM when switching
-profiles. Setting this to <b>Normal</b> or <b>Save changes</b> has the effect
-that modified resources in the switch dialog will be preset to <b>save</b>,
-setting it to <b>Drop changes</b> results in preset <b>ignore</b>. This option
-has more effects on the command line SCPM, so please have a look at the info
-page if you intend to use that one, too.</p>") +
+    _("<p>The <b>Switch Mode</b> defines the behavior of SCPM when switching
+profiles. If set to <b>Normal</b> or <b>Save Changes</b>,
+modified resources in the switch dialog are preset to <b>save</b>.
+Setting it to <b>Drop Changes</b> results in presets to <b>ignore</b>. This option
+has more effects on the command line SCPM, so check the info page if also using that.</p>
+") +
 
     // Options dialog help 4/6
-    _("<p><b>Boot Mode</b> defines the behaviour of SCPM at system boot time.
-Option <b>Save changes</b> will apply all changes to the previous profile,
-<b>Drop changes</b> throws them away.</p>") +
+    _("<p><b>Boot Mode</b> defines the behavior of SCPM at system boot time.
+<b>Save Changes</b> applies all changes to the previous profile,
+<b>Drop Changes</b> discards them.</p>
+") +
 
     // Options dialog help 5/6
-    _("<p><b>Verbose messages</b> affects the detail level of progress messages
-in the progress pop-up.</p>") +
+    _("<p><b>Verbose Messages</b> affects the detail level of progress messages
+in the progress pop-up.</p>
+") +
 
     // Options dialog help 6/6
-    _("<p>For progress windows to close automatically, check <b>Close progress
-pop-ups automatically</b>. This box is also available in the progress pop-ups
-themselves.</p>"),
+    _("<p>For progress windows to close automatically, check <b>Close Progress
+Pop-ups Automatically</b>. This box is also available in the progress pop-ups
+themselves.</p>
+"),
 
 
     /* ProfileSettings dialog help 1/4 */
@@ -210,60 +214,68 @@ themselves.</p>"),
 These scripts are executed as the user root. Make sure no users can change or even read them without authorization. For YaST to set the appropriate file permissions, check the box at the bottom of the dialog.</p>"),
 
     // Switch dialog help 1/4
-    "switch" : _("<p>When you leave a profile, there might be changes in resources covered by SCPM. You have to decide what to do with these changes.</p>") +
+    "switch" : _("<p>When you leave a profile, there might be changes in resources covered by SCPM. You must decide what to do with these changes.</p>") +
 
     // Switch dialog help 2/4
-    _("<p>This dialog shows you the Resource Groups containing modified
-resources. You can decide to <b>save</b> the modifications to the profile you
-are leaving or to <b>ignore</b> them. Groups that are going to be saved are
-marked with an <b>X</b> in the first column.</p>") +
+    _("<p>This dialog shows the resource groups containing modified
+resources. Decide to <b>save</b> the modifications to the profile you
+are leaving or to <b>ignore</b> them. Groups to save are
+marked with an <b>X</b> in the first column.</p>
+") +
 
     // Switch dialog help 3/4
-    _("<p>If you want to have more detailed information about the resources of
-a Resource Group, then first click that group and then the <b>Details</b>
-button.</p>") +
+    _("<p>To access more detailed information about the resources of
+a resource group, first click that group then <b>Details</b>.
+</p>
+") +
 
     // Switch dialog help 4/4
     _("<p>A flag <b>m</b> in front of a group name means that the resources of
-the group have mixed save/ignore settings.</p>"),
+the group have mixed save and ignore settings.</p>
+"),
 
     // Switch Details Popup help 1/2
-    "switchdetails":  _("<p>Here you can see the modified resources of the
-selected Resource Group. You can choose for every single resource what has to
-be done with it: <b>save</b>, <b>ignore</b>, <b>save to all profiles</b>
-(resource will be same in all profiles after that), and <b>patch to all profiles
-</b> (only the latest change will be applied to all profiles).</p>") +
+    "switchdetails":  _("<p>Here, see the modified resources of the
+selected resource group. For each resource, select whether to
+<b>save</b>, <b>ignore</b>, <b>save to all profiles</b>
+(resource will be same in all profiles after that), or <b>patch to all profiles
+</b> (only the latest change will be applied to all profiles).</p>
+") +
 
     // Switch Details Popup help 2/2
-    _("<p>The <b>Show Changes</b> button will show you the difference between
+    _("<p><b>Show Changes</b> displays the difference between
 the resource in its current state and the one stored in the profile you are
-leaving.</p>"),
+leaving.</p>
+"),
 
 
     // Configure Resources Dialog help 1/4
-    "resources": _("<p>This list contains all installed Resource Groups.
-A Resource Group usually represents a system service with all needed
-configuration files. You can easily choose here which services should be
-handled by the profile management, just activate or deactive the groups by
-double-clicking them.</p>") +
+    "resources": _("<p>This list contains all installed resource groups.
+A resource group usually represents a system service with all needed
+configuration files. Here, easily choose which services should be
+handled by the profile management. Activate or deactive the groups by
+double-clicking them.</p>
+") +
 
     // Configure Resources Dialog help 2/4
-    _("<p>To achive an even more customized setup you can also create your own
-Resource Groups or modify existing ones. If you select <b>Add</b> or <b>Edit</b>
-you will enter the Resource Group editor. It will let you activate and
-deactivate resources and gives you the possibility to create additional
-resources and add them to your groups.</p>") +
+    _("<p>To achive an even more customized setup, create your own
+resource groups or modify existing ones. With <b>Add</b> or <b>Edit</b>,
+enter the resource group editor. It allows activation and
+deactivation of resources and gives the possibility to create additional
+resources and add them to your groups.</p>
+") +
 
     // Configure Resources Dialog help 3/4
-    _("<p>Changes to the resource configuration will get applied when leaving
-the dialog using the <b>OK</b> button. Please note that in case you deactivated
-or removed resources those will get removed from your saved profiles, too.
-This data can not be recovered later, so please pay attention when altering
-your resource setup.</p>") +
+    _("<p>Changes to the resource configuration are applied when leaving
+the dialog using the <b>OK</b> button. If you deactivated
+or removed resources, those will be removed from your saved profiles, too.
+This data cannot be recovered later.
+</p>
+") +
 
     // Configure Resources Dialog help 4/4
-    _("<p>You can return all Resource Groups to its initial state by pressing
-the <b>Reset All</b> button. The changes will be applied immediately!</p>"),
+    _("<p>Return all resource groups to their initial states by pressing
+<b>Reset All</b>. The changes will be applied immediately.</p>"),
 
     /* Write dialog help 1/1 */
     "write" : _("<p><b><big>Writing Profile Manager Configuration</big></b><br>

@@ -899,7 +899,7 @@ global define boolean ProgressPopup(string position, integer start, integer end)
             `ProgressBar(`id(`pb), "", 100, 0),
             `VSpacing(1),
 	    // checkbox label:
-            `CheckBox(`id(`close_ch), `opt(`notify), _("Close progress pop-ups &automatically (reenable it in SCPM Setup)"),close_popups),
+            `CheckBox(`id(`close_ch), `opt(`notify), _("Close Progress Pop-ups &Automatically (reenable it in SCPM Setup)"),close_popups),
             `VSpacing(1),
 	        `HBox(
 	            `Right(`PushButton(`id(`close), `opt(`default, `key_F10),
@@ -1188,12 +1188,15 @@ global define symbol ConfigureResourcesDialog () ``{
 	    // yes/no popup
 	    if (Popup::YesNo (_("All resource groups will be reset to their initial default values.
 All user modifications (including new groups) will be lost.
-Are you sure to do it now?")))
+Really do this now?
+")))
 	    {
 		if (!ProfileManager::ResetResourceGroups ())
 		{
 		    // error message
-		    Report::Error( sformat(_("Problem with reseting resource groups:\n%1"),
+		    Report::Error( sformat(_("Problem with resetting resource groups:
+%1
+"),
 			ProfileManager::scpm_error));
 		    continue;
 		}
@@ -1505,12 +1508,15 @@ global define map ResourceGroupPopup (map group) ``{
 	    // yes/no popup
 	    if (Popup::YesNo (_("Current resource group will be reset to its initial default values.
 All user modifications will be lost.
-Are you sure to do it now?")))
+Really do this now?
+")))
 	    {
 		if (!ProfileManager::ResetResourceGroup (groupname))
 		{
 		    // error message
-		    Report::Error( sformat(_("Problem with reseting resource group:\n%1"),
+		    Report::Error( sformat(_("Problem with resetting resource group:
+%1
+"),
 			ProfileManager::scpm_error));
 		    continue;
 		}
