@@ -97,9 +97,27 @@ global define boolean Read() ``{
     );
 
 
-/*    first_time = SCR::Read(.target.yast2, "scpm_first.ycp");
-    if (first_time)
-        SCR::Write(.target.yast2, "scpm_first.ycp",false);*/
+/*
+    first_time = SCR::Read(.target.yast2, "scpm.ycp");
+    if (first_time) {
+        SCR::Write(.target.yast2, "scpm.ycp",false);
+    }*/
+
+    SCR::Execute (.target.bash, "/bin/touch /var/lib/YaST2/scpm.ycp");
+    map state = SCR::Read (.target.ycp, "/var/lib/YaST2/scpm.ycp");
+
+    if (state == nil || state == $[]) {
+        state = $[];
+        first_time = true;
+        state = add (state, "first_time", false);
+        state = add (state, "close_popups", false);
+        SCR::Write(.target.ycp, "/var/lib/YaST2/scpm.ycp", state);
+    }
+/*
+    first_time = SCR::Read(.target.ycp, "/tmp/scpm.ycp");
+    if (first_time) {
+        SCR::Write(.target.ycp, "/tmp/scpm.ycp",false);
+    }*/
 
     // read
     if(Abort()) return false;
@@ -360,7 +378,7 @@ global define boolean PrepareSwitch() ``{
                 ];*/
 
 
-    switch_info = SCR::Execute(.scpm.switch.prepare, selected);
+    switch_info = SCR::Execute(.scpm.switch.prepare, selected_profile);
     y2milestone("switch_info: %1",switch_info);
 
 }
@@ -377,9 +395,9 @@ global define boolean SaveSwitchInfo() ``{
 
     switch_info = add(switch_info,"modified_resources",saved_resources);
 
-    y2debug("switch_info:%1", switch_info);
+    y2milestone("switch_info:%1", switch_info);
 
-    return true; // only affects the swich_info map?
+    return true;
 }
 
 global define boolean DropSwitchInfo() ``{
@@ -394,15 +412,16 @@ global define boolean DropSwitchInfo() ``{
 
     switch_info = add(switch_info,"modified_resources",saved_resources);
 
-    y2debug("switch_info:%1", switch_info);
+    y2milestone("switch_info:%1", switch_info);
 
     return true;
 }
 
 global define boolean Switch() ``{
 
+    SCR::Execute(.scpm.switch, switch_info);
+
     active_profile = selected_profile;
-    // SCR::Execute(.scpm.switch, switch_info)
 
 }
 
@@ -420,7 +439,7 @@ global define boolean WriteStatus() ``{
 
 global define boolean WriteResources(string resource_set) ``{
 
-//    SCR::Write(.scpm.resources.current, resource_set);
+    SCR::Write(.scpm.resources.current, resource_set);
 
 }
 
@@ -438,20 +457,22 @@ global define string ShowChanges(integer resource_no) ``{
     string name = lookup(resource, "resource_name","");
     string type = lookup(resource, "resource_type","");
 
-    // SCR::Execute(.scpm.profiles.changes, name, type)
+    SCR::Execute(.scpm.profiles.changes, type, name); // some other path?
     // read -> string (ze streamu!)
 
-    return name + "<br>(" + type + ")";
+    return name + "(" + type + ")" + "<br> not implemented yet";
 }
 
 global define list GetProfilesAsItems() ``{
 
-    return maplist (`name, `descr, profiles, ``{
+    list items = [];
+    items = maplist (`name, `descr, profiles, ``{
         if (name == active_profile)
             return `item(`id(name),"---->",name,descr);
         else
             return `item(`id(name),"",name,descr);
     });
+    return items;
 }
 
 global define list GetResourcesAsItems() ``{

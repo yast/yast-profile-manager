@@ -141,8 +141,6 @@ global define any MainDialog () ``{
 
     if (enabled)
         UI::SetFocus(`id(`profiles));
-/*    else
-        UI::SetFocus(`id(`options_button));*/
 
     UI::ChangeWidget(`id(`profiles), `Enabled, enabled);
     UI::ChangeWidget(`id(`add_button), `Enabled, enabled);
@@ -303,7 +301,7 @@ global define any OptionsDialog () ``{
             {
                 ProfileManager::current_resources = selected;
                 ProfileManager::WriteResources(selected);
-                run_progress = true;
+                run_progress = true; // not necessary ?
             }
             if (run_progress) ProgressPopup();
         }
