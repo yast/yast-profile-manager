@@ -17,7 +17,6 @@ textdomain "profile-manager";
 
 import "Progress";
 import "Report";
-//import "Summary";
 
 include "profile-manager/routines.ycp";
 
@@ -522,11 +521,7 @@ global define boolean GetProfile() ``{
  */
 global define boolean AddProfile(string name) ``{
 
-//    boolean ret = 
     SCR::Execute(.scpm.profiles.add, name, auto);
-/*    if (ret)
-        profiles = add (profiles, name, "");
-*/
     return true;
 }
 
@@ -538,11 +533,7 @@ global define boolean AddProfile(string name) ``{
  */
 global define boolean CopyProfile(string source, string new) ``{
 
-    //boolean ret = 
     SCR::Execute(.scpm.profiles.copy, source, new);
-/*    if (ret)
-        profiles = add (profiles, new, "");*/
-
     return true;
 }
 
@@ -640,20 +631,13 @@ global define boolean DeleteProfile(string to_delete) ``{
 }
 
 /**
- * Calls SCPM::PrepareSwitch() and gets
- * the switch_info map.
- * @return true on success
+ * Calls SCPM::PrepareSwitch(), which drops switch_info map to file
+ * @return true
  */
 global define boolean PrepareSwitch() ``{
 
-//    switch_info =
     SCR::Execute(.scpm.switch.prepare, selected_profile);
 
-/*    switch_info = SCR::Read(.target.ycp, "/tmp/scpm.tmp");
-    if (switch_info == nil)
-        return false;*/
-
-    y2milestone("switch_info: %1",switch_info);
     return true;
 
 }
@@ -997,19 +981,26 @@ global define string GetProgressText() ``{
     }
 
     string ret = mergestring (ret_l, "\n");
+    if (ret != "" && !end_of_progress)
+        ret = ret + "\n";
     return ret;
 }
 
 /**
- * Reads the switch info, which was dumped to file by agent's thread
+ * Reads the switch info map,
+ * which was dumped to file by agent's thread
  * @return boolean true on success
  */
 global define boolean ReadSwitchInfo() ``{
 
     switch_info = SCR::Read(.target.ycp, tmppath);
     if (switch_info == nil)
+    {
         switch_info = $[];
+        return false;
+    }
     y2milestone("switch_info: %1",switch_info);
+    return true;
 }
 
 /**
@@ -1019,7 +1010,6 @@ global define boolean ReadSwitchInfo() ``{
 global define boolean Wait() ``{
     return SCR::Read(.scpm.exit_status );
 }
-
 
 /* EOF */
 }

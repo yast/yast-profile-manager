@@ -12,7 +12,6 @@
 textdomain "profile-manager";
 
 import "Wizard";
-import "Wizard_hw";
 
 import "ProfileManager";
 
@@ -178,29 +177,33 @@ global define any MainDialog () ``{
     else if (ret == `switch_button)
     {
         selected = UI::QueryWidget(`id(`profiles), `CurrentItem);
+        /*
         if (selected == active) {
 			// Popup text:
             UI::MessagePopup(_("It does not make a sense to switch to the active profile."));
             continue;
         }
-        else {
-            ProfileManager::selected_profile = selected;
+        else {*/
+        ProfileManager::selected_profile = selected;
 
-            if (!ProfileManager::PrepareSwitch())
-            {
-                // Error popup text
-                UI::ErrorPopup(_("Switching to another profile is not possible."));
-                continue;
+        ProfileManager::PrepareSwitch();
 
-            }
+        ProgressPopup();
 
-            block func = ``{
-                ProfileManager::Wait();
-                ProfileManager::ReadSwitchInfo();
-            };
-            ProgressPopup( func );
-            break;
+        if (!ProfileManager::Wait())
+        {
+            // Error popup text
+            UI::ErrorPopup(_("Switching to another profile is not possible."));
+            continue;
         }
+        if (!ProfileManager::ReadSwitchInfo())
+        {
+            // Error popup text
+            UI::ErrorPopup(_("Switching to another profile is not possible."));
+            continue;
+        }
+
+        break;
     }
     else if (ret == `next || ret ==`back || ret == `options_button)
 	    break;
@@ -361,26 +364,23 @@ global define any OptionsDialog () ``{
                 {
                     ProfileManager::initialized = true;
                     ProfileManager::WriteStatusFirst();
-                    block func = ``{
-                        if (!ProfileManager::Wait())
-                        {
-                            UI::ErrorPopup(
-                                // Error popup text
-                                _("Enabling SCPM was not succesfull."));
-                            ProfileManager::enabled = false;
+                    ProgressPopup();
+                    if (!ProfileManager::Wait())
+                    {
+                        // Error popup text
+                        UI::ErrorPopup(_("Enabling SCPM was not succesfull."));
+                        ProfileManager::enabled = false;
+                        //    continue;
+                    }
+                    else
+                    {
+                        ProfileManager::current_resources = selected;
+                        ProfileManager::WriteResources(selected);
 
-                        }
-                        else
-                        {
-                            ProfileManager::current_resources = selected;
-                            ProfileManager::WriteResources(selected);
-
-                            ProfileManager::ReadProfiles();
-                            ProfileManager::ReadActiveProfile();
-				            ProfileManager::ReadProfilesDescriptions();
-                        }
-                    };
-                    ProgressPopup(func);
+                        ProfileManager::ReadProfiles();
+                        ProfileManager::ReadActiveProfile();
+				        ProfileManager::ReadProfilesDescriptions();
+                    }
                 }
                 else
                 {
@@ -411,8 +411,7 @@ global define any OptionsDialog () ``{
 					ProfileManager::WriteResources(selected);
 					ProfileManager::RebuildDB();
                     /*
-                    block func = ``{};
-                    ProgressPopup(func);*/
+                    ProgressPopup();*/
 				}
 				else continue;
             }

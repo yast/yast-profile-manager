@@ -52,10 +52,10 @@ Safely abort the configuration utility by pressing the <b>Abort</b> now.</p>"),
     </p>") +
 
     /* Options dialog help 3/5 */
-    _("<i>Typical:</i> networking, mail, printing, nis, nfs
+    _("<p><i>Typical:</i> networking, mail, printing, nis, nfs
 <br><i>Network only:</i> networking
 <br><i>FooBar:</i> services foo and bar
-<br><i>Everything:</i> all installed services, all files below /etc and any other important file for any service") +
+<br><i>Everything:</i> all installed services, all files below /etc and any other important file for any service</p>") +
 
     /* Options dialog help 4/5 */
     _("<p>You may create your own individual resource set, but currently not with YaST2. See info scpm or administration guide for information. Your manually created resource sets will then be available in this list as well. If you change the used resource set, all resources that will be deleted from the profiles are backed up below /var/lib/scpm/backup/.</p>") +
@@ -77,7 +77,7 @@ Safely abort the configuration utility by pressing the <b>Abort</b> now.</p>"),
 <br>- change configuration files
 <br>- execute <b>Prestart script</b> from new profile
 <br>- start some services
-<br>- execute <b>Poststart script</b> from new profile") +
+<br>- execute <b>Poststart script</b> from new profile</p>") +
 
     /* ProfileSettings dialog help 4/4 */
     _("<p><b>Security Warning:</b><br>

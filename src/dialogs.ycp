@@ -28,7 +28,6 @@ global define any ProfileSettingsDialog () ``{
     string edited = ProfileManager::selected_profile;
     string action = ProfileManager::profile_action;
     map profiles = ProfileManager::profiles;
-    block func = {};
 
     // reading the profile settings
     ProfileManager::GetProfile();
@@ -140,27 +139,29 @@ global define any ProfileSettingsDialog () ``{
                 continue;
             }
             ProfileManager::AddProfile(selected);
-            func = ``{
-                if (!ProfileManager::Wait())
-                    // Error popup text
-                    UI::ErrorPopup(_("Adding new profile was not succesfull."));
-                else
+            ProgressPopup();
+            if (!ProfileManager::Wait())
+            {
+                // Error popup text
+                UI::ErrorPopup(_("Adding new profile was not succesfull."));
+                // continue;
+            }
+            else
+            {
+                ProfileManager::profiles = add (ProfileManager::profiles,
+                        selected, "");
+
+                if (ProfileManager::auto)
+                    ProfileManager::active_profile = selected;
+
+                ProfileManager::profile_settings = new_settings;
+                if (!ProfileManager::SetProfile(selected))
                 {
-                    ProfileManager::profiles = add (ProfileManager::profiles,
-                            selected, "");
-
-                    if (ProfileManager::auto)
-                        ProfileManager::active_profile = selected;
-
-                    ProfileManager::profile_settings = new_settings;
-                    if (!ProfileManager::SetProfile(selected))
-                    {
-                        UI::ErrorPopup(
-                            // Error popup text
-                            _("Writing profile settings was not succesfull."));
-                    }
+                    UI::ErrorPopup(
+                        // Error popup text
+                        _("Writing profile settings was not succesfull."));
                 }
-            };
+            }
         }
         else if (action == "copy")
         {
@@ -171,24 +172,26 @@ global define any ProfileSettingsDialog () ``{
                 continue;
             }
             ProfileManager::CopyProfile(edited, selected);
-               func = ``{
-                if (!ProfileManager::Wait())
-                    // Error popup text
-                    UI::ErrorPopup(_("Copying profile was not succesfull."));
-                else
-                {
-                    ProfileManager::profiles = add (ProfileManager::profiles,
-                            selected, "");
+            ProgressPopup();
+            if (!ProfileManager::Wait())
+            {
+                // Error popup text
+                UI::ErrorPopup(_("Copying profile was not succesfull."));
+                //    continue;
+            }
+            else
+            {
+                ProfileManager::profiles = add (ProfileManager::profiles,
+                        selected, "");
 
-                    ProfileManager::profile_settings = new_settings;
-                    if (!ProfileManager::SetProfile(selected))
-                    {
-                        UI::ErrorPopup(
-                            // Error popup text
-                            _("Writing profile settings was not succesfull."));
-                    }
+                ProfileManager::profile_settings = new_settings;
+                if (!ProfileManager::SetProfile(selected))
+                {
+                    UI::ErrorPopup(
+                        // Error popup text
+                        _("Writing profile settings was not succesfull."));
                 }
-            };
+            }
         }
         else if (action == "edit")
         {
@@ -220,10 +223,6 @@ global define any ProfileSettingsDialog () ``{
         }
         if (secure)
             ProfileManager::SetFilePermitions();
-        if (action != "edit")
-        {
-            ProgressPopup(func);
-        }
 	    break;
 	}
     };
@@ -365,14 +364,12 @@ global define any SwitchDialog () ``{
         else if (ret == `next)
 	    {
             ProfileManager::Switch();
-            block func = ``{
-                if (!ProfileManager::Wait())
-                    // Error popup text
-                    UI::ErrorPopup(_("Switching was not succesfull."));
-                else
-                    ProfileManager::active_profile = selected;
-            };
-            ProgressPopup(func);
+            ProgressPopup();
+            if (!ProfileManager::Wait())
+                // Error popup text
+                UI::ErrorPopup(_("Switching was not succesfull."));
+            else
+                ProfileManager::active_profile = selected;
 	        break;
 	    }
         };
@@ -468,11 +465,9 @@ profile nor does it start or stop services."))),
 
 /**
  * Popup for showing progress informations
- * @param function actions to execute after finish of agent's thread
- * generating progress output
- * @return boolean true on success
+ * @return boolean true
  */
-global define boolean ProgressPopup( block function) ``{
+global define boolean ProgressPopup() ``{
 
     boolean close_popups = ProfileManager::close_popups;
 
@@ -488,8 +483,7 @@ global define boolean ProgressPopup( block function) ``{
             `CheckBox(`id(`close_ch),_("Close progress popups &automatically (reenable it in SCPM Setup)"),close_popups),
             `VSpacing(1),
 	        `HBox(
-                // Push button label
-	            `Right(`PushButton(`id(`close), `opt(`default), _("&Close"))),
+	            `Right(`PushButton(`id(`close), `opt(`default), CloseButtonLabel())),
 	            `HSpacing(1)
 	            ),
             `VSpacing(1)),
@@ -498,8 +492,6 @@ global define boolean ProgressPopup( block function) ``{
 
     UI::ChangeWidget(`id(`close), `Enabled, false);
     UI::ChangeWidget(`id(`close_ch), `Enabled, false);
-
-    // evaluating function
 
     string progresstext = "";
     ProfileManager::end_of_progress = false;
@@ -513,9 +505,6 @@ global define boolean ProgressPopup( block function) ``{
             UI::ChangeWidget(`id(`progress), `LastLine, progresstext);
     }
     while (!ProfileManager::end_of_progress);
-
-    // what has to be done after finishing background process:
-    eval ( function );
 
     /* disabled for now
     integer steps = 0;
