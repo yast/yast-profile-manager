@@ -23,16 +23,34 @@ YCPList tolist(vector<string> l)
     return list;
 }
 
+
 YCPMap tomap_ri(resource_info_t ri) {
     YCPMap map;
 
     map->add(YCPString("resource_name"), YCPString(ri.resource_name));
     map->add(YCPString("resource_type"), YCPString(ri.resource_type));
-    map->add(YCPString("id_new"), YCPBoolean(ri.is_new));
-    map->add(YCPString("id_deleted"), YCPBoolean(ri.is_deleted));
+    map->add(YCPString("is_new"), YCPBoolean(ri.is_new));
+    map->add(YCPString("is_deleted"), YCPBoolean(ri.is_deleted));
     map->add(YCPString("save"), YCPBoolean(ri.save));
 
     return map;
+}
+
+resource_info_t frommap_ri(YCPMap map) {
+    resource_info_t ri;
+    
+    ri.resource_name = map->value(YCPString("resource_name"))
+        ->asString()->value();
+    ri.resource_type = map->value(YCPString("resource_type"))
+        ->asString()->value();
+    ri.is_new = map->value(YCPString("is_new"))
+        ->asBoolean()->value();
+    ri.is_deleted = map->value(YCPString("is_deleted"))
+        ->asBoolean()->value();
+    ri.save = map->value(YCPString("save"))
+        ->asBoolean()->value();
+
+    return ri;
 }
 
 YCPList tolist_sw(vector<resource_info_t> l) 
@@ -46,6 +64,17 @@ YCPList tolist_sw(vector<resource_info_t> l)
     return list;
 }
 
+vector<resource_info_t> fromlist_sw(YCPList list) 
+{
+    vector<resource_info_t> l;
+    int i;
+    
+    for ( i=0 ; i<list->size(); i++ ) {
+        l.push_back ( frommap_ri(list->value(i)->asMap()));
+    }
+    return l;
+}
+
 YCPMap tomap_sw(switch_info_t sw) {
     YCPMap map;
 
@@ -55,6 +84,19 @@ YCPMap tomap_sw(switch_info_t sw) {
             YCPList(tolist_sw(sw.modified_resources)));
 
     return map;
+}
+
+switch_info_t frommap_sw(YCPMap map) {
+    switch_info_t sw;
+
+    sw.profile_modified = map->value(YCPString("profile_modified"))
+        ->asBoolean()->value();
+    sw.profile_name = map->value(YCPString("profile_name"))
+        ->asString()->value();
+    sw.modified_resources = fromlist_sw (
+        map->value(YCPString("modified_resources"))->asList());
+
+    return sw;
 }
 
 
@@ -70,6 +112,7 @@ SCPMAgent::SCPMAgent() : SCRAgent()
  */
 SCPMAgent::~SCPMAgent()
 {
+    if (scpm) delete scpm;
 }
 
 /**
@@ -88,11 +131,11 @@ YCPValue SCPMAgent::Read(const YCPPath &path, const YCPValue& arg)
 {
     y2error("Path in Read(): %s", path->toString().c_str());
     
-    options = 0;
-    scpm = NULL;
+//    options = 0;
+//    scpm = NULL;
     YCPValue ret = YCPVoid(); 
 
-    scpm = new SCPM (options);
+//    scpm = new SCPM (options);
     
     if (path->length() == 0) {
     	ret = YCPString("0");
@@ -145,8 +188,10 @@ YCPValue SCPMAgent::Read(const YCPPath &path, const YCPValue& arg)
    	if ((PC(0) == "status") && (PC(1) == "enabled")) {
         scpm_status_t scpm_status;
 
-        if (!scpm->Status(scpm_status)) 
+        if (!scpm->Status(scpm_status)) {
             y2error ("error");
+            ret = YCPBoolean(false);
+        }
         else
             ret = YCPBoolean(scpm_status.enabled);
     }
@@ -155,8 +200,10 @@ YCPValue SCPMAgent::Read(const YCPPath &path, const YCPValue& arg)
       if (PC(1) == "current") {
         string profile;
 
-        if (!scpm->Active(profile)) 
+        if (!scpm->Active(profile)) {
             y2error ("error");
+            ret = YCPString("");
+        }
         else
             ret = YCPString(profile);
       }
@@ -183,15 +230,17 @@ YCPValue SCPMAgent::Read(const YCPPath &path, const YCPValue& arg)
      
    	if ((PC(0) == "resources") && (PC(1) == "current")) {
         string set;
-        if (!scpm->GetResourceSet(set)) 
+        if (!scpm->GetResourceSet(set)) {
             y2error ("error");
+            ret = YCPString("");
+        }
         else
             ret = YCPString(set);
     }
     
     } 
     
-    if (scpm) delete scpm;
+//    if (scpm) delete scpm;
 
     return ret;
 }
@@ -202,11 +251,11 @@ YCPValue SCPMAgent::Write(const YCPPath &path, const YCPValue& value,
 {
     y2error("Path in Write(): %s", path->toString().c_str());
 
-    options = 0;
-    scpm = NULL;
+//    options = 0;
+//    scpm = NULL;
     YCPBoolean ret = false;
 
-    scpm = new SCPM (options);
+//    scpm = new SCPM (options);
 
     if (path->length() == 2) {
         
@@ -282,7 +331,7 @@ YCPValue SCPMAgent::Write(const YCPPath &path, const YCPValue& value,
 
     }
 
-    if (scpm) delete scpm;
+//    if (scpm) delete scpm;
 
     return ret;
 
@@ -297,13 +346,14 @@ YCPValue SCPMAgent::Execute(const YCPPath &path, const YCPValue& value,
 {
     y2error("Path in Execute(): %s", path->toString().c_str());
     
-    options = 0;
-    scpm = NULL;
+//    options = 0;
+//    scpm = NULL;
     YCPValue ret = YCPBoolean(false);
     ofstream vystup;
     
     vystup.open ("/tmp/vystup.out");
-    scpm = new SCPM (options, vystup);
+//    scpm = new SCPM (options, vystup);
+//    scpm = new SCPM (options);
 
     if (path->length() == 0) {
     }
@@ -313,10 +363,18 @@ YCPValue SCPMAgent::Execute(const YCPPath &path, const YCPValue& value,
    	if (PC(0) == "switch") {
         switch_info_t switch_info;
         
-        if (!scpm->Switch(switch_info)) 
+        if ((value.isNull ()) || (!value->isMap())) {
             y2error ("error");
+            ret = YCPVoid();
+        }
         else {
-            ret = YCPBoolean(1);
+            switch_info = frommap_sw(value->asMap());
+            if (!scpm->Switch(switch_info)) 
+                y2error ("error");
+            else {
+                ret = YCPBoolean(1);
+
+            }
         }
 
     }
@@ -409,13 +467,34 @@ YCPValue SCPMAgent::Execute(const YCPPath &path, const YCPValue& value,
                 ret = YCPBoolean(1);
         }
       }
+
+      if (PC(1) == "changes") { 
+        string name, type;
+        ofstream changes;
+    
+ 
+        if ((value.isNull ()) || (arg.isNull ())) {
+            y2error ("error");
+        }
+        else {
+            type = value->asString()->value(); 
+            name = arg->asString()->value(); 
+            changes.open ("/tmp/changes.out");
+        
+/*            if (!scpm->ShowChanges(changes, type, name)) 
+                y2error ("error");
+            else
+                ret = YCPBoolean(1);*/
+            changes.close();
+        }
+      }
       
       
     }
     }
      
     vystup.close();
-    if (scpm) delete scpm;
+//    if (scpm) delete scpm;
 
     return ret;
 }
@@ -430,7 +509,8 @@ YCPValue SCPMAgent::otherCommand(const YCPTerm& term)
     if (sym == "SCPMAgent") {
         
         /* Your initialization */
-        
+        scpm = NULL;
+        scpm = new SCPM (options);
         
         return YCPVoid();
     }
@@ -438,229 +518,4 @@ YCPValue SCPMAgent::otherCommand(const YCPTerm& term)
     return YCPNull();
 }
 
-
-
-
-/* ModulesAgent.cc
- *
- * An agent for reading the modules.conf configuration file.
- *
- * Author: Michal Svec <msvec@suse.cz>
- *         Daniel Vesely <dan@suse.cz>
- *
- * $Id$
- *
- *
-
-
-#include "Y2Logger.h"
-#include "ModulesAgent.h"
-#include "ModulesConf.h"
-
-#define MAGIC_DIRECTIVE "extra"
-
-#define PC(n)       (path->component_str(n))
-#define VAL2STR(v)  ((v)->asString()->value())
-#define VAL2CSTR(v) ((v)->asString()->value_cstr())
-
-*
-  PATH:
-        MAP[STRING].MAP[STRING].MAP[STRING].(MAP[STRING].STRING|STRING)
-
-  READ:
-        .modules.options.<module>.<option>
-                           "options".STRING.MAP
-        .modules.options.<module>.<option>.<parameters>
-                           "options".STRING.STRING.STRING
-        .modules.<directive>.<module>.<argument>
-                           STRING.STRING.STRING
-        .modules.<directive>.<module>.comment.<comment>
-                           STRING.STRING."comment".STRING
-        .modules.<directive>.<module>
-                           STRING.STRING.LIST
-        .modules.<directive>
-                           STRING.LIST
-        .modules
-                           LIST
-
-ModulesAgent::ModulesAgent() : SCRAgent(), modules_conf(NULL) {
-}
-
-
-ModulesAgent::~ModulesAgent() {
-    if (modules_conf != NULL)
-	delete modules_conf;
-}
-
-**
- * Simple template function for converting c++ map into YCP list
- *
-template <class T> YCPList map2list(const T &m) {
-    YCPList list;
-    typename T::const_iterator it = m.begin ();
-	
-    for (; it != m.end (); ++it)
-	list->add(YCPString (it->first));
-	
-    return list;
-}
-
-**
- * Simple template function for converting c++ map into YCP map
- *
-template <class T> YCPMap map2ycpmap(const T &m) {
-    YCPMap ret_map;
-    typename T::const_iterator it = m.begin ();
-	
-    for (; it != m.end(); ++it)
-	ret_map->add (YCPString (it->first), YCPString (it->second));
-	
-    return ret_map;
-}
-
-**
- * Simple function for converting YCP map into c++ map
- *
-ModuleEntry::EntryArg ycpmap2map (const YCPMap &m) {
-    ModuleEntry::EntryArg ret_map;
-    YCPMapIterator it = m->begin ();
-
-    for (; it != m->end(); ++it)
-	if (it.key()->isString () && it.value ()->isString ())
-	    ret_map[VAL2STR(it.key ())] = VAL2STR(it.value ());
-	else {
-	    y2error("Map element must be string!");
-	    return ModuleEntry::EntryArg();
-	}
-    
-    return ret_map;
-}
-
-
-**
- * Dir
- *
-YCPValue ModulesAgent::Dir(const YCPPath& path) {
-  YCPList list;
-  string elem;
-  
-    if (modules_conf == NULL)
-	Y2_RETURN_VOID("Can't execute Dir before being mounted.")
-
-    switch (path->length ()) {
-    case 0:
-	return map2list (modules_conf->getDirectives ());
-    case 1:
-        if(PC(0) == MAGIC_DIRECTIVE)
-	    Y2_RETURN_VOID("Dir() doesn't support the .%s directive", MAGIC_DIRECTIVE)
-	return map2list (modules_conf->getModules(PC(0)));
-    }
-  
-    Y2_RETURN_VOID("Wrong path '%s' in Dir().", path->toString().c_str())
-}
-
-
-**
- * Read
- *
-YCPValue ModulesAgent::Read(const YCPPath &path, const YCPValue& arg) {
-	    
-    if (modules_conf == NULL)
-	Y2_RETURN_VOID("Can't execute Read before being mounted.")
-	    
-    switch (path->length ()) {
-    case 0:
-	return YCPList (map2list (modules_conf->getDirectives()) );
-    case 1:
-	if (arg.isNull ())
-	    return YCPList (map2list (modules_conf->getModules(PC(0))) );
-	if (arg->isString ()) {
-	    if (PC(0) == "options")
-		return YCPMap (map2ycpmap (modules_conf->getOptions(VAL2STR(arg))));
-	    else
-		return YCPString (modules_conf->getArgument(PC(0), VAL2STR(arg)));
-	}
-	
-    case 2:
-	if (!arg.isNull () && arg->isString ()) {
-	    if (PC(1) == "comment")
-		return YCPString (modules_conf->getComment(PC(0), VAL2STR(arg)));
-	    if (PC(0) == "options")
-		return YCPString (modules_conf->getOption(VAL2STR(arg), PC(1)));
-	}
-    }
-    
-    Y2_RETURN_VOID("Wrong path '%s' in Read().", path->toString().c_str())
-}
-
-**
- * Write
- *
-YCPValue ModulesAgent::Write(const YCPPath &path, const YCPValue& value, const YCPValue& arg) {
-
-    if (modules_conf == NULL)
-	Y2_RETURN_VOID("Can't execute Write before being mounted.")
-
-    if (path->isRoot() && value->isVoid ())
-	return YCPBoolean(modules_conf->writeFile());
-
-    switch (path->length ()) {
-
-    case 1:
-	if (!arg.isNull () && arg->isString ()) {
-	    if (value->isVoid ())
-		return YCPBoolean (modules_conf->removeEntry (PC(0), VAL2STR(arg)));
-	    if (PC(0) == "options") {
-		if (value->isMap ())
-		    return YCPBoolean (modules_conf->setOptions(VAL2STR(arg),
-								ycpmap2map (value->asMap ()),
-								ModuleEntry::SET));
-		else 
-		    Y2_RETURN_YCP_FALSE("Argument for Write () not map.")
-	    }
-	    return YCPBoolean (modules_conf->setArgument (PC(0), VAL2STR(arg),
-							  VAL2STR(value),
-							  ModuleEntry::SET));
-	}
-	else 
-	    Y2_RETURN_YCP_FALSE("Argument (2nd) for Write() is not string.")
-		
-    case 2:
-	if (value->isString () && !arg.isNull () && arg->isString ()) {
-	    if (PC(0) == "options")
-		return YCPBoolean (modules_conf->setOption (VAL2STR(arg), PC(1),
-							    VAL2STR(value),
-							    ModuleEntry::SET));
-	    if (PC(1) == "comment")
-		return YCPBoolean (modules_conf->setComment (PC(0), VAL2STR(arg),
-							     VAL2STR(value),
-							     ModuleEntry::SET));
-	}
-	else
-	    Y2_RETURN_YCP_FALSE("One or both Arguments for Write() is not string.")
-    }
-	
-    Y2_RETURN_VOID("Wrong path '%s' in Write().", path->toString().c_str())
-}
-
-
-**
- * otherCommand
- *
-YCPValue ModulesAgent::otherCommand(const YCPTerm& term) {
-    string sym = term->symbol()->symbol();
-
-    if (sym == "ModulesConf" && term->size() == 1) {
-	if (term->value(0)->isString()) {
-	    YCPString s = term->value(0)->asString();
-	    if (modules_conf != NULL)
-		delete modules_conf;
-	    modules_conf = new ModulesConf(s->value());
-	    return YCPVoid();
-	} else 
-	    Y2_RETURN_VOID("Bad first arg of ModulesConf(): is not a string.")
-    }
-
-    return YCPNull();
-}*/
 
