@@ -974,6 +974,10 @@ global define string GetProgressText(boolean everything) ``{
 
     string ret = "";
     string all = SCR::Read(.target.string, progresspath);
+
+    // check for non-existent file
+    if (all == nil) return ret;
+
     list all_l = splitstring (all, "\n");
 
     string current = select(all_l,progress_size,"");
