@@ -387,10 +387,11 @@ global define any SwitchDialog () ``{
         }
         else if (ret == `next)
 	    {
-            // saving: check for "drop all"
+            // saving changes: check for "drop all"
             ProfileManager::Save();
-            /*
+            /* we do not want to have two popups...
             ProgressPopup();
+            */
             if (!ProfileManager::Wait())
             {
                 // Error popup text, %1 is additional translated error message
@@ -400,7 +401,6 @@ global define any SwitchDialog () ``{
                     ProfileManager::scpm_error));
                 break;
             }
-            */
             ProfileManager::Switch();
             ProgressPopup();
             if (!ProfileManager::Wait())
