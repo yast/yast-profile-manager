@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Wed Jul 31 17:21:35 2002 - jsuchome@suse.cz
+
+- imlemented threads to agent
+- 2.6.2
+
+-------------------------------------------------------------------
 Tue Jul 30 09:27:23 2002 - jsuchome@suse.cz
 
 - fixed testsuite failing
