@@ -1,4 +1,15 @@
 -------------------------------------------------------------------
+Fri Sep 20 14:28:35 CEST 2002 - jsuchome@suse.cz
+
+- added new text for translation
+- 2.6.6
+
+-------------------------------------------------------------------
+Wed Sep 18 09:28:11 CEST 2002 - jsuchome@suse.cz
+
+- translated text showed in ShowChanges Popup
+
+-------------------------------------------------------------------
 Sat Sep  7 15:56:07 CEST 2002 - mvidner@suse.cz
 
 - Make "yast2 profile_manager" invoke "yast2 profile-manager"

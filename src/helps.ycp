@@ -203,6 +203,7 @@ These scripts are executed as the user root. Make sure no users can change or ev
     _("<p>The <b>flags</b> DELETED or NEW show that a resource will be deleted or added to the profile. This only happens if you changed the resource set in the SCPM options or if packages have been installed or removed from the system.</p>") +
 
     /* Switch dialog help 3/4 ---changed */
+    /* Do not translate resource type names (\"file\" and \"service\") here */
     _("<p>The resource <b>type</b> <i>file</i> indicates changes in a file or a directory. The resource type <i>service</i> means that there are changes in the runlevel links of this service, which decide if a service has to be started in a runlevel.</p>") +
 
     /* Switch dialog help 4/4 */

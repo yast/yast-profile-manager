@@ -649,6 +649,7 @@ global define boolean IntroductionTextPopup() ``{
 global define boolean ShowChangesPopup() ``{
 
     string changes = ProfileManager::ShowChanges();
+    string recoded = UI::Recode(Console::encoding,"UTF-8", changes);
 
     UI::OpenDialog(`opt(`decorated), `HBox(`HSpacing(1.5),
         `VSpacing(25),
@@ -659,7 +660,7 @@ global define boolean ShowChangesPopup() ``{
             `Label(_("Changes to the resource")),
             `Label(ProfileManager::active_resource_name),
             `VSpacing(1),
-            `RichText(changes),
+            `RichText(recoded),
             `VSpacing(1),
             `PushButton(`id(`ok), `opt(`default), OKButtonLabel()),
             `VSpacing(1)),

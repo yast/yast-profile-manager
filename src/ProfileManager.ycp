@@ -447,7 +447,7 @@ define boolean Initialize() ``{
     y2debug("progresspath=%1, hashpath=%2", progresspath, hashpath);
 
     boolean ret = SCR::Execute(.scpm, tmpdir);
-
+    if (ret == nil) ret = false;
     return ret;
 }
 
@@ -872,9 +872,11 @@ global define list GetResourcesAsItems() ``{
     foreach (`resource, resources, ``{
         string flag = "";
         if (lookup(resource,"is_new",false))
-            flag = "NEW";
+            // flag
+            flag = _("NEW");
         else if(lookup(resource,"is_deleted",false))
-            flag = "DELETED";
+            // flag
+            flag = _("DELETED");
 
 
         items = add(items, `item(`id(i),
