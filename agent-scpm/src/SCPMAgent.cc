@@ -112,9 +112,6 @@ SCPMAgent::SCPMAgent() : SCRAgent()
  */
 SCPMAgent::~SCPMAgent()
 {
-    hash.close();
-    output.close();
-    if (scpm) delete scpm;
 }
 
 /**
@@ -131,7 +128,7 @@ YCPValue SCPMAgent::Dir(const YCPPath& path)
  */
 YCPValue SCPMAgent::Read(const YCPPath &path, const YCPValue& arg)
 {
-    y2error("Path in Read(): %s", path->toString().c_str());
+    y2milestone("Path in Read(): %s", path->toString().c_str());
     
     YCPValue ret = YCPVoid(); 
 
@@ -160,9 +157,6 @@ YCPValue SCPMAgent::Read(const YCPPath &path, const YCPValue& arg)
         
         if (!scpm->ListResourceSets(predefined, individual)) {
             y2error ( scpm_error );
-            sets->add(YCPList());
-            sets->add(YCPList());
-            ret = sets;
         }
         else {
             sets->add (tolist(predefined));
@@ -184,13 +178,16 @@ YCPValue SCPMAgent::Read(const YCPPath &path, const YCPValue& arg)
         
    	if ((PC(0) == "status") && (PC(1) == "enabled")) {
         scpm_status_t scpm_status;
-
+            
         if (!scpm->Status(scpm_status)) {
             y2error ( scpm_error );
-            ret = YCPBoolean(false);
         }
-        else
-            ret = YCPBoolean(scpm_status.enabled);
+        else {
+            YCPList l;
+            l->add(YCPBoolean(scpm_status.enabled));
+            l->add(YCPBoolean(scpm_status.initialized));
+            ret = l;
+        }
     }
 
 	if (PC(0) == "profiles") {
@@ -199,7 +196,6 @@ YCPValue SCPMAgent::Read(const YCPPath &path, const YCPValue& arg)
 
         if (!scpm->Active(profile)) {
             y2error ( scpm_error );
-            ret = YCPString("");
         }
         else
             ret = YCPString(profile);
@@ -230,7 +226,6 @@ YCPValue SCPMAgent::Read(const YCPPath &path, const YCPValue& arg)
 
         if (!scpm->GetResourceSet(set)) {
             y2error ( scpm_error );
-            ret = YCPString("");
         }
         else
             ret = YCPString(set);
@@ -245,9 +240,17 @@ YCPValue SCPMAgent::Read(const YCPPath &path, const YCPValue& arg)
 YCPValue SCPMAgent::Write(const YCPPath &path, const YCPValue& value,
 			     const YCPValue& arg)
 {
-    y2error("Path in Write(): %s", path->toString().c_str());
+    y2milestone("Path in Write(): %s", path->toString().c_str());
 
     YCPValue ret = YCPBoolean(false);
+
+    if (path->length() == 0) {
+        y2debug("---------- destructing SCPM object");
+        hash.close();
+        output.close();
+        if (scpm) delete scpm;
+        ret = YCPBoolean(true);
+    }
 
     if (path->length() == 2) {
         
@@ -261,13 +264,13 @@ YCPValue SCPMAgent::Write(const YCPPath &path, const YCPValue& value,
         }
 
         if (!value->isBoolean ()) {
-            y2error ("error2");
+            y2error (scpm_error);
         }
         else {
             action = value->asBoolean()->value();
-        
+            bool force = false; 
             if (action) {
-                if (!scpm->Enable()) 
+                if (!scpm->Enable(force)) 
                     y2error ( scpm_error );
                 else
                     ret = YCPBoolean(1);
@@ -332,11 +335,27 @@ YCPValue SCPMAgent::Write(const YCPPath &path, const YCPValue& value,
 YCPValue SCPMAgent::Execute(const YCPPath &path, const YCPValue& value,
 			     const YCPValue& arg)
 {
-    y2error("Path in Execute(): %s", path->toString().c_str());
+    y2milestone("Path in Execute(): %s", path->toString().c_str());
     
     YCPValue ret = YCPBoolean(false);
     
     if (path->length() == 0) {
+        string tmpdir = value->asString()->value();
+        
+        string outfile = tmpdir + "/scpm.progress";
+        string hashfile = tmpdir + "/scpm.hash";
+        changesfile = tmpdir + "/scpm.changes";
+
+        const char *outf = outfile.c_str();
+        const char *hashf = hashfile.c_str();
+            
+        y2debug("----------- agent-scpm initialization");
+        y2debug("----------- output to: %s, %s", outf, hashf);
+    	output.open (outf);
+    	hash.open (hashf);
+        scpm = new SCPM (options, output, hash);
+        if (scpm)
+            ret = YCPBoolean(true);
     }
     
     if (path->length() == 1) {
@@ -373,6 +392,7 @@ YCPValue SCPMAgent::Execute(const YCPPath &path, const YCPValue& value,
         }
         else {
             profile = value->asString()->value();
+
             if (!scpm->PrepareSwitch(profile, switch_info)) {
                 y2error ( scpm_error );
                 ret = YCPVoid();
@@ -382,27 +402,62 @@ YCPValue SCPMAgent::Execute(const YCPPath &path, const YCPValue& value,
         }
     }
 	
-   	if ((PC(0) == "resources") && (PC(1) == "rebuild")) {
+   	if (PC(0) == "resources") {
+      if (PC(1) == "rebuild") {
         
-	/*
 		if (!scpm->RebuildDB()) {
             y2error ( scpm_error );
         }
-        else*/
+        else
             ret = YCPBoolean(true);
-	}
-     
-   	if (PC(0) == "profiles") {
-      if (PC(1) == "add") {
-        string profile;
+      }
+      if (PC(1) == "delete") {
+        string set;
         
         if (value.isNull ()) {
             y2error ( scpm_error );
         }
         else {
-            profile = value->asString()->value();
+            set = value->asString()->value();
+/*        
+            if (!scpm->DeleteResourceSet(set)) 
+                y2error ( scpm_error );
+            else*/
+                ret = YCPBoolean(1);
+        }
+      }
+      if (PC(1) == "copy") {
+        string set, newset;
+
+        if ((value.isNull ()) || arg.isNull ()){
+            y2error ( scpm_error );
+        }
+        else {
+            set = value->asString()->value();
+            newset = arg->asString()->value();
+       /* 
+            if (!scpm->CopyResourceSet(set, newset)) 
+                y2error ( scpm_error );
+            else*/
+                ret = YCPBoolean(1);
+        }
+      }
+      
+
+    }
+     
+   	if (PC(0) == "profiles") {
+      if (PC(1) == "add") {
+        string profile;
+        bool auto_switch;
         
-            if (!scpm->Add(profile)) // auto_switch!!!
+        if ((value.isNull ()) || (arg.isNull ())){
+            y2error ( scpm_error );
+        }
+        else {
+            profile = value->asString()->value();
+            auto_switch = arg->asBoolean()->value();
+            if (!scpm->Add(profile, auto_switch))
                 y2error ( scpm_error );
             else
                 ret = YCPBoolean(1);
@@ -463,19 +518,20 @@ YCPValue SCPMAgent::Execute(const YCPPath &path, const YCPValue& value,
         string name, type;
         ofstream changes;
     
- 
         if ((value.isNull ()) || (arg.isNull ())) {
             y2error ( scpm_error );
         }
         else {
+            const char *chgf = changesfile.c_str();
             type = value->asString()->value(); 
             name = arg->asString()->value(); 
-            changes.open ("/tmp/scpm_changes.out");
+            changes.open (chgf);
+            y2milestone("----------- changes to: %s", chgf);
         
-/*            if (!scpm->ShowChanges(changes, type, name)) 
+            if (!scpm->ShowChanges(changes, type, name)) 
                 y2error ( scpm_error );
             else
-                ret = YCPBoolean(1);*/
+                ret = YCPBoolean(1);
             changes.close();
         }
       }
@@ -497,9 +553,6 @@ YCPValue SCPMAgent::otherCommand(const YCPTerm& term)
     if (sym == "SCPMAgent") {
         
         /* Your initialization */
-    	output.open ("/tmp/scpm.out");
-    	hash.open ("/tmp/scpm.hash");
-        scpm = new SCPM (options, output, hash);
         
         return YCPVoid();
     }

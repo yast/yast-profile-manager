@@ -40,7 +40,7 @@ private:
     int options;
     SCPM *scpm;
     ofstream output, hash;
-    
+    string changesfile;    
 
 public:
     /**
@@ -74,6 +74,7 @@ public:
     virtual YCPValue Execute(const YCPPath &path,
 			     const YCPValue& value = YCPNull(),
 			     const YCPValue& arg = YCPNull());
+                 
 
     /**
      * Provides SCR Dir ().

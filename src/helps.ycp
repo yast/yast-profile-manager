@@ -93,8 +93,11 @@ These scripts are executed as the user root. Make sure no users can change or ev
     _("<p>The resource <b>type</b> <i>file</i> explains itself. The resource type <i>service</i> means that there are changes in the runlevel links of this service, which decide if a service has to be started in a runlevel.</p>") +
 
     /* Switch dialog help 4/4 */
-    _("<p>If you are unsure what was changed in a resource, select it and use Show changes. This will show you the changes in the selected resource.</p>")
+    _("<p>If you are unsure what was changed in a resource, select it and use Show changes. This will show you the changes in the selected resource.</p>"),
 
+    /* Write dialog help 1/1 */
+    "write" : _("<p><b><big>Writing profile-manager configuration</big></b><br>
+Please wait for a while...<br></p>")
 
 ];
 

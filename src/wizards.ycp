@@ -17,8 +17,6 @@ include "ui/common_popups.ycp";
 include "ui/common_messages.ycp";
 include "wizard/sequencer.ycp";
 
-//include "./complex.ycp";
-//include "./dialogs.ycp";
 include "profile-manager/complex.ycp";
 include "profile-manager/dialogs.ycp";
 
@@ -30,8 +28,8 @@ global define symbol ProfileManagerSequence() ``{
 
     map aliases = $[
 	"read"	: [ ``( ReadDialog() ), true ],
-	"main"	:   ``( MainSequence() )
-//,	"write"	: [ ``( WriteDialog() ), true ]
+	"main"	:   ``( MainSequence() ),
+    "write"	: [ ``( WriteDialog() ), true ]
     ];
 
     map sequence = $[
@@ -42,13 +40,12 @@ global define symbol ProfileManagerSequence() ``{
 	],
 	"main" : $[
 	    `abort	: `abort,
-//	    `next	: "write"
-	    `next	: `finish
+	    `next	: "write"
 	]
-/*	,"write" : $[
+	,"write" : $[
 	    `abort	: `abort,
 	    `next	: `next
-	]*/
+	]
     ];
 
     string caption = _("Profile-manager configuration");
@@ -114,9 +111,11 @@ global define any MainSequence () ``{
 	"options" :
 	$[
 	    `abort	: `abort,
+        `cp_button : "options",
+        `del_button : "options",
 	    `next	: "main"
 	],
-	"edit" :
+    "edit" :
 	$[
 	    `abort	: `abort,
 	    `next	: "main"
@@ -127,6 +126,7 @@ global define any MainSequence () ``{
 
     return ret;
 }
+
 
 
 /* EOF */
