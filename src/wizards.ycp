@@ -128,8 +128,8 @@ define symbol ProfileManagerSequence() ``{
 	]
     ];
 
-    Wizard::SetDesktopIcon("profile-manager");
     Wizard::CreateDialog();
+    Wizard::SetDesktopIcon("profile-manager");
     any ret = Sequencer::Run (aliases, sequence);
     UI::CloseDialog();
 
