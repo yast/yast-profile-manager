@@ -1216,7 +1216,7 @@ global define symbol ConfigureResourcesDialog () ``{
 		break;
 	    // yes/no popup
 	    if (Popup::YesNo (_("Apply changes to Resource Groups now?
-(Resource database will be rebuilded.)")))
+(Resource database will be rebuilt.)")))
 	    {
 		// really delete/add/modify
 		if (!ProfileManager::SaveResourceGroups ())

@@ -137,7 +137,6 @@ YCPMap SCPMAgent::tomap_ri(resource_info_t ri) {
     map->add(YCPString("save"), YCPBoolean(ri.save));
 
     if (use_rg) {
-	y2internal ("save mode: %i", ri.save_mode);
 	string save_mode = "normal";
 	switch (ri.save_mode)
 	{
@@ -389,8 +388,7 @@ YCPValue SCPMAgent::Read(const YCPPath &path, const YCPValue& arg) {
 		YCPList l;
 		l->add(YCPBoolean(scpm_status.enabled));
 		l->add(YCPBoolean(scpm_status.initialized));
-// FIXME: resource sets or resource groups? -> check version -> use_rg
-y2internal ("scpm version: %s", scpm_status.scpm_version.c_str());
+		l->add (YCPString (scpm_status.scpm_version));
 		ret = l;
 	    }
 	}
@@ -599,9 +597,6 @@ YCPValue SCPMAgent::Write(const YCPPath &path, const YCPValue& value,
             	y2error ( scpm_error );
             }
 	    else {
-y2internal ("old name: %s", PC(3).c_str());
-y2internal ("new name: %s", value->asString()->value().c_str());
-		// FIXME don't work?
 		if (!scpm->RenameResourceGroup (PC(3),
 			    value->asString()->value())) {
 		    y2error ( scpm_error );

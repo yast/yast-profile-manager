@@ -11,6 +11,10 @@
  */
 
 {
+    // FIXME remaining:
+    // - scpm version -> rg/rs
+    // - show resources button
+    // - helptexts
 
 module "ProfileManager";
 textdomain "profile-manager";
