@@ -723,11 +723,21 @@ global define boolean DropSwitchInfo() ``{
 }
 
 /**
+ * Saves modified resources of the profile
+ */
+global define void Save() ``{
+
+    y2debug ("Saving...");
+    SCR::Execute(.scpm.save, switch_info);
+}
+
+/**
  * Switchs to the selected profile.
  */
 global define void Switch() ``{
 
-    y2milestone ("Switching from profile \"%1\" to profile \"%2\"...",active_profile,selected_profile);
+    y2milestone ("Switching from profile \"%1\" to profile \"%2\"...",
+        active_profile, selected_profile);
     SCR::Execute(.scpm.switch, switch_info);
 }
 
@@ -1035,7 +1045,7 @@ global define boolean ReadSwitchInfo() ``{
         switch_info = $[];
         return false;
     }
-    y2milestone("switch_info: %1",switch_info);
+    y2debug("switch_info: %1",switch_info);
     return true;
 }
 

@@ -411,6 +411,18 @@ YCPValue SCPMAgent::Execute(const YCPPath &path, const YCPValue& value,
             pthread_create( &pt, NULL, (void*(*)(void*))&call_switch, this );
         }
     }
+
+   	if (PC(0) == "save") {
+        
+        if ((value.isNull ()) || (!value->isMap())) {
+            y2error ( scpm_error );
+            ret = YCPVoid();
+        }
+        else {
+            switch_info = frommap_sw(value->asMap());
+            pthread_create( &pt, NULL, (void*(*)(void*))&call_save, this );
+        }
+    }
     
     }
     
@@ -621,6 +633,30 @@ void *SCPMAgent::call_switch( SCPMAgent *ag )
   hash.open (hashf, ios::out | ios::trunc);
 
   if ( !ag->scpm->Switch( ag->switch_info ) ) {
+    y2error( scpm_error );
+    retval=1;
+  }
+  else 
+    retval=0;
+
+  int i;
+  for (i=0; i<10; i++)
+    hash.write("##########", 10);
+  hash.close();
+
+  pthread_exit((void*)&retval);
+}
+
+void *SCPMAgent::call_save( SCPMAgent *ag )
+{
+  static int retval;
+
+  const char *hashf = ag->hashfile.c_str();
+  ofstream hash;
+
+  hash.open (hashf, ios::out | ios::trunc);
+
+  if ( !ag->scpm->Save( ag->switch_info ) ) {
     y2error( scpm_error );
     retval=1;
   }

@@ -45,6 +45,7 @@ private:
     string changesfile, tmpfile, hashfile;    
     static void *call_prepare( SCPMAgent *);
     static void *call_switch( SCPMAgent *);
+    static void *call_save( SCPMAgent *);
     static void *call_add( SCPMAgent *);
     static void *call_copy( SCPMAgent *);
     static void *call_enable( SCPMAgent *);

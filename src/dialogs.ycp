@@ -387,6 +387,20 @@ global define any SwitchDialog () ``{
         }
         else if (ret == `next)
 	    {
+            // saving: check for "drop all"
+            ProfileManager::Save();
+            /*
+            ProgressPopup();
+            if (!ProfileManager::Wait())
+            {
+                // Error popup text, %1 is additional translated error message
+                UI::ErrorPopup (sformat(_("Saving the profile was not successful:
+%1
+"),
+                    ProfileManager::scpm_error));
+                break;
+            }
+            */
             ProfileManager::Switch();
             ProgressPopup();
             if (!ProfileManager::Wait())
