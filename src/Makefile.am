@@ -21,7 +21,10 @@ ynclude_DATA =			\
 config_DATA =			\
 	profile-manager.y2cc
 
+desktop_DATA =			\
+	profile-manager.desktop
+
 module_DATA =			\
 	ProfileManager.ycp
 
-EXTRA_DIST = $(client_DATA) $(ynclude_DATA) $(config_DATA) $(module_DATA)
+EXTRA_DIST = $(client_DATA) $(ynclude_DATA) $(config_DATA) $(module_DATA) $(desktop_DATA)
