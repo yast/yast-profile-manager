@@ -143,8 +143,8 @@ YCPMap SCPMAgent::tomap_ri(resource_info_t ri) {
 	    case normal:
 		save_mode = "normal";
 		break;
-	    case apply_all:
-		save_mode = "save_all";//FIXME save/apply?
+	    case save_all:
+		save_mode = "save_all";
 		break;
 	    case patch_all:
 		save_mode = "patch_all";
@@ -177,8 +177,8 @@ resource_info_t SCPMAgent::frommap_ri(YCPMap map) {
 	save_mode_t save_mode = normal;
 	string save_string = 
 		map->value(YCPString("save_mode"))->asString()->value();
-	if (save_string	== "save_all")//FIXME save/apply?
-	    save_mode = apply_all;
+	if (save_string	== "save_all")
+	    save_mode = save_all;
 	if (save_string == "patch_all")
 	    save_mode = patch_all;
 
@@ -389,6 +389,7 @@ YCPValue SCPMAgent::Read(const YCPPath &path, const YCPValue& arg) {
 		l->add(YCPBoolean(scpm_status.enabled));
 		l->add(YCPBoolean(scpm_status.initialized));
 		l->add (YCPString (scpm_status.scpm_version));
+		l->add (YCPBoolean (scpm_status.needs_reinit));
 		ret = l;
 	    }
 	}
@@ -526,7 +527,7 @@ YCPValue SCPMAgent::Write(const YCPPath &path, const YCPValue& value,
           (PC(1) == "poststop")) {
         
         if ((value.isNull ()) || (!value->isString())) {
-			scpm_error = "Wrong parameter.";
+	    scpm_error = "Wrong parameter.";
             y2error ( scpm_error );
         }
         else {
@@ -547,7 +548,7 @@ YCPValue SCPMAgent::Write(const YCPPath &path, const YCPValue& value,
     if ((PC(0) == "resources") && (PC(1) == "current")) {
         
         if ((value.isNull ()) || (!value->isString())) {
-			scpm_error = "Wrong parameter.";
+	    scpm_error = "Wrong parameter.";
             y2error ( scpm_error );
         }
         else {
@@ -628,8 +629,15 @@ YCPValue SCPMAgent::Write(const YCPPath &path, const YCPValue& value,
 			ret = YCPBoolean(1);
 		}
 	    }	
-	}		
-    }
+	}
+	else if ((PC(0) == "status")&&(PC(1) == "enabled")&&(PC(2)=="force")) {
+
+            if (!scpm->Enable(true)) 
+                y2error ( scpm_error );
+            else
+                ret = YCPBoolean(1);
+        }
+    } 
     /*
     else if (path->length() == 4) {
     }
@@ -681,148 +689,171 @@ YCPValue SCPMAgent::Execute(const YCPPath &path, const YCPValue& value,
     
    	if (PC(0) == "switch") {
         
-        if ((value.isNull ()) || (!value->isMap())) {
-			scpm_error = "Wrong parameter.";
-            y2error ( scpm_error );
-            ret = YCPVoid(); // why not false?
-        }
-        else {
-            switch_info = frommap_sw(value->asMap());
-            pthread_create( &pt, NULL, (void*(*)(void*))&call_switch, this );
-        }
-    }
+	    if ((value.isNull ()) || (!value->isMap())) {
+		scpm_error = "Wrong parameter.";
+		y2error ( scpm_error );
+		ret = YCPVoid();
+	    }
+	    else {
+		switch_info = frommap_sw(value->asMap());
+		pthread_create( &pt, NULL, (void*(*)(void*))&call_switch, this);
+	    }
+	}
 
    	if (PC(0) == "save") {
         
-        if ((value.isNull ()) || (!value->isMap())) {
-			scpm_error = "Wrong parameter.";
-            y2error ( scpm_error );
-            ret = YCPVoid();
-        }
-        else {
-            switch_info = frommap_sw(value->asMap());
-            pthread_create( &pt, NULL, (void*(*)(void*))&call_save, this );
-        }
+	    if ((value.isNull ()) || (!value->isMap())) {
+		scpm_error = "Wrong parameter.";
+		y2error ( scpm_error );
+		ret = YCPVoid();
+	    }
+	    else {
+		switch_info = frommap_sw(value->asMap());
+		pthread_create( &pt, NULL, (void*(*)(void*))&call_save, this );
+	    }
+	}
     }
-    
-    }
-    
-    if (path->length() == 2) {
-        
+    else if (path->length() == 2) {
+	
+	// (.scpm.rg.reset): reset all resource groups
+   	if ((PC(0) == "rg") && (PC(1) == "reset")) {
+
+	    if (!scpm->ResetAllGroups ())
+		y2error ( scpm_error );
+	    else
+		ret = YCPBoolean(true);
+	}
+
    	if ((PC(0) == "switch") && (PC(1) == "prepare")) {
         
-        if ((value.isNull ()) || (!value->isString())) {
-			scpm_error = "Wrong parameter.";
-            y2error ( scpm_error );
-            ret = YCPVoid();
-        }
-        else {
-            profile = value->asString()->value();
-            pthread_create( &pt, NULL, (void*(*)(void*))&call_prepare, this );
-        }
-    }
+	    if ((value.isNull ()) || (!value->isString())) {
+		scpm_error = "Wrong parameter.";
+		y2error ( scpm_error );
+		ret = YCPVoid();
+	    }
+	    else {
+		profile = value->asString()->value();
+		pthread_create( &pt, NULL, (void*(*)(void*))&call_prepare,this);
+	    }
+	}
 
    	if ((PC(0) == "enable") && (PC(1) == "first")) {
         
-        pthread_create( &pt, NULL, (void*(*)(void*))&call_enable, this );
-    }
+	    pthread_create( &pt, NULL, (void*(*)(void*))&call_enable, this );
+	}
 		
-    if (PC(0) == "resources") {
-      if (PC(1) == "rebuild") {
+	if (PC(0) == "resources") {
+	    if (PC(1) == "rebuild") {
         
-		if (!scpm->RebuildDB()) {
-            y2error ( scpm_error );
-        }
-        else
-            ret = YCPBoolean(true);
-      }
-    }
+		if (!scpm->RebuildDB())
+		    y2error ( scpm_error );
+		else
+		    ret = YCPBoolean(true);
+	    }
+	}
      
-    if (PC(0) == "profiles") {
-      if (PC(1) == "add") {
+	if (PC(0) == "profiles") {
+	    if (PC(1) == "add") {
         
-        if ((value.isNull ()) || (arg.isNull ())){
-			scpm_error = "Wrong parameter.";
-            y2error ( scpm_error );
-        }
-        else {
-            profile = value->asString()->value();
-            auto_switch = arg->asBoolean()->value();
-            pthread_create( &pt, NULL, (void*(*)(void*))&call_add, this );
-        }
-      }
+		if ((value.isNull ()) || (arg.isNull ())){
+		    scpm_error = "Wrong parameter.";
+		    y2error ( scpm_error );
+		}
+		else {
+		    profile = value->asString()->value();
+		    auto_switch = arg->asBoolean()->value();
+		    pthread_create( &pt, NULL, (void*(*)(void*))&call_add,this);
+		}
+	    }
       
-      if (PC(1) == "delete") {
+	    if (PC(1) == "delete") {
         
-        if (value.isNull ()) {
-			scpm_error = "Wrong parameter.";
-            y2error ( scpm_error );
-        }
-        else {
-            profile = value->asString()->value();
+		if (value.isNull ()) {
+		    scpm_error = "Wrong parameter.";
+		    y2error ( scpm_error );
+		}
+		else {
+		    profile = value->asString()->value();
         
-            if (!scpm->Delete(profile)) 
-                y2error ( scpm_error );
-            else
-                ret = YCPBoolean(1);
-        }
-      }
+		    if (!scpm->Delete(profile)) 
+			y2error ( scpm_error );
+		    else
+			ret = YCPBoolean(1);
+		}
+	    }
 
-      if (PC(1) == "copy") { 
+	    if (PC(1) == "copy") { 
         
-        if ((value.isNull ()) || (arg.isNull ())) {
-			scpm_error = "Wrong parameter.";
-            y2error ( scpm_error );
-        }
-        else {
-            profile = value->asString()->value(); 
-            dest_profile = arg->asString()->value(); 
-            pthread_create( &pt, NULL, (void*(*)(void*))&call_copy, this );
-        }
-      }
+		if ((value.isNull ()) || (arg.isNull ())) {
+		    scpm_error = "Wrong parameter.";
+		    y2error ( scpm_error );
+		}
+		else {
+		    profile = value->asString()->value(); 
+		    dest_profile = arg->asString()->value(); 
+		    pthread_create(&pt, NULL, (void*(*)(void*))&call_copy,this);
+		}
+	    }
 
-      if (PC(1) == "rename") { 
-        string old_profile, new_profile;
+	    if (PC(1) == "rename") { 
+		string old_profile, new_profile;
         
-        if ((value.isNull ()) || (arg.isNull ())) {
-			scpm_error = "Wrong parameter.";
-            y2error ( scpm_error );
-        }
-        else {
-            old_profile = value->asString()->value(); 
-            new_profile = arg->asString()->value(); 
+		if ((value.isNull ()) || (arg.isNull ())) {
+		    scpm_error = "Wrong parameter.";
+		    y2error ( scpm_error );
+		}
+		else {
+		    old_profile = value->asString()->value(); 
+		    new_profile = arg->asString()->value(); 
         
-            if (!scpm->Rename(old_profile, new_profile)) 
-                y2error ( scpm_error );
-            else
-                ret = YCPBoolean(1);
-        }
-      }
+		    if (!scpm->Rename(old_profile, new_profile)) 
+			y2error ( scpm_error );
+		    else
+			ret = YCPBoolean(1);
+		}
+	    }
 
-      if (PC(1) == "changes") { 
-        string name, type;
-        ofstream changes;
+	    if (PC(1) == "changes") { 
+		string name, type;
+		ofstream changes;
     
-        if ((value.isNull ()) || (arg.isNull ())) {
-			scpm_error = "Wrong parameter.";
-            y2error ( scpm_error );
-        }
-        else {
-            const char *chgf = changesfile.c_str();
-            type = value->asString()->value(); 
-            name = arg->asString()->value(); 
-            changes.open (chgf);
-            y2debug("----------- changes to: %s", chgf);
+		if ((value.isNull ()) || (arg.isNull ())) {
+		    scpm_error = "Wrong parameter.";
+		    y2error ( scpm_error );
+		}
+		else {
+		    const char *chgf = changesfile.c_str();
+		    type = value->asString()->value(); 
+		    name = arg->asString()->value(); 
+		    changes.open (chgf);
+		    y2debug("----------- changes to: %s", chgf);
         
-            if (!scpm->ShowChanges(changes, type, name)) 
-                y2error ( scpm_error );
-            else
-                ret = YCPBoolean(1);
-            changes.close();
-        }
-      }
-      
+		    if (!scpm->ShowChanges(changes, type, name)) 
+			y2error ( scpm_error );
+		    else
+			ret = YCPBoolean(1);
+		    changes.close();
+		}
+	    }
+	}
     }
+    else if (path->length() == 3) {
+	
+	// (.scpm.rg.group.reset, group_name): reset resource group group_name
+   	if ((PC(0) == "rg") && (PC(1) == "group") && (PC(2) == "reset")) {
+
+	    if ((value.isNull ()) || (!value->isString())) {
+		scpm_error = "Wrong parameters.";
+            	y2error ( scpm_error );
+            }
+	    else
+	    {
+		if (!scpm->ResetResourceGroup (value->asString()->value()))
+		    y2error ( scpm_error );
+		else
+		    ret = YCPBoolean(true);
+	    }
+	}
     }
      
     return ret;

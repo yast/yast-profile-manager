@@ -241,9 +241,13 @@ global define any OptionsDialog () ``{
     list resource_sets = union( union (ProfileManager::resource_sets_predefined, [ separator ]), ProfileManager::resource_sets_individual);
     boolean close_popups = ProfileManager::close_popups;
 
+    /* FIXME which values?
     list switch_modes = ["normal", "skip", "force"];
     list boot_modes = ["backup", "skip", "force"];
-    // FIXME how should the module behave according to this values?
+    */
+    // FIXME radiobuttons
+    list switch_modes = [_("save changes"), _("drop changes")];
+    list boot_modes = [_("save changes"), _("drop changes")];
 
     boolean use_rg = ProfileManager::use_rg;
     // -------------------------
@@ -326,7 +330,35 @@ global define any OptionsDialog () ``{
 		`Left(`CheckBox(`id("verbose"),
 		    // checkbox label
                     _("&Verbose messages"), false)),
-		`VSpacing(3),
+		`VSpacing(2),
+		`HBox(
+		    `HSpacing(0.5),
+		    // frame label
+		    `Frame (_("Switch mode"), `VBox(
+			`VSpacing (0.5),
+			`RadioButtonGroup (`id(`rb_sw), `HBox(`VBox (
+			    // radiobutton label
+			    `Left(`RadioButton (`id(`sws), _("&Save changes"))),
+			    // radiobutton label
+			    `Left(`RadioButton (`id(`swd), _("Dro&p changes")))
+			))),
+			`VSpacing (0.5)
+		    )),
+		    `HSpacing (),
+		    // frame label
+		    `Frame (_("Boot mode"), `VBox(
+			`VSpacing (0.5),
+			`RadioButtonGroup (`id(`rb_bo), `VBox (
+			    // radiobutton label
+			    `Left(`RadioButton (`id(`bs), _("Save &changes"))),
+			    // radiobutton label
+			    `Left(`RadioButton (`id(`bd), _("Drop c&hanges")))
+			)),
+			`VSpacing (0.5)
+		    )),
+		    `HSpacing()
+		),
+		/*
 		`HBox(
 		    `HSpacing(),
 		    `Left(
@@ -339,14 +371,13 @@ global define any OptionsDialog () ``{
 		    `ComboBox(`id("boot_mode"), _("Boo&t mode"), boot_modes)),
 		    `HSpacing()
 		),
+		*/
 		`VSpacing()
 	    )
         )),
         `VSpacing(1),
-	`Bottom(
-	    // button label
-	    `Right (`PushButton(`id(`resources), _("Configure &Resources")))
-	),
+	// button label
+	`Right (`PushButton(`id(`resources), _("Configure &Resources"))),
 	`VSpacing(1)
 	),
         `HSpacing(1.5));
@@ -374,9 +405,15 @@ global define any OptionsDialog () ``{
     // set the initial values of comboboxes
     if (use_rg)
     {
+	/*
 	foreach (`key, `value, ProfileManager::scpm_conf, ``{
 	    UI::ChangeWidget (`id(key), `Value, value);
 	});
+	*/
+	UI::ChangeWidget (`id("verbose"), `Value, ProfileManager::scpm_conf["verbose"]:true);
+	// FIXME mode values???
+	UI::ChangeWidget(`id(`rb_sw), `CurrentButton, `sws);
+	UI::ChangeWidget(`id(`rb_bo), `CurrentButton, `bs);
     }
 
     any ret = nil;

@@ -11,9 +11,6 @@
  */
 
 {
-    // FIXME remaining:
-    // - scpm version -> rg/rs
-    // - show resources button
 
 module "ProfileManager";
 textdomain "profile-manager";
@@ -34,6 +31,11 @@ global boolean first_time = false;
  * Is SCPM enabled?
  */
 global boolean enabled = false;
+
+/**
+ * Is SCPM re-initialization needed? (possibly after update)
+ */
+global boolean needs_reinit = false;
 
 // for saving status of enabled/disabled radiobuttons in OptionsDialog
 // when going to ConfigureResources
@@ -289,6 +291,31 @@ global define boolean ReadResourceGroups() ``{
 
     return true;
 }
+
+/**
+ * Resets RG's to default values
+ * @return success
+ */
+global define boolean ResetResourceGroups() ``{
+
+    boolean ret = SCR::Execute (.scpm.rg.reset);
+    if (!ret)
+	SetError();
+    return ret;
+}
+
+/**
+ * Resets one resource group to default values
+ * @return success
+ */
+global define boolean ResetResourceGroup (string groupname) ``{
+
+    boolean ret = SCR::Execute (.scpm.rg.group.reset, groupname);
+    if (!ret)
+	SetError();
+    return ret;
+}
+
 
 /**
  * Returns all available resource groups.
@@ -740,7 +767,25 @@ global define boolean Read() ``{
     {
 	// Error message: %1 is special error message, should be translated
 	Report::Error(sformat(_("Cannot read SCPM status:\n%1"), scpm_error));
+
+
         return false;
+    }
+    // FIXME re-initialization needed
+    if (needs_reinit)
+    {
+	// yes/no popup
+	if (Popup::YesNo (_("SCPM is currently locked because you system
+installation has changed.
+This is usually caused by a system update. Therefore the data saved in
+your profiles may be inconsistent, which makes it necessary to reininitialize
+SCPM. This also means the saved profiles get lost and need to be
+setup up again from scratch.
+Perform the reinitialization now?")))
+	{
+	    // force enabling TODO test it...
+	    SCR::Write(.scpm.status.enabled.force, true);
+	}
     }
 
     // read profiles
@@ -973,8 +1018,10 @@ Install it now?</p>")))
         SetError();
 
     // FIXME: read use_rg status! - check scpm_version from status?
+    /*
     string version = lookup (SCR::Execute (.target.bash_output, "rpm -qi scpm | grep Version"), "stdout", "");
     list v_l = splitstring (version, " \t\n:");
+    */
     return ret;
 }
 
@@ -993,6 +1040,7 @@ define boolean ReadSCPMStatus() ``{
 
     enabled = select (stat, 0, false);
     initialized = select (stat, 1, false);
+    needs_reinit = select (stat, 3, false);
     return true;
 }
 

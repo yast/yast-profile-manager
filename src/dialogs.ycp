@@ -814,22 +814,22 @@ global define boolean AddProfilePopup() ``{
             `VSpacing(1),
             `RadioButtonGroup(`id(`rb),
 	            `VBox(
-			        `Left(`RadioButton(`id(`new), `opt(`notify),
-					    // Popup text, part 2/3
-                        _("on the c&urrent system configuration"))),
+			`Left(`RadioButton(`id(`new), `opt(`notify),
+			    // Popup text, part 2/3
+			    _("on the c&urrent system configuration"))),
                     `VSpacing(0.2),
                     `HBox(
-                    `HSpacing(2),
-					// Checkbox label, part 1/2
-                 `CheckBox(`id(`auto), _("&Make the added profile the new active profile."))),
+			`HSpacing(2),
+			// Checkbox label, part 1/2
+			`CheckBox(`id(`auto), _("&Make the added profile the new active profile."))),
                     `HBox(
-                    `HSpacing(4.5),
-					// Checkbox label, part 2/2
-                 `Label(`id(`autol),_("This does not save anything to the old active
+			`HSpacing(4.5),
+			// Checkbox label, part 2/2
+			`Label(`id(`autol),_("This does not save anything to the old active
 profile nor does it start or stop services."))),
-                   `VSpacing(1),
-                    `Left(`RadioButton(`id(`copy), `opt(`notify),
-					    // Popup text, part 3/3
+		    `VSpacing(1),
+		    `Left(`RadioButton(`id(`copy), `opt(`notify),
+			// Popup text, part 3/3
                         _("on an &existing profile:")))
                     )),
             `SelectionBox(`id(`profiles),
@@ -1147,7 +1147,10 @@ global define symbol ConfigureResourcesDialog () ``{
 		    `PushButton(`id(`edit_button), `opt(`key_F4),_("&Edit")),
 		    `Left(
                     // Push button label
-		    `PushButton(`id(`delete_button),`opt(`key_F5),_("&Delete")))
+		    `PushButton(`id(`delete_button),`opt(`key_F5),_("&Delete"))),
+		    `Right(`PushButton(`id(`reset_button),`opt(`key_F6),
+			// Push button label
+			_("&Reset All")))
 		    ),
 		`VSpacing(0.2)
                 ),
@@ -1179,7 +1182,7 @@ global define symbol ConfigureResourcesDialog () ``{
 	if (ret == `delete_button)
 	{
 	    if (!ProfileManager::GroupDeletable (selected))
-		// Popup text
+		// Popup text FIXME can be?
 		Popup::Message(_("You cannot delete predefined resource group."));
 	    // yes/no popup
 	    else if (Popup::YesNo(sformat(_("Delete group %1?"), selected)))
@@ -1205,6 +1208,32 @@ global define symbol ConfigureResourcesDialog () ``{
 		modified = true;
 	    }
 	    continue;
+	}
+	else if (ret == `reset_button)
+	{
+	    // yes/no popup
+	    if (Popup::YesNo (_("All resource groups will be reset to their initial default values.
+All user modifications (including new groups) will be lost.
+Are you sure to do it now?")))
+	    {
+		if (!ProfileManager::ResetResourceGroups ())
+		{
+		    // error message
+		    Report::Error( sformat(_("Problem with reseting resource groups:\n%1"),
+			ProfileManager::scpm_error));
+		    continue;
+		}
+		// read resource groups again
+		if (!ProfileManager::ReadResourceGroups())
+		{
+		    // error message
+		    Report::Error(sformat(_("Cannot read resource groups:\n%1"),
+			ProfileManager::scpm_error));
+		    continue;
+		}
+		// reload the list of groups
+		UI::ChangeWidget(`id(`rgroups),`Items, resource_groups_items());
+	    }
 	}
 	else if (ret == `rgroups)
 	{
@@ -1384,6 +1413,21 @@ global define map ResourceGroupPopup (map group) ``{
 	return (contains (items, `item(`id(name), "X", name, type)) ||
 	    contains (items, `item(`id(name), "", name, type)));
     }
+    /**
+     * helper function for building table items of one resource group
+     */
+    define list resource_group_items() ``{
+
+	return maplist (`res, group["resources"]:[], ``{
+	    string name = res["name"]:"";
+	    user_defined [name] = res["user_defined"]:false; //FIXME not needed?
+	    if (res["active"]:false)
+		return `item(`id(name), "X", name, res["type"]:"");
+	    else
+		return `item(`id(name), "", name, res["type"]:"");
+    });
+
+    }
 
     string groupname = group["name"]:"";
     string descr = group["description"]:"";
@@ -1422,7 +1466,10 @@ global define map ResourceGroupPopup (map group) ``{
 		`PushButton(`id(`addf_b), `opt(`key_F4),_("Add &File")),
 		`Left(
                     // Push button label
-		    `PushButton(`id(`delete_b),`opt(`key_F5),_("&Delete")))
+		    `PushButton(`id(`delete_b),`opt(`key_F5),_("&Delete"))),
+		`Right(
+                    // Push button label
+		    `PushButton(`id(`reset_b),`opt(`key_F6),_("&Reset Group")))
 		),
 	    `VSpacing(0.2)),
 	    `HSpacing())
@@ -1444,23 +1491,19 @@ global define map ResourceGroupPopup (map group) ``{
     UI::OpenDialog(`opt(`decorated), con);
 
     // create the table items
-    items = maplist (`res, group["resources"]:[], ``{
-	string name = res["name"]:"";
-	user_defined [name] = res["user_defined"]:false;
-	if (res["active"]:false)
-	    return `item(`id(name), "X", name, res["type"]:"");
-	else
-	    return `item(`id(name), "", name, res["type"]:"");
-    });
+    items = resource_group_items ();
     UI::ChangeWidget(`id(`resources), `Items, items);
     UI::SetFocus(`id(`name));
 
     y2milestone ("edited group: %1", group);
     if (group["user_defined"]:true == false)
     {
-	// default group cannot be renamed
+	// default group cannot be renamed FIXME or can?
 	UI::ChangeWidget(`id(`name), `Enabled, false);
     }
+    else
+	// user defined group cannot be reset
+	UI::ChangeWidget(`id(`reset_b), `Enabled, false);
 
     any ret = nil;
     do
@@ -1482,14 +1525,35 @@ global define map ResourceGroupPopup (map group) ``{
 	    UI::ChangeWidget(`id(`resources), `Items, items);
 	    UI::ChangeWidget(`id(`resources), `CurrentItem, selected);
 	}
+	if (ret == `reset_b)
+	{
+	    // yes/no popup
+	    if (Popup::YesNo (_("Current resource group will be reset to its initial default values.
+All user modifications will be lost.
+Are you sure to do it now?")))
+	    {
+		if (!ProfileManager::ResetResourceGroup (groupname))
+		{
+		    // error message
+		    Report::Error( sformat(_("Problem with reseting resource group:\n%1"),
+			ProfileManager::scpm_error));
+		    continue;
+		}
+		group = ProfileManager::GetGroup (groupname);
+		items = resource_group_items ();
+		UI::ChangeWidget(`id(`resources), `Items, items);
+	    }
+	}
 	if (ret == `delete_b)
 	{
+	    /*
 	    if (!user_defined[selected]:false)
 	    {
 		// Popup text (user wants to delete predefined resource)
 		Popup::Message(_("You cannot delete predefined resource."));
 		continue;
 	    }
+	    */
 	    if (Popup::YesNo(sformat(
 // Popup text (confirmation), %1 is name of file or service
 _("Really delete resource \'%1\' from this group?"),
