@@ -1,0 +1,51 @@
+/**
+ * File:	clients/profile-manager.ycp
+ * Package:	Configuration of profile-manager
+ * Summary:	Main file
+ * Authors:	Jiri Suchomel <jsuchome@suse.cz>
+ *
+ * $Id$
+ *
+ * Main file for profile-manager configuration. Uses all other files.
+ */
+
+{
+
+/***
+ * <h3>Configuration of the profile-manager</h3>
+ */
+
+textdomain "profile-manager";
+
+/* The main () */
+y2milestone ("----------------------------------------");
+y2milestone ("Profile-manager module started");
+
+include "profile-manager/wizards.ycp";
+
+/* is this proposal or not? */
+boolean propose = false;
+list args = Args();
+if(size(args) > 0) {
+    if(is(Args(0), path) && Args(0) == .propose) {
+        y2milestone("Using PROPOSE mode");
+        propose = true;
+    }
+    else
+        y2error("Bad argument for profile-manager: %1", Args(0));
+}
+
+/* main ui function */
+any ret = nil;
+
+if(propose) ret = ProfileManagerAutoSequence();
+else ret = ProfileManagerSequence();
+y2debug("ret == %1", ret);
+
+/* Finish */
+y2milestone("Profile-manager module finished");
+y2milestone("----------------------------------------");
+return ret;
+
+/* EOF */
+}

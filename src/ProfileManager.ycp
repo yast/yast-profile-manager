@@ -1,0 +1,216 @@
+/**
+ * File:	modules/ProfileManager.ycp
+ * Package:	Configuration of profile-manager
+ * Summary:	Data for configuration of profile-manager, input and output functions.
+ * Authors:	Jiri Suchomel <jsuchome@suse.cz>
+ *
+ * $Id$
+ *
+ * Representation of the configuration of profile-manager.
+ * Input and output routines.
+ */
+
+{
+
+module "ProfileManager";
+textdomain "profile-manager";
+
+import "Progress";
+import "Report";
+import "Summary";
+
+include "profile-manager/routines.ycp";
+
+/**
+ * Abort function
+ * return boolean return true if abort
+ */
+global block AbortFunction = nil;
+
+/**
+ * Data was modified?
+ */
+global boolean modified = false;
+
+global boolean proposal_valid = false;
+global boolean write_only = false;
+
+/**
+ * Data was modified?
+ * @return true if modified
+ */
+global define boolean Modified() ``{
+    y2debug("modified=%1",modified);
+    return modified;
+};
+
+// Settings: Define all variables needed for configuration of profile-manager
+// TODO FIXME: Define all the variables necessary to hold
+// TODO FIXME: the configuration here (with the appropriate
+// TODO FIXME: description)
+// TODO FIXME: For example:
+//   /**
+//    * List of the configured cards.
+//    */
+//   list cards = [];
+//
+//   /**
+//    * Some additional parameter needed for the configuration.
+//    */
+//   boolean additional_parameter = true;
+
+/**
+ * Read all profile-manager settings
+ * @return true on success
+ */
+global define boolean Read() ``{
+
+    /* Xprofile-manager read dialog caption */
+    string caption = _("Initializing profile-manager configuration");
+
+    // TODO FIXME Set the right number of stages
+    integer steps = 4;
+
+    integer sl = 500;
+    sleep(sl);
+
+    // TODO FIXME Names of real stages
+    // We do not set help text here, because it was set outside
+    Progress::New( caption, " ", steps, [
+	    _("Read the database"),
+	    _("Read the previous settings"),
+	    _("Detect the devices")
+	], [
+	    _("Reading the database..."),
+	    _("Reading the previous settings..."),
+	    _("Detecting the devices..."),
+	    _("Finished")
+	],
+	""
+    );
+
+    // read database
+    if(Abort()) return false;
+    Progress::NextStage();
+    if(false) Report::Error(_("Can not read the database1!"));
+    sleep(sl);
+
+    // read another database
+    if(Abort()) return false;
+    Progress::NextStep();
+    if(false) Report::Error(_("Can not read the database2"));
+    sleep(sl);
+
+    // read current settings
+    if(Abort()) return false;
+    Progress::NextStage();
+    if(false) Report::Error(_("Can not read current settings!"));
+    sleep(sl);
+
+    // detect devices
+    if(Abort()) return false;
+    Progress::NextStage();
+    if(false) Report::Warning(_("Can not detect device"));
+    sleep(sl);
+
+    if(Abort()) return false;
+    ProgressNextStage(_("Finished"));
+    sleep(sl);
+
+    if(Abort()) return false;
+    modified = false;
+    return true;
+}
+
+/**
+ * Write all profile-manager settings
+ * @return true on success
+ */
+global define boolean Write() ``{
+
+    /* Xprofile-manager read dialog caption */
+    string caption = _("Saving profile-manager configuration");
+
+    // TODO FIXME And set the right number of stages
+    integer steps = 2;
+
+    integer sl = 500;
+    sleep(sl);
+
+    // TODO FIXME Names of real stages
+    // We do not set help text here, because it was set outside
+    Progress::New(caption, " ", steps, [
+	    _("Write the settings"),
+	    _("Run SuSEconfig")
+	], [
+	    _("Writing the settings..."),
+	    _("Running SuSEconfig..."),
+	    _("Finished")
+	],
+	""
+    );
+
+    // write settings
+    if(Abort()) return false;
+    Progress::NextStage();
+    if(false) Report::Error (_("Can not write settings!"));
+    sleep(sl);
+
+    // run SuSEconfig
+    if(Abort()) return false;
+    Progress::NextStage ();
+    if(false) Report::Error (_("SuSEconfig script failed!"));
+    sleep(sl);
+
+    if(Abort()) return false;
+    ProgressNextStage(_("Finished"));
+    sleep(sl);
+
+    if(Abort()) return false;
+    return true;
+}
+
+/**
+ * Get all profile-manager settings from the first parameter
+ * (For use by autoinstallation.)
+ * @param settings The YCP structure to be imported.
+ * @return boolean True on success
+ */
+global define boolean Import (map settings) ``{
+    // TODO FIXME: your code here (fill the above mentioned variables)...
+    sleep(3000);
+    return true;
+}
+
+/**
+ * Dump the profile-manager settings to a single map
+ * (For use by autoinstallation.)
+ * @return map Dumped settings (later acceptable by Import ())
+ */
+global define map Export () ``{
+    // TODO FIXME: your code here (return the above mentioned variables)...
+    sleep(3000);
+    return $[];
+}
+
+/**
+ * Create a textual summary and a list of unconfigured cards
+ * @param split split configured and unconfigured?
+ * @return summary of the current configuration
+ */
+global define list Summary() ``{
+    // TODO FIXME: your code here...
+    return [ _("Configuration summary ..."), [] ];
+}
+
+/**
+ * Create an overview table with all configured cards
+ * @return table items
+ */
+global define list Overview() ``{
+    // TODO FIXME: your code here...
+    return [];
+}
+
+/* EOF */
+}
