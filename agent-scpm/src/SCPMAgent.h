@@ -39,8 +39,8 @@ private:
      * Agent private variables
      */
     int options;
-    scpm_status_t scpm_status;
     SCPM *scpm;
+    
 
 public:
     /**
