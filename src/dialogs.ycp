@@ -43,8 +43,8 @@ define boolean ProgressPopup(string position, integer start, integer end) ``{
             `VSpacing(1),
             `ProgressBar(`id(`pb), "", 100, 0),
             `VSpacing(1),
-	    // checkbox label:
-            `CheckBox(`id(`close_ch), `opt(`notify), _("Close Progress Pop-ups &Automatically (reenable it in SCPM Setup)"),close_popups),
+	    // checkbox label: ('SCPM Options' is another dialog name
+            `CheckBox(`id(`close_ch), `opt(`notify), _("Close Progress Pop-ups &Automatically (reenable it in SCPM Options)"),close_popups),
             `VSpacing(1),
 	        `HBox(
 	            `Right(`PushButton(`id(`close), `opt(`default, `key_F10),

@@ -15,6 +15,7 @@
 module "ProfileManager";
 textdomain "profile-manager";
 
+import "Directory";
 import "Progress";
 import "Report";
 import "Require";
@@ -910,9 +911,15 @@ global define boolean ReadProfilesDescriptions() ``{
  */
 define boolean ReadUserSettings() ``{
 
-    SCR::Execute (.target.bash, "/bin/touch /var/lib/YaST2/scpm.ycp");
-    state = (map) SCR::Read (.target.ycp, "/var/lib/YaST2/scpm.ycp");
-
+    string file	= Directory::vardir + "/scpm.ycp";
+    if (SCR::Read (.target.size, file) == -1)
+    {
+	SCR::Execute (.target.bash, sformat ("/bin/touch %1", file));
+    }
+    else
+    {
+	state = (map) SCR::Read (.target.ycp, "/var/lib/YaST2/scpm.ycp");
+    }
     if (state == nil || state == $[])
 	first_time = true;
     else
