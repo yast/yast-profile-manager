@@ -1,5 +1,5 @@
 #
-# Makefile.am for devtools/devtools/skeletons/config/src
+# Makefile.am for yast2-profile-manager/src
 #
 
 yncludedir = @yncludedir@/profile-manager
