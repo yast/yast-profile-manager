@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Mon Apr 28 12:41:07 CEST 2003 - jsuchome@suse.de
+
+- adapted to Require interface
+- closing module after pressing "close window" button
+- 2.8.0
+
+-------------------------------------------------------------------
 Fri Feb 14 11:15:17 CET 2003 - jsuchome@suse.de
 
 - implemented progress bar

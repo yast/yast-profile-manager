@@ -84,6 +84,14 @@ global define symbol ProfileManagerAutoSequence() ``{
     return ret;
 }
 
+/**
+ * Finishing module after clicking windowmanager "close window" button
+ * @return symbol next (-> write all)
+ */
+global define symbol Cancel() ``{
+
+    return `next;
+}
 
 /**
  * Main sequence of profile-manager
@@ -95,7 +103,8 @@ global define any MainSequence () ``{
 	    "main"	:   ``( MainDialog () ),
 	    "options"	:  ``( OptionsDialog () ),
 	    "switch"	:  ``( SwitchDialog () ),
-	    "edit"	:  ``( ProfileSettingsDialog () )
+	    "edit"	:  ``( ProfileSettingsDialog () ),
+	    "cancel"	:	``( Cancel() )
 	];
 
     map sequence = $[
@@ -103,25 +112,33 @@ global define any MainSequence () ``{
 	"main" :
 	$[
 	    `abort	: `abort,
+	    `cancel	: "cancel",
 	    `next	: `next,
-		`switch_button : "switch",
+	    `switch_button : "switch",
 	    `options_button: "options",
 	    `edit_button: "edit",
 	],
 	"switch" :
 	$[
 	    `abort	: `abort,
-		`next	: "main"
+	    `cancel	: "cancel",
+	    `next	: "main"
 	],
 	"options" :
 	$[
 	    `abort	: `abort,
+	    `cancel	: "cancel",
 	    `next	: "main"
 	],
-    "edit" :
+	"edit" :
 	$[
 	    `abort	: `abort,
+	    `cancel	: "cancel",
 	    `next	: "main"
+	],
+	"cancel" :
+	$[
+	    `next	: `next
 	]
     ];
 

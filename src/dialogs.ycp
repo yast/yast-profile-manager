@@ -98,10 +98,10 @@ global define any ProfileSettingsDialog () ``{
     while (true)
     {
 	ret = UI::UserInput ();
-	if (ret == `back)
-    {
-        break;
-    }
+	if (ret == `back || ret == `cancel)
+	{
+	    break;
+	}
     else if (ret == `next)
 	{
         boolean secure = UI::QueryWidget(`id(`secure_ch), `Value);
@@ -344,8 +344,8 @@ global define any SwitchDialog () ``{
     any ret = nil;
     while (true)
     {
-	    ret = UI::UserInput ();
-	    if (ret == `back)
+	ret = UI::UserInput ();
+	if (ret == `back || ret == `cancel)
             break;
         else if (ret ==`modified || ret ==`select_button)
         {

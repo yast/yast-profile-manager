@@ -69,7 +69,7 @@ global define any MainDialog () ``{
         `Frame(_("Profile management"), `HBox(`HSpacing(1),
             `VBox(
                 `VSpacing(0.2),
-		        `Table(`id(`profiles),
+		    `Table(`id(`profiles), `opt (`notify),
                     `header(
                             // Header of the table with the aviable profiles 1/3
                             _("active"),
@@ -177,12 +177,13 @@ global define any MainDialog () ``{
 			return `edit_button;
 		else continue;
 	}
-    else if (ret == `edit_button)
-	{
+    else if (ret == `edit_button || ret == `profiles)
+    {
+	ret = `edit_button;
         ProfileManager::selected_profile = UI::QueryWidget(`id(`profiles), `CurrentItem);
         ProfileManager::profile_action = "edit";
         break;
-	}
+    }
     else if (ret == `switch_button)
     {
         selected = UI::QueryWidget(`id(`profiles), `CurrentItem);
@@ -210,7 +211,7 @@ global define any MainDialog () ``{
         IntroductionTextPopup();
         continue;
     }
-    else if (ret == `next || ret == `options_button)
+    else if (ret == `next || ret == `options_button || ret == `cancel)
 	    break;
 
     };
@@ -465,7 +466,7 @@ global define any OptionsDialog () ``{
 
 	    break;
 	}
-    else if (ret == `back) break;
+    else if (ret == `back || ret == `cancel) break;
 
     else {
         y2error("Undefined return value");

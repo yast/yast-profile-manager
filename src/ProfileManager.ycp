@@ -17,6 +17,7 @@ textdomain "profile-manager";
 
 import "Progress";
 import "Report";
+import "Require";
 
 include "profile-manager/routines.ycp";
 
@@ -143,10 +144,14 @@ global string scpm_error = "";
  */
 map state = $[];
 
-// how many lines of progress has been pruducted
+/**
+ * how many lines of progress has been pruducted
+ */
 integer progress_size = 0;
 
-// how many times was progress bar used
+/**
+ * how many times was progress bar used
+ */
 global integer hash_size = 0;
 
 /**
@@ -168,8 +173,6 @@ string hashpath = "";
 string changespath = "";
 string tmppath = "";
 string tmpdir = "";
-
-global boolean text_mode = true;
 
 global boolean proposal_valid = false;
 global boolean write_only = false;
@@ -227,11 +230,6 @@ global define boolean Read() ``{
 	],
 	""
     );
-
-
-    // get display mode
-    map display_info = UI::GetDisplayInfo();
-    text_mode = display_info["TextMode"]:true;
 
     // initialize
     if(Abort()) return false;
@@ -450,6 +448,11 @@ global define boolean WriteUserSettings() ``{
  * @return true on success
  */
 define boolean Initialize() ``{
+
+    // popup label, %1 is required application
+    if (!Require::RequireAndConflict (["scpm"], [], _("<p>For using profile manager, the package <b>%1</b> is necessary.</p>
+<p>Install it now?</p>")))
+         return false;
 
     tmpdir = SCR::Read(.target.tmpdir);
     progresspath = tmpdir + progressfile;
@@ -978,6 +981,7 @@ global define boolean ModifiedSettings(map new_settings) ``{
 global define integer GetHashMarks() ``{
 
     string all = SCR::Read(.target.string, hashpath);
+    if (all == nil || all == "") return 0;
     return (size(all) - (100 * hash_size));
 }
 
