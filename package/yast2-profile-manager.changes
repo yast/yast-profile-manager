@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Sat Sep  7 15:56:07 CEST 2002 - mvidner@suse.cz
+
+- Make "yast2 profile_manager" invoke "yast2 profile-manager"
+  (#17570, #19053 workaround).
+- 2.6.5
+
+-------------------------------------------------------------------
 Thu Sep  5 10:04:15 CEST 2002 - jsuchome@suse.cz
 
 - changed size of ShowChanges popup
