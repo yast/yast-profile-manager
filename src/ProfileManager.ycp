@@ -21,6 +21,7 @@ import "Package";
 import "Popup";
 import "Progress";
 import "Report";
+import "String";
 
 
 // function prototypes:
@@ -1519,11 +1520,17 @@ global define boolean CheckNameValidity(string name) ``{
 
     if (size(name) < 1)
         return false;
-    if (name != filterchars(name,"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-_."))
+    string additional	= "-_.@#"; // additional characters allowed
+    if (name != filterchars (name, String::CAlnum () + additional))
+    {
+	y2error ("invalid characters in profile name");
         return false;
-    string first = substring(name,0,1);
-    if (size(deletechars(first,"-_.")) <1)
+    }
+    if (issubstring (additional, substring (name, 0, 1)))
+    {
+	y2error ("profile name must start with letter or digit");
         return false;
+    }
     return true;
 }
 
