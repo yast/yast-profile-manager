@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Tue Jan 18 14:20:43 CET 2005 - jsuchome@suse.cz
+
+- fixed OK/Cancel button positions in popup
+- removed unused code (only resource groups are supported)
+- 2.11.1
+
+-------------------------------------------------------------------
 Tue Jan  4 14:24:49 CET 2005 - jsuchome@suse.cz
 
 - added dialog for choosing Recover or Rollback

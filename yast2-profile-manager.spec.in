@@ -2,7 +2,8 @@
 # neededforbuild gpp libgpp libxcrypt libxcrypt-devel yast2-devel-packages scpm yast2-country
 
 @HEADER@
-Requires:	yast2 yast2-country scpm
+Requires:	yast2 yast2-country
+Requires:	scpm >= 0.9.4
 
 Summary:	Configuration of profile-manager
 

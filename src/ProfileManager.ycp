@@ -105,12 +105,6 @@ global map profiles = $[];
 global map profile_settings = $[];
 
 /**
- * The name of current resource set.
- * It is read in ReadCurrentResource().
- */
-global string current_resources = "";
-
-/**
  * This is the name of the active profile.
  * It is read in ReadActiveProfile().
  */
@@ -277,11 +271,6 @@ boolean default_save = true;
  * if module was canceled (aborted)
  */
 global boolean canceled = false;
-
-/**
- * if scpm supports resource groups
- */
-global boolean use_rg = true;
 
 /**
  * name of resource group currently beeing edited (selected in SwitchDialog)
@@ -837,24 +826,6 @@ global define void Rollback () {
 }
 
 /**
- * Reads the current resource set.
- * @return true on success
- */
-global define boolean ReadCurrentResources() ``{
-
-    string cur = (string) SCR::Read(.scpm.resources.current);
-
-    if (cur == nil || cur =="")
-    {
-        SetError();
-        return false;
-    }
-
-    current_resources = cur;
-    return true;
-}
-
-/**
  * Reads the list of aviable resource sets.
  * @return true on success
  */
@@ -1012,7 +983,7 @@ global define boolean Read() ``{
     // profile-manager Read dialog caption:
     string caption = _("Initializing profile manager configuration");
 
-    integer steps = 8;
+    integer steps = 7;
 
     Progress::New( caption, " ", steps, [
 	    // progress stage
@@ -1026,8 +997,6 @@ global define boolean Read() ``{
 	    // progress stage
 	    _("Read the profiles descriptions"),
 	    // progress stage
-	    _("Read current resource set"),
-	    // progress stage
 	    _("Read user settings"),
 	], [
 	    // progress stage
@@ -1040,8 +1009,6 @@ global define boolean Read() ``{
 	    _("Reading active profile..."),
 	    // progress stage
 	    _("Reading the profiles descriptions..."),
-	    // progress stage
-	    _("Reading current resource set..."),
 	    // progress stage
 	    _("Reading user settings..."),
 	    // progress stage
@@ -1126,14 +1093,6 @@ Perform the reinitialization now?
     if (initialized && !ReadProfilesDescriptions())
 	// Error message: %1 is special error message, should be translated
 	Report::Error(sformat(_("Cannot read profile descriptions:\n%1"),
-            scpm_error));
-
-    // read current resources
-    if(Abort()) return false;
-    Progress::NextStage();
-    if(!ReadCurrentResources())
-	// Error message: %1 is special error message, should be translated
-	Report::Error(sformat(_("Cannot read current resources:\n%1"),
             scpm_error));
 
     // read user settings
@@ -1369,43 +1328,6 @@ global define void PrepareSwitch (string profile) ``{
 }
 
 /**
- * Sets all "save" flags in switch_info map to true.
- * @return true on success
- */
-global define boolean SaveSwitchInfo() ``{
-
-    list resources = switch_info["modified_resources"]:[];
-
-    integer i = 0;
-    while (i<size (resources)) {
-        switch_info["modified_resources",i,"save"] = true;
-        i = i + 1;
-    }
-
-    y2debug("switch_info:%1", switch_info);
-    return true;
-}
-
-/**
- * Sets all "save" flags in switch_info map to false.
- * @return true on success
- */
-global define boolean DropSwitchInfo() ``{
-
-    list resources = switch_info["modified_resources"]:[];
-
-    integer i = 0;
-    while (i<size (resources)) {
-        switch_info["modified_resources",i,"save"] = false;
-        i = i + 1;
-    }
-
-    y2debug("switch_info:%1", switch_info);
-
-    return true;
-}
-
-/**
  * Saves modified resources of the profile
  */
 global define void Save () ``{
@@ -1443,22 +1365,6 @@ global define boolean WriteSCPMStatus() ``{
  */
 global define void WriteStatusFirst() ``{
     SCR::Execute(.scpm.enable.first);
-}
-
-/**
- * Changes the current resources.
- * @param resource_set Name of new resource set
- * @return true on success
- */
-global define boolean WriteResources(string resource_set) ``{
-
-    if (use_rg)
-	return true;
-    boolean ret = SCR::Write(.scpm.resources.current, resource_set);
-    if (!ret)
-        ShowError();
-    return ret;
-
 }
 
 /**
@@ -1532,35 +1438,6 @@ global define list GetProfilesAsItems() ``{
             return `item(`id(name),"---->",name,descr);
         else
             return `item(`id(name),"",name,descr);
-    });
-    return items;
-}
-
-/**
- * Creates the item list for the Table widget (to use in Switch dialog).
- * @return list of items
- */
-global define list GetResourcesAsItems() ``{
-
-    list resources = switch_info["modified_resources"]:[];
-    list items = [];
-    integer i = 0;
-
-    foreach (map resource, (list<map<string,any> >)resources, ``{
-        string flag = "";
-        if (resource["is_new"]:false)
-            // flag
-            flag = _("NEW");
-        else if(resource["is_deleted"]:false)
-            // flag
-            flag = _("DELETED");
-
-        items = add(items, `item(`id(i),
-                                 resource["save"]:false ? "X":"",
-                                 flag,
-                                 resource["resource_name"]:"",
-                                 resource["resource_type"]:""));
-        i = i + 1;
     });
     return items;
 }

@@ -80,15 +80,8 @@ define any MainDialog () ``{
     string active = ProfileManager::active_profile;
     boolean enabled = ProfileManager::enabled;
 
-    // State label text (continues with the name of the resource set):
-    string state_label = (enabled)? _("SCPM is enabled with Resource Set \"")+ProfileManager::current_resources+"\"." :
-    // Alternative state label text:
-    _("SCPM is disabled.");
-
-    boolean use_rg = ProfileManager::use_rg;
-    if (use_rg)
-	// State label text
-	state_label = (enabled) ? _("SCPM is enabled."):_("SCPM is disabled.");
+    // State label text
+    string state_label = enabled ? _("SCPM is enabled."):_("SCPM is disabled.");
 
     string selected = "";
 
@@ -253,58 +246,10 @@ define any OptionsDialog () ``{
     list resource_sets = union( union (ProfileManager::resource_sets_predefined, [ separator ]), ProfileManager::resource_sets_individual);
     boolean close_popups = ProfileManager::close_popups;
 
-    boolean use_rg = ProfileManager::use_rg;
-
     // Dialog caption label:
     string caption = _("SCPM Options");
-    term contents = `HBox(`HSpacing(1.5),
-        `VBox(
-        `VSpacing(1),
-	// frame label:
-        `Frame(_("Enable SCPM"), `VBox(
-	    `VSpacing(0.5),
-            `RadioButtonGroup(`id(`rb),
-	    `HBox(
-		`HCenter(`RadioButton(`id(`ena), `opt(`notify),
-		    // Push button label (state of SCPM)
-                    _("&Enabled") )),
-                `HCenter(`RadioButton(`id(`dis), `opt(`notify),
-		    // Push button label (state of SCPM)
-                    _("&Disabled") ))
-            )),
-	    `VSpacing(0.5)
-        )),
-        `VSpacing(1),
-	// frame label
-	`Frame(_("Resource Sets"), `VBox(
-	    `VSpacing(0.2),
-            `HBox(
-                `HSpacing(1),
-                `SelectionBox(`id(`resources),
-		    // selection box label:
-                    _("Choose a &resource set:"), resource_sets),
-                `HSpacing(1)
-            ),
-            `VSpacing(0.5)
-        )),
-        `VSpacing(1),
-	// frame label:
-	`Frame(_("Other settings"), `VBox(
-            `VSpacing(0.5),
-            `HBox(
-                `HSpacing(1),
-		`Left(`CheckBox(`id(`close_popups_ch),
-		    // checkbox label
-                    _("Close Progress Pop-ups &Automatically"), close_popups))
-            ),
-            `VSpacing(0.5)
-        )),
-	`VSpacing(1)),
-        `HSpacing(1.5));
 
-    if (use_rg) // ---------------------- dialog for resource groups
-	contents = `HBox(`HSpacing(1.5),
-        `VBox(
+    term contents = `HBox (`HSpacing(1.5), `VBox (
         `VSpacing(1),
 	// frame label:
         `Frame(_("Enable SCPM"), `VBox(
@@ -355,7 +300,7 @@ define any OptionsDialog () ``{
 			`VSpacing (0.5),
 			`RadioButtonGroup (`id(`rb_bo), `VBox (
 			    // radiobutton label
-			    `Left(`RadioButton (`id(`bs), _("Save &Changes"))),
+			    `Left(`RadioButton (`id(`bs), _("Save Chan&ges"))),
 			    // radiobutton label
 			    `Left(`RadioButton (`id(`bd), _("Drop C&hanges")))
 			)),
@@ -364,20 +309,6 @@ define any OptionsDialog () ``{
 		    )),
 		    `HSpacing()
 		),
-		/*
-		`HBox(
-		    `HSpacing(),
-		    `Left(
-		    // combobox label
-		     `ComboBox(`id("switch_mode"), _("S&witch Mode"),
-			switch_modes)),
-		    `HSpacing(),
-		    `Left(
-		    // combobox label
-		    `ComboBox(`id("boot_mode"), _("Boo&t Mode"), boot_modes)),
-		    `HSpacing()
-		),
-		*/
 		`VSpacing()
 	    )
         )),
@@ -386,7 +317,7 @@ define any OptionsDialog () ``{
 	`Right (`PushButton(`id(`resources), _("Configure &Resources"))),
 	`VSpacing(1)
 	),
-        `HSpacing(1.5));
+    `HSpacing(1.5));
 
 
     Wizard::RestoreBackButton ();
@@ -404,29 +335,24 @@ define any OptionsDialog () ``{
 	UI::ChangeWidget(`id(`resources), `Enabled, false);
     }
 
-    if (size(ProfileManager::current_resources)>0)
-        UI::ChangeWidget(`id(`resources), `CurrentItem,
-            ProfileManager::current_resources);
-
     // set the initial values of config (scpm.conf) values
-    if (use_rg)
-    {
-	map sw_mode = $[
-	    "normal" :	`swn,
-	    "skip" :	`swd,
-	    "force":	`sws
-	];
-	map b_mode = $[
-	    "skip" :	`bd,
-	    "force":	`bs
-	];
-	UI::ChangeWidget (`id("verbose"), `Value,
-	    ProfileManager::scpm_conf["verbose"]:true);
-	UI::ChangeWidget(`id(`rb_sw), `CurrentButton,
-	    sw_mode[ProfileManager::scpm_conf["switch_mode"]:"normal"]:`swn);
-	UI::ChangeWidget(`id(`rb_bo), `CurrentButton,
-	    b_mode[ProfileManager::scpm_conf["boot_mode"]:"force"]:`bs);
-    }
+
+
+    map sw_mode = $[
+	"normal": `swn,
+	"skip"	: `swd,
+	"force"	: `sws
+    ];
+    map b_mode = $[
+	"skip"	: `bd,
+	"force"	: `bs
+    ];
+    UI::ChangeWidget (`id("verbose"), `Value,
+	ProfileManager::scpm_conf["verbose"]:true);
+    UI::ChangeWidget(`id(`rb_sw), `CurrentButton,
+	sw_mode[ProfileManager::scpm_conf["switch_mode"]:"normal"]:`swn);
+    UI::ChangeWidget(`id(`rb_bo), `CurrentButton,
+	b_mode[ProfileManager::scpm_conf["boot_mode"]:"force"]:`bs);
 
     any ret = nil;
     while (true)
@@ -445,7 +371,7 @@ define any OptionsDialog () ``{
         UI::ChangeWidget(`id(`resources), `Enabled, true);
         continue;
     }
-    else if (ret == `resources && use_rg)
+    else if (ret == `resources)
     {
 	// for resource groups there is another dialog defined
 	break;
@@ -457,27 +383,12 @@ define any OptionsDialog () ``{
 	// SCPM will be enabled
         if (UI::QueryWidget(`id(`rb), `CurrentButton) == `ena)
 	{
-
-	    if (use_rg)
-		selected = ProfileManager::current_resources;
-	    else
-		selected =(string)UI::QueryWidget(`id(`resources),`CurrentItem);
-            if (selected == separator || selected == nil)
-            {
-		// Popup label:
-                Popup::Message(_("Choose a resource set first."));
-                continue;
-            }
-
             if (!ProfileManager::enabled)
             {
                 ProfileManager::enabled = true;
 
 		if (!ProfileManager::initialized)
                 {
-                    ProfileManager::current_resources = selected;
-                    ProfileManager::WriteResources(selected);
-
                     ProfileManager::initialized = true;
                     ProfileManager::WriteStatusFirst();
                     ProfileManager::ProgressPopup("",0,100);
@@ -498,9 +409,6 @@ define any OptionsDialog () ``{
                 }
                 else
                 {
-                    ProfileManager::current_resources = selected;
-                    ProfileManager::WriteResources(selected);
-
                     if (!ProfileManager::WriteSCPMStatus())
                     {
                         Popup::Error(sformat(
@@ -517,18 +425,6 @@ define any OptionsDialog () ``{
 		    ProfileManager::ReadProfilesDescriptions();
                 }
             }
-	    else if (ProfileManager::current_resources != selected)
-            {
-		// Popup label (confirmation)
-		if (Popup::YesNo(_("Changing the resource set may drop some of your configuration settings. Proceed?")))
-		{
-		    ProfileManager::current_resources = selected;
-		    // maybe WriteResources should be run every time
-		    ProfileManager::WriteResources(selected);
-		    ProfileManager::RebuildDB();
-		}
-		else continue;
-            }
         }
 	// SCPM will be disabled
         else
@@ -536,7 +432,6 @@ define any OptionsDialog () ``{
             if (ProfileManager::enabled)
             {
                 ProfileManager::enabled = false;
-                ProfileManager::current_resources = "";
                 if (!ProfileManager::WriteSCPMStatus())
                 {
                     Popup::Error(sformat(
@@ -554,7 +449,6 @@ define any OptionsDialog () ``{
 
         y2debug("enabled=%1",ProfileManager::enabled);
         y2debug("close_popups=%1",ProfileManager::close_popups);
-        y2debug("current_resources=%1",ProfileManager::current_resources);
 
         break;
     }

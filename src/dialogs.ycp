@@ -323,9 +323,8 @@ define boolean ShowChangesPopup() ``{
  * Switch dialog
  * @return any Returned value from UserInput() call
  */
-define any SwitchDialog () ``{
+define any SwitchDialog () {
 
-    boolean use_rg = ProfileManager::use_rg;
     string active_group = "";
 
     string active = ProfileManager::active_profile;
@@ -333,67 +332,8 @@ define any SwitchDialog () ``{
 
     // Dialog caption label
     string caption = _("Confirm Switch");
-    term contents = `HBox( //-------------- dialog for switching resource sets
-	`HSpacing(1.5),
-	`VBox(
-        `VSpacing(1),
-        `HBox(
-            `HSpacing(1),
-            // Label text
-            `Label(_("Active Profile:")),
-            `Right(`Heading(active)),
-            `HSpacing(2)
-            ),
-        `VSpacing(0.2),
-        `HBox(
-            `HSpacing(1),
-            // Label text
-            `Label(_("New Profile:")),
-            `Right(`Heading(selected)),
-            `HSpacing(2)
-            ),
-        `VSpacing(1),
-		// frame label
-        `Frame(_("Modified Resources of Active Profile"), `HBox(`HSpacing(1),
-            `VBox(
-                `VSpacing(0.2),
-		        `Table(`id(`modified),`opt(`notify),
-                    `header(
-                            // Header of the table with modified resources 1/4
-                            _("save"),
-                            // Header of the table with modified resources 2/4
-                            _("flags"),
-                            // Header of the table with modified resources 3/4
-                            _("Resource"),
-                            // Header of the table with modified resources 4/4
-                            _("type")),
-                    []
-                    ),
-                `VSpacing(0.2),
-		        `HBox(
-		            `PushButton(`id(`select_button), `opt(`key_F3),
-                        // Push button label
-                        _("&Select or Deselect")),
-		            `PushButton(`id(`save_button), `opt(`key_F4),
-                        // Push button label
-                        _("Select &All")),
-		            `PushButton(`id(`drop_button), `opt(`key_F5),
-                        // Push button label
-                        _("&Deselect all")),
-                    `Right( `PushButton(`id(`changes_button), `opt(`key_F2),
-                        // Push button label
-                        _("Show c&hanges")))
-				    ),
-                `VSpacing(0.2)
-                ),
-            `HSpacing(1)
-                )),
-        `VSpacing(1)
-		),
-	`HSpacing(1.5));
 
-    if (use_rg) //----------------------- dialog for switching resource groups
-	contents = `HBox( `HSpacing(1.5),`VBox(
+    term contents = `HBox (`HSpacing(1.5),`VBox(
 	`VSpacing(1),
         `HBox(
             `HSpacing(1),
@@ -430,11 +370,6 @@ define any SwitchDialog () ``{
 		    `PushButton (`id(`save_b), `opt(`key_F4),
 			// Push button label
 			_("&Save or Ignore")),
-		    /*
-		    `PushButton (`id(`ignore_b), `opt(`key_F5),
-			// Push button label
-			_("&Ignore")),
-			*/
                     `Right(`PushButton(`id (`details), `opt(`key_F2),
                         // Push button label
                         _("&Details")))
@@ -445,7 +380,7 @@ define any SwitchDialog () ``{
             )),
         `VSpacing(1)
 	),
-	`HSpacing(1.5));
+    `HSpacing(1.5));
 
 
     Wizard::RestoreBackButton ();
@@ -453,42 +388,22 @@ define any SwitchDialog () ``{
     Wizard::SetContentsButtons ( caption, contents, HELPS["switch"]:"",
 				Label::CancelButton (), Label::OKButton () );
 
-    list resources_as_items = (!use_rg)? ProfileManager::GetResourcesAsItems():
-	ProfileManager::GetGroupsAsItems();
+    list res_groups_as_items = ProfileManager::GetGroupsAsItems();
 
-    UI::ChangeWidget(`id(`modified), `Items, resources_as_items);
+    UI::ChangeWidget(`id(`modified), `Items, res_groups_as_items);
 
-    if (resources_as_items == [] || resources_as_items == nil)
+    if (size (res_groups_as_items) < 1)
     {
         UI::ChangeWidget(`id(`modified), `Enabled, false);
-	if (use_rg)
-	{
-	    UI::ChangeWidget(`id(`save_b), `Enabled, false);
-	    UI::ChangeWidget(`id(`details), `Enabled, false);
-	}
-	else
-	{
-	    UI::ChangeWidget(`id(`save_button), `Enabled, false);
-	    UI::ChangeWidget(`id(`drop_button), `Enabled, false);
-	    UI::ChangeWidget(`id(`changes_button), `Enabled, false);
-	    UI::ChangeWidget(`id(`select_button), `Enabled, false);
-	}
+	UI::ChangeWidget(`id(`save_b), `Enabled, false);
+	UI::ChangeWidget(`id(`details), `Enabled, false);
     }
     else
     {
-	if (use_rg)
-	{
-	    active_group = ProfileManager::current_resource_group;
-	    if (active_group == "")
-		active_group = resources_as_items[0,2]:"";
-	    UI::ChangeWidget(`id(`modified), `CurrentItem,
-		active_group);
-	}
-	else
-	{
-	    UI::ChangeWidget(`id(`modified), `CurrentItem,
-		ProfileManager::active_resource);
-	}
+	active_group = ProfileManager::current_resource_group;
+	if (active_group == "")
+	    active_group = res_groups_as_items[0,2]:"";
+	UI::ChangeWidget(`id(`modified), `CurrentItem, active_group);
 	UI::SetFocus(`id(`modified));
     }
 
@@ -503,7 +418,7 @@ define any SwitchDialog () ``{
             break;
 	}
 	// only for resource groups
-	else if (contains ([`save_b,`ignore_b, `modified], ret) && use_rg)
+	else if (contains ([`save_b,`ignore_b, `modified], ret))
 	{
 	    boolean set =ProfileManager::SetGroupSaveFlag((string)selected_res);
 	    UI::ChangeWidget(`id(`modified), `Items,
@@ -518,44 +433,6 @@ define any SwitchDialog () ``{
 	    ProfileManager::current_resource_group = (string) selected_res;
 	    break;
 	}
-	// only for resource sets...
-        else if (ret ==`modified || ret ==`select_button)
-        {
-            ProfileManager::active_resource = (integer)
-                UI::QueryWidget(`id(`modified), `CurrentItem);
-            ProfileManager::SetSaveFlag();
-            UI::ChangeWidget(`id(`modified), `Items,
-                    ProfileManager::GetResourcesAsItems());
-            UI::ChangeWidget(`id(`modified), `CurrentItem,
-                    ProfileManager::active_resource);
-	    continue;
-        }
-        else if (ret == `save_button)
-	{
-            ProfileManager::SaveSwitchInfo();
-            UI::ChangeWidget(`id(`modified), `Items,
-                    ProfileManager::GetResourcesAsItems());
-            UI::ChangeWidget(`id(`modified), `CurrentItem,
-                    ProfileManager::active_resource);
-            continue;
-        }
-        else if (ret == `drop_button)
-        {
-            ProfileManager::DropSwitchInfo();
-            UI::ChangeWidget(`id(`modified), `Items,
-                    ProfileManager::GetResourcesAsItems());
-            // is this necessary?
-            UI::ChangeWidget(`id(`modified), `CurrentItem,
-                    ProfileManager::active_resource);
-            continue;
-        }
-        else if (ret == `changes_button)
-        {
-            ProfileManager::active_resource = (integer)
-                UI::QueryWidget(`id(`modified), `CurrentItem);
-            ShowChangesPopup();
-            continue;
-        }
         else if (ret == `next)
 	{
             // saving changes: not necessary if "drop all" is checked
@@ -581,7 +458,7 @@ define any SwitchDialog () ``{
             else
                 ProfileManager::active_profile = selected;
 	    break;
-	    }
+	}
     };
     return (any) ret;
 }
@@ -705,11 +582,6 @@ define symbol DetailsSwitchDialog () ``{
 			`PushButton(`id(`show_ch), `opt(`key_F2),
 			    _("&Show Changes"))
 		    )
-			/*
-			// menubutton label
-			`MenuButton(`id(`show_b), `opt(`key_F2), _("&Show"),
-			    show_list))
-			*/
 		),
 		`VSpacing(0.2)
                 ),
@@ -721,7 +593,7 @@ define symbol DetailsSwitchDialog () ``{
     );
 
     Wizard::SetContentsButtons ( caption, contents, HELPS["switchdetails"]:"",
-                Label::BackButton (), Label::OKButton () );
+        Label::CancelButton (), Label::OKButton () );
 
     Wizard::HideAbortButton();
 
@@ -790,11 +662,6 @@ define symbol DetailsSwitchDialog () ``{
 	    ProfileManager::active_resource = selected;
 	    ShowChangesPopup();
 	}
-	// FIXME show_r: no action yet
-	else if (ret == `show_r)
-	{
-	    y2internal ("?");
-	}
 	else if (ret == `back || ret == `cancel)
 	{
 	    // throw away changes
@@ -844,17 +711,15 @@ profile nor does it start or stop services."))),
 			// Popup text, part 3/3
                         _("on an &existing profile:")))
                     )),
-            `SelectionBox(`id(`profiles), "", maplist (
-	string name, any desc, (map<string,any>) profiles, ``{ return name; })),
+            `SelectionBox (`id(`profiles), "", maplist (
+		string name, any desc, (map<string,any>) profiles, ``(name))),
             `VSpacing(1),
-	        `HBox(
-	            `HSpacing(1),
-	            `Left(`PushButton(`id(`cancel), `opt (`key_F9),
-                    Label::CancelButton())),
-	            `Right(`PushButton(`id(`ok), `opt(`default, `key_F10),
-                    Label::OKButton())),
-	            `HSpacing(1)
-	            ),
+	    `HBox (
+		`HSpacing (1),
+		`Left (`PushButton(`id(`ok), `opt(`default),Label::OKButton())),
+	        `Right (`PushButton(`id(`cancel), Label::CancelButton())),
+	        `HSpacing (1)
+	    ),
             `VSpacing(1)),
         `HSpacing(1.5)
         ));
@@ -1006,8 +871,8 @@ define string GetService() ``{
 	    `ComboBox( `id(`services), _("Available &Services"), service_items),
 	    `VSpacing(0.2),
 	    `HBox(
-		`PushButton(`id(`ok),`opt(`default, `key_F10), Label::OKButton()),
-		`PushButton(`id(`cancel), `opt (`key_F9), Label::CancelButton())
+		`PushButton(`id(`ok),`opt(`default), Label::OKButton()),
+		`PushButton(`id(`cancel), Label::CancelButton())
 	    ),
 	    `VSpacing(0.2)),
 	`HSpacing(1)
@@ -1065,8 +930,8 @@ define string GetFile() ``{
 	    ),
 	    `VSpacing(0.2),
 	    `HBox(
-		`PushButton(`id(`ok),`opt(`default, `key_F10), Label::OKButton()),
-		`PushButton(`id(`cancel), `opt (`key_F9), Label::CancelButton())
+		`PushButton(`id(`ok),`opt(`default), Label::OKButton()),
+		`PushButton(`id(`cancel), Label::CancelButton())
 	    ),
 	    `VSpacing(0.2)),
 	`HSpacing(1)
@@ -1188,10 +1053,8 @@ define map ResourceGroupPopup (map group) ``{
         `VSpacing(0.5),
 	`HBox(
 	    `HSpacing(1.5),
-	    `Left(
-		`PushButton(`id(`cancel),`opt (`key_F9), Label::CancelButton())),
-	    `Right(
-		`PushButton(`id(`ok), `opt(`default,`key_F10),Label::OKButton())),
+	    `Left (`PushButton (`id(`ok), `opt(`default),Label::OKButton())),
+	    `Right (`PushButton(`id(`cancel), Label::CancelButton())),
 	    `HSpacing(1.5)
 	),
         `VSpacing(0.5)
@@ -1206,7 +1069,7 @@ define map ResourceGroupPopup (map group) ``{
     UI::ChangeWidget(`id(`resources), `Items, items);
     UI::SetFocus(`id(`name));
 
-    y2milestone ("edited group: %1", group);
+    y2debug ("edited group: %1", group);
     if (group["user_defined"]:true == false)
     {
 	// default group cannot be renamed
