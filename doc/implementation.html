@@ -53,10 +53,10 @@ To know more about dialogs, see the <a href="specification.html">specification d
 
 <h3>Implementation</h3>
 
-The implementation of SCPM will has two parts: a YaST2 module (written in YCP language) and a SCR agent (in C++). The agent performs the actions with the SCPM library (which is written in C++, see the <a href="API/index.html">API</a>) after the Read/Write/Execute calls from the module. 
+The implementation of SCPM will has two parts: a YaST2 module (written in YCP language) and a SCR agent (in C++). The agent performs the actions with the SCPM library (which is written in C++, see the <a href="/usr/share/doc/packages/scpm/api/html/index.html">API documentation</a>) after the Read/Write/Execute calls from the module. 
 
 <p>
-Example: User checks an "Enabled" checkbox in the Options Dialog. After pushing the OK button, YCP module calls SCR::Write(.scpm.enabled, "true") and ".scpm" agent calls function <a href="API/classSCPM.html#a2">SCPM::Enable</a> from the SCPM library.
+Example: User checks an "Enabled" checkbox in the Options Dialog. After pushing the OK button, YCP module calls SCR::Write(.scpm.enabled, "true") and ".scpm" agent calls function <a href="/usr/share/doc/packages/scpm/api/html/classSCPM.html#a2">SCPM::Enable</a> from the SCPM library.
 
 <h4>YCP module</h4>
 

@@ -49,18 +49,18 @@ choose a Resource Set. Other options may follow.</p>
 <h3 align=left>Getting information</h3>
 <p>You need to determine wether SCPM is already enabled and
 initialized. This information is located in the <code>
-<a href="API/structscpm__status__t.html">scpm_status_t</a></code>
-struct, namly in <code><a href="API/structscpm__status__t.html#m0">
+<a href="/usr/share/doc/packages/scpm/api/html/structscpm__status__t.html">scpm_status_t</a></code>
+struct, namly in <code><a href="/usr/share/doc/packages/scpm/api/html/structscpm__status__t.html#m0">
 scpm_status_t::initialized</a></code> and <code>
-<a href="API/structscpm__switch__t.html#m1">scpm_status_t::enabled</a>
+<a href="/usr/share/doc/packages/scpm/api/html/structscpm__switch__t.html#m1">scpm_status_t::enabled</a>
 </code>. This information will also be needed when the user clicks ok.
 The defined Resource Sets can be determined by calling <code>
-<a href="API/classSCPM.html#a22">SCPM::ListResourceSets</a></code>.
+<a href="/usr/share/doc/packages/scpm/api/html/classSCPM.html#a22">SCPM::ListResourceSets</a></code>.
 You get two different list, one for predefined Resource Sets, and one
 for individual Resource Sets. These two lists get written to the list
 box, and should be separated by a line containing dashes (see picture).
 You can query the active Resource Set by calling <code>
-<a href="API/classSCPM.html#a21">SCPM::GetResourceSet</a></code>.
+<a href="/usr/share/doc/packages/scpm/api/html/classSCPM.html#a21">SCPM::GetResourceSet</a></code>.
 The <b>Close progress popups automatically</b> flag is taken from and
 saved to some YaST2 configuration space as it is front end specific
 anyway.</p>
@@ -84,19 +84,19 @@ anything further.
 Clicking this button may perfom some actions based on the users
 selection. In case the user changed the status from <b>disabled</b> to
 <b>enabled</b>, you should call <code>
-<a href="API/classSCPM.html#a2">SCPM::Enable</a></code>. In case SCPM
+<a href="/usr/share/doc/packages/scpm/api/html/classSCPM.html#a2">SCPM::Enable</a></code>. In case SCPM
 has already been initialized, that means, <code>
-<a href="API/structscpm__status__t.html#m0">scpm_status_t::initialized</a>
+<a href="/usr/share/doc/packages/scpm/api/html/structscpm__status__t.html#m0">scpm_status_t::initialized</a>
 </code> is <var>true</var>, this will be non thrilling. In case it
 wasn't, SCPM will create its database and stuff, therefor we need the
 <a href="popup_progress.html">progress popup</a> here. In case the
 user switched from <b>enabled</b> to <b>disabled</b>, just call
-<code><a href="API/classSCPM.html#a3">SCPM::Disable</a></code>.
+<code><a href="/usr/share/doc/packages/scpm/api/html/classSCPM.html#a3">SCPM::Disable</a></code>.
 In case the user switched to another Resource Set, just set it calling
-<code><a href="API/classSCPM.html#a20">SCPM::SetResourceSet</a></code>.
+<code><a href="/usr/share/doc/packages/scpm/api/html/classSCPM.html#a20">SCPM::SetResourceSet</a></code>.
 Changing the Resource Set usually entails major database modifications.
 SCPM can perform these changes, the function for this is <code>
-<a href="API/classSCPM.html#a25">SCPM::RebuildDB</a></code>. Calling
+<a href="/usr/share/doc/packages/scpm/api/html/classSCPM.html#a25">SCPM::RebuildDB</a></code>. Calling
 this may heavily change the database and may even remove data, so it would
 be a good idea to let the user confirm that.
 After everything is done, back to the <a href="dialog_main.html">main

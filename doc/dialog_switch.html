@@ -43,18 +43,18 @@ do with that resources.</p>
 <p>
 To gather the needed inforation about the modified resources, the
 switch has do be prepared. For that purpose,
-directly after entering this dialog <code><a href="API/classSCPM.html#a12">
+directly after entering this dialog <code><a href="/usr/share/doc/packages/scpm/api/html/classSCPM.html#a12">
 SPCM:PrepareSwitch</a></code> gets called. You need to create a struct
-of <code><a href="API/structswitch__info__t.html">switch_info_t</a></code>
+of <code><a href="/usr/share/doc/packages/scpm/api/html/structswitch__info__t.html">switch_info_t</a></code>
 type first. Performing this command usually writes some information on
 the first stream object you passed when creating the SCPM object, see 
-<a href="API/classSCPM.html#a0">constructor documentation</a>. Those
+<a href="/usr/share/doc/packages/scpm/api/html/classSCPM.html#a0">constructor documentation</a>. Those
 informations get presented to the user by a special popup, see
 <a href="popup_progress.html">progress popup documentation</a>.
 After the switch was prepared, you have your <code>
-<a href="API/structswitch__info__t.html">switch_info_t</a></code>
+<a href="/usr/share/doc/packages/scpm/api/html/structswitch__info__t.html">switch_info_t</a></code>
 struct filled with data. For every item in the <code>
-<a href="API/structswitch__info__t.html#m2">modified_resources
+<a href="/usr/share/doc/packages/scpm/api/html/structswitch__info__t.html#m2">modified_resources
 vector</a></code> of the struct, one entry in the table list Modified
 Resources gets generated. The flags <b>Save</b>, <b>New</b>, and
 <b>Deleted</b> are saved in the respective flags
@@ -73,7 +73,7 @@ Sets the <code>Save</code> flags of all resources to <var>true</var>.
 <li><b>drop all</b></li>
 Sets the <code>Save</code> flags of all resources to <var>false</var>.
 <li><b>show changes</b></li>
-Call <code><a href="API/classSCPM.html#a19">SCPM::ShowChanges</a></code> 
+Call <code><a href="/usr/share/doc/packages/scpm/api/html/classSCPM.html#a19">SCPM::ShowChanges</a></code> 
 with the selected resource as an
 argument and show the changes in a pop-up with a single RTF field and a close
 button.
@@ -81,7 +81,7 @@ button.
 This takes the user back to the <a href="dialog_main.html">main
 dialog</a>. The <code>switch_info_t</code> struct can be dropped.
 <li><b>Ok</b></li>
-Calls <code><a href="API/classSCPM.html#a13">SCPM::Switch</a></code>
+Calls <code><a href="/usr/share/doc/packages/scpm/api/html/classSCPM.html#a13">SCPM::Switch</a></code>
 with the possibly modified <code>switch_info_t</code> struct. The
 <a href="popup_progress.html">progress popup</a> is needed here again.
 </ul>

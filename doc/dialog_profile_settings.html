@@ -46,7 +46,7 @@ The name of the profile is already known if we came here via Edit. If we came
 here via Add then leave the name field empty or suggest a new name. It may only
 contain the characters [a-zA-Z0-9_-.] and must start with [a-zA-Z0-9].<br>
 The description and script paths can be queried calling <code><a
-href="API/classSCPM.html#a16">SCPM::Get</a> </code> comand.<br>
+href="/usr/share/doc/packages/scpm/api/html/classSCPM.html#a16">SCPM::Get</a> </code> comand.<br>
 The <b>Set file permissions...</b> check box is a global option and not a
 property of the profile. YaST2 has to store this value somewhere like the 'close
 progress popup automatically' information.
@@ -76,17 +76,17 @@ Just go back to the <a href="dialog_main.html">main dialog</a>,
 dropping all changes.
 <li><b>Ok</b></li>
 In case the user changed the profile's name, call <code> <a
-href="API/callSCPM.html#a10">SCPM::Rename</a></code> to rename the profile
+href="/usr/share/doc/packages/scpm/api/html/callSCPM.html#a10">SCPM::Rename</a></code> to rename the profile
 accordingly. If we came here via Add then use <code><a
-href="API/classSCPM.html#a6">SCPM::Add</a> </code> resp. <code><a
-href="API/classSCPM.html#a7">SCPM::Copy</a></code> with the information
+href="/usr/share/doc/packages/scpm/api/html/classSCPM.html#a6">SCPM::Add</a> </code> resp. <code><a
+href="/usr/share/doc/packages/scpm/api/html/classSCPM.html#a7">SCPM::Copy</a></code> with the information
 collected in <a href="popup_add_profile.html">Add new Profile</a>. When the
 suboption <b>Make the added profile...</b> was checked the use
 the optional <var>auto_switch</var> parameter of <code>SCPM:Add</code>
 to make the new profile also the active one.<br>
 In case the user changed the description and/or at
 least one of the script paths, write the changes to the profile using
-the corresponding <code><a href="API/classSCPM.html#a15">SCPM::Set</a>
+the corresponding <code><a href="/usr/share/doc/packages/scpm/api/html/classSCPM.html#a15">SCPM::Set</a>
 </code> command.<br>
 If <b>Set file permissions of all scripts secure</b> is checked then chmod 700
 these scripts.<br>

@@ -53,23 +53,23 @@ gets the <a href="popup_introduction.html">Introduction popup</a>.</p>
 
 <h3 align=left>Getting information</h3>
 <p> You can get all needed information from the
-class <code><a href="API/classSCPM.html">SCPM</a></code>. Even before
+class <code><a href="/usr/share/doc/packages/scpm/api/html/classSCPM.html">SCPM</a></code>. Even before
 entering this dialog you may have already called <code>
-<a href="API/classSCPM.html#a18">SCPM::Status</a></code>. The <code>
-<a href="API/structscpm__status__t.html#m1">scpm_status_t::enabled</a> 
-</code> flag of the <code><a href="API/struct__scpm__status__t.html">
+<a href="/usr/share/doc/packages/scpm/api/html/classSCPM.html#a18">SCPM::Status</a></code>. The <code>
+<a href="/usr/share/doc/packages/scpm/api/html/structscpm__status__t.html#m1">scpm_status_t::enabled</a> 
+</code> flag of the <code><a href="/usr/share/doc/packages/scpm/api/html/struct__scpm__status__t.html">
 scpm_status_t</a></code> struct tells you about wether SCPM is
 enabled. In case it is disabled, then show the <a
 href="popup_introduction.html">Introduction popup</a>. The following
 queries are only useful (and possible) in case SCPM is enabled.
-The struct element <code><a href="API/structscpm__status__t.html#m4">
+The struct element <code><a href="/usr/share/doc/packages/scpm/api/html/structscpm__status__t.html#m4">
 scpm_status_t::active_profile</a></code> contains a string naming the active
 profile. This string can - if needed - also be queried using
-<code><a href="API/classSCPM.html#a4">
+<code><a href="/usr/share/doc/packages/scpm/api/html/classSCPM.html#a4">
 SCPM::Active</a></code>. The list of all profiles can be determined with
-<code><a href="API/classSCPM.html#a5">SCPM::List</a></code>.
+<code><a href="/usr/share/doc/packages/scpm/api/html/classSCPM.html#a5">SCPM::List</a></code>.
 The current Resource Set can be queried with <code>
-<a href="API/classSCPM.html#a21">SCPM::GetResourceSet</a></code>.</p>
+<a href="/usr/share/doc/packages/scpm/api/html/classSCPM.html#a21">SCPM::GetResourceSet</a></code>.</p>
 
 <h3 align=left>Actions to perform</h3>
 <ul>
@@ -82,7 +82,7 @@ Clicking this button performs a switch to the active profile. This is
 useful in case a user want to drop or apply changes. Check the 
 <a href="dialog_switch.html">switch dialog</a> for details.
 <li><b>Save</b> (dropped!!!) </li>
-Clicking this button performs <code><a href="API/classSCPM.html#a17">
+Clicking this button performs <code><a href="/usr/share/doc/packages/scpm/api/html/classSCPM.html#a17">
 SCPM::Save</a></code>. In case it returns <var>false</var>, popup a
 small window telling the user an error occured, and show the error (
 global variable <code>scpm_error</code>).
@@ -95,7 +95,7 @@ Clicking <b>Edit</b> will take the user to the
 the selected profile.
 <li><b>Delete</b></li>
 Clicking on this button deletes the selected profile. Deletion is
-performed by calling <code><a href="API/classSCPM.html#a9">
+performed by calling <code><a href="/usr/share/doc/packages/scpm/api/html/classSCPM.html#a9">
 SCPM::Delete</a></code>.
 <li><b>Options</b></li>
 Takes the user to the <a href="dialog_options.html">options dialog</a>.
