@@ -20,9 +20,8 @@
 
 #include <string>
 #include <vector>
-#include "scpm_types.h"
-#include "scdb.h"
-//#include <scdb.h>
+#include <scpm_types.h>
+#include <scdb.h>
 
 class SCPM
 {
