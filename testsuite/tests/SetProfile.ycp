@@ -37,7 +37,7 @@
        "home" : "My private configuration",
     ];
 
-    ProfileManager::profile_settings =
+    map profile_settings =
     $[ "name": "default",
        "description": "New description for default profile",
        "prestart": "/tmp/default/p1",
@@ -48,11 +48,13 @@
 
     DUMP(ProfileManager::profiles);
 
-	TEST (``(ProfileManager::SetProfile("default")), [ READ, WRITE_false, $[] ], nil);
+    TEST (``(ProfileManager::SetProfile("default", profile_settings)),
+	[ READ, WRITE_false, $[] ], nil);
 
     DUMP(ProfileManager::profiles);
 
-	TEST (``(ProfileManager::SetProfile("default")), [ READ, WRITE_true, $[] ], nil);
+    TEST (``(ProfileManager::SetProfile("default", profile_settings)),
+	[ READ, WRITE_true, $[] ], nil);
 
     DUMP(ProfileManager::profiles);
 

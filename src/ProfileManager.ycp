@@ -18,6 +18,7 @@ textdomain "profile-manager";
 import "Progress";
 import "Report";
 import "Require";
+import "Popup";
 
 include "profile-manager/routines.ycp";
 
@@ -30,6 +31,10 @@ global boolean first_time = false;
  * Is SCPM enabled?
  */
 global boolean enabled = false;
+
+// for saving status of enabled/disabled radiobuttons in OptionsDialog
+// when going to ConfigureResources
+global boolean tmp_enabled = false;
 
 /**
  * Is SCPM initialized?
@@ -184,12 +189,18 @@ global boolean write_only = false;
 global block AbortFunction = nil;
 
 // --------------------------------------------------------------------------
-// ------- new functions and variables for work with resource groups --------
+// ------- functions and variables for work with resource groups ------------
+// --------------------------------------------------------------------------
 
 /**
- * all resource groups available; filled by ListResourceGroups()
+ * all resource groups available; filled by ReadResourceGroups()
  */
 map resource_groups = $[];
+
+/**
+ * list of resource groups marked for deletion
+ */
+list resource_groups_deleted = [];
 
 /**
  * this map holds the contents of scpm.conf configuration file
@@ -198,7 +209,7 @@ global map scpm_conf = $[];
 
 /**
  * helper structure for faster querying modified resource groups (prepared
- * for Switch) - is filled in GetModifiedGroups()
+ * for Switch) - is filled in GetModifiedGroups() function
  */
 global map modified_groups = $[];
 
@@ -213,26 +224,15 @@ boolean default_save = true;
  */
 global boolean canceled = false;
 
-// just a helper TODO remove?
+/**
+ * if scpm supports resource groups
+ */
 global boolean use_rg = true;
 
-global string current_resource_group = "";
-
 /**
- * Delete resource group from scpm database and from local structures
- * @param groupname resource group name
- * @return success
+ * name of resource group currently beeing edited (selected in SwitchDialog)
  */
-global define boolean DeleteResourceGroup(string groupname) ``{
-
-    if (!SCR::Write(.scpm.rg.group.delete, groupname))
-    {
-	SetError();
-	return false;
-    }
-    remove (resource_groups, groupname);
-    return true;
-}
+global string current_resource_group = "";
 
 /**
  * Writes modified resource group.
@@ -241,7 +241,7 @@ global define boolean DeleteResourceGroup(string groupname) ``{
  * @param descr group description
  * @return success
  */
-global define boolean SetResourceGroup(string groupname, list resources, string descr) ``{
+define boolean SetResourceGroup(string groupname, list resources, string descr) ``{
 
     boolean ret = SCR::Write(add(.scpm.rg.group, groupname), resources, descr);
     if (!ret)
@@ -256,7 +256,7 @@ global define boolean SetResourceGroup(string groupname, list resources, string 
  * @param groupname resource group name
  * @return list of resources
  */
-global define list GetResourceGroup(string groupname) ``{
+define list GetResourceGroup(string groupname) ``{
 
     list resource_group = SCR::Read(.scpm.rg.group, groupname);
     if (resource_group == nil)
@@ -268,98 +268,172 @@ global define list GetResourceGroup(string groupname) ``{
 }
 
 /**
- * Reads a list of all available resource groups.
+ * Reads all available resource groups.
  * @return true on success
  */
-global define boolean ListResourceGroups() ``{
+global define boolean ReadResourceGroups() ``{
 
     resource_groups = SCR::Read(.scpm.rg);
+    resource_groups_deleted = [];
     if (resource_groups == nil)
     {
 	SetError();
 	return false;
     }
     foreach (`name, `group, resource_groups, ``{
-	group["resources"] = GetResourceGroup (name);// TODO check error?
+	group["resources"] = GetResourceGroup (name);
     });
 
     return true;
 }
 
 /**
- * returns new copy of map with resource groups
+ * Returns all available resource groups.
+ * @return map of groups
  */
 global define map GetResourceGroups() ``{
 
-    return eval (resource_groups);
+    return resource_groups;
 }
 
-// temporary fix, FIXME is it OK?
-global define void UpdateResourceGroups (map groups) ``{
+/**
+ * Can be resource group deleted by user?
+ * @param groupname name of group
+ * @return boolean
+ */
+global define boolean GroupDeletable (string groupname) ``{
 
-    resource_groups = $[];
-    resource_groups = eval (groups);
-    // check for de/activated?
+    return resource_groups [groupname, "user_defined"]:false;
 }
 
-// do the "commit" - save to scpm
+/**
+ * Does given resource group exist? (Checked when user enters name of new group)
+ * @param groupname name of group
+ * @return boolean
+ */
+global define boolean GroupnameExists (string groupname) ``{
+
+    return haskey (resource_groups, groupname);
+}
+
+/**
+ * Returns map resource group
+ * @param groupname name of group
+ * @return map
+ */
+global define map GetGroup (string groupname) ``{
+
+    return eval (resource_groups [groupname]:$[]);
+}
+
+/**
+ * Marks selected resource group for deletion (will not be shown in list)
+ * @param groupname name of group
+ */
+global define void MarkGroupDeleted (string groupname) ``{
+
+    resource_groups = remove (resource_groups, groupname);
+    if (resource_groups[groupname, "what"]:"" != "added")
+    {
+	resource_groups_deleted = add (resource_groups_deleted, groupname);
+    }
+    y2debug ("resource group %1 marked for deletion", groupname);
+}
+
+/**
+ * Changes "active" flag of selected resource group to opposite value
+ * @param groupname name of group
+ * @return new value
+ */
+global define boolean MarkGroupActive (string groupname) ``{
+
+    boolean active = !resource_groups[groupname, "active"]:false;
+    resource_groups[groupname,"active"] = active;
+    resource_groups[groupname,"user_modified"] = true;
+    return active;
+}
+
+
+/**
+ * Updates global resource_groups map with currently edited group
+ */
+global define void ChangeGroup (map group) ``{
+
+    if (group["org_name"]:"" != "")
+	resource_groups = remove (resource_groups, group["org_name"]:"");
+    resource_groups = add (resource_groups, group["name"]:"",group);
+}
+
+/**
+ * Store error messages generated by multiple commands to one string
+ */
+define string AllErrorMessages (string error) ``{
+
+    if (scpm_error != "")
+    {
+	if (error != "")
+	    error = error + "\n";
+	error = error + scpm_error;
+	scpm_error = "";
+    }
+    return error;
+}
+
+/**
+ * Save the resource groups edited in YaST UI
+ * @return success
+ */
 global define boolean SaveResourceGroups () ``{
 
+    scpm_error = "";
     string error = "";
 
-    // TODO do not call this if Apply not set
+    // deletion must be done in first cycle
+    // (because some new group can have the name of deleted one)
+    foreach (`name, resource_groups_deleted, ``{
+
+	y2milestone ("deleting group %1", name);
+	if (!SCR::Write (.scpm.rg.group.delete, name))
+	    SetError();
+	// deactivate deleted group
+	SCR::Write (.scpm.rg.group.activate, name, false);
+	error = AllErrorMessages (error);
+    });
+    // renaming must be done in second cycle
+    // (because some new group can have the old name of renamed one)
+    foreach (`name, `group, resource_groups, ``{
+	if (group["what"]:"" == "renamed")
+	{
+	    y2milestone ("renaming group %1 to %2", group["org_name"]:"", name);
+	    if (!SCR::Write (
+		    add (.scpm.rg.group.rename, group["org_name"]:name),
+		    name))
+		SetError();
+	}
+	error = AllErrorMessages (error);
+    });
+    // rest of modifications
     foreach (`name, `group, resource_groups, ``{
 	string what = group["what"]:"";
-	string name = group["name"]:"";
 
-	// edited/added/modifies -> SetResourceGroup
-	if (what == "deleted")
-	{
-	    if (!SCR::Write (.scpm.rg.group.delete, name))
-		SetError();
-	}
 	if (what == "added" || what == "edited")
 	{
+	    y2milestone ("saving modified group %1", name);
 	    if (!SCR::Write (
 		    add (.scpm.rg.group.set, name),
 		    group["resources"]:[],
 		    group["description"]:""))
 		SetError();
 	}
-	/* TODO use some rename function
-	if (what == "renamed")
+	// do Activation/Deactivation (it is not done in Set/Rename)
+	if (group["user_modified"]:false)
 	{
-	    if (!SCR::Write (.scpm.rg.group.delete, group["org_name"]:""))
+	    boolean activate = group["active"]:true;
+	    if (!SCR::Write (.scpm.rg.group.activate, name, activate))
 		SetError();
-	    if (!SCR::Write (
-		    add (.scpm.rg.group.set, name),
-		    group["resources"]:[],
-		    group["description"]:""))
-		SetError();
+	    y2milestone ("changed active status of %1 to %2", name, activate);
 	}
-	*/
-	if (what != "")
-	{
-	    y2internal ("changed: %1", group);
-	    remove (group,"what");
-	}
-	// do Activation/Deactivation
-	// TODO is it needed for groups "edited"/"added"?
-	// or only when "user_modified" is set?
-	else if (group["user_modified"]:false)
-	{
-	    y2internal ("changed: %1", group);
-	    if (!SCR::Write (.scpm.rg.group.activate,name,group["active"]:true))
-		SetError();
-	}
-	// store error messages...
-	if (scpm_error != "")
-	{
-	    if (error != "")
-		error = error + "\n";
-	    error = error + scpm_error;
-	    scpm_error = "";
-	}
+	error = AllErrorMessages (error);
     });
     if (error != "")
 	scpm_error = error;
@@ -411,9 +485,14 @@ global define map GetModifiedGroupResources(string groupname) ``{
 }
 
 /**
- * uses switch_info map to generate helper structure in the form
+ * Uses "switch_info" map to generate helper structure "modified_groups"
+ * @example
+ * <b>modified_groups</b> structure
  * $[ modified_group: resources_of_modified_group ]
- * resources_of_modified_group is a map of format:
+ *
+ * <b>modified_group</b> is name of resource group
+ *
+ * <b>resources_of_modified_group</b> is a map of format:
  * $[
  *	0: $[
  *		"resource_name":	"/etc/inetd.conf",
@@ -440,11 +519,12 @@ global define map GetModifiedGroupResources(string groupname) ``{
  *	"description"	"Inetd services"
  * ]
  * numbers are indexes in the switch_info["modified_resources"]:[] list,
- * "save" and "modified" are flags of this group
+ * "save" and "modified" are flags of this group (<b>modified_group</b>)
  */
 global define void GetModifiedGroups() ``{
 
     integer i = 0;
+    modified_groups = $[];
     foreach (`resource, switch_info["modified_resources"]:[], ``{
 	// go through all groups owning this resource:
 	foreach (`group, resource["groups"]:[], ``{
@@ -457,13 +537,27 @@ global define void GetModifiedGroups() ``{
 		];
 	    // add a map of this resource to the group,
 	    // key is resource's index in modified_resources list
-	    modified_groups [groupname,i] = resource;//TODO use eval?
+	    modified_groups [groupname,i] = eval (resource);
 	});
 	i = i + 1;
     });
 }
 
 
+/**
+ * Check the modified resources belonging to specified group
+ * If user changed anything (in DetailsSwitchDialog), global maps
+ * modified_groups and switch_info are updated.
+ *
+ * Some of modified resource could be also contained in some other group
+ * and all such groups have to be checked also (to update modified_groups).
+ *
+ * It could be the situation when resource should not be saved and it is
+ * set in first group. But it is also the only resource of some other group
+ * and so such group should be also marked not to save.
+ * @param name group name
+ * @param resources map of that group's modified resources (altered by user)
+ */
 global define boolean CheckAndUpdateResources (string name, map resources) ``{
 
     list groups_to_check = [];
@@ -482,7 +576,7 @@ global define boolean CheckAndUpdateResources (string name, map resources) ``{
 		switch_info["modified_resources",i,key] = resource[key]:nil;
 		// set modified flag of the group
 		modified_groups [name, "modified"] = true;
-		// set other groups to check
+		// set other groups (this resource belongs to) for later check
 		foreach (`g, resource["groups"]:[], ``{
 		    if (g["name"]:"" != name)
 		    groups_to_check = union (groups_to_check, [ g["name"]:"" ]);
@@ -491,13 +585,22 @@ global define boolean CheckAndUpdateResources (string name, map resources) ``{
 	});
     });
     modified_groups[name, "save"] = group_save;
-    // now go through other groups and possibly check save and "m" flags
-    // TODO test this!
-    foreach (`gname, groups_to_check, ``{
-y2internal ("other group to check: %1", gname);
+    UpdateOtherGroups (groups_to_check);
+    return true;
+}
+
+/**
+ * Update global flags (save/m) of groups according to the state
+ * of their resources
+ * @param groups list of groups to check and possibly update
+ */
+global define boolean UpdateOtherGroups (list groups) ``{
+
+    boolean group_save = false;
+    foreach (`gname, groups, ``{
 	group_save = false;
-	// check all the resources (some are possibly changed) of group
-	// switch_info is updated, modified groups not
+	// - check all the resources (some are possibly changed) of group
+	// - switch_info is updated, modified_groups not yet
 	foreach (`i, `resource, modified_groups[gname]:$[], ``{
 	    if (!is(i, integer))
 		return;
@@ -516,36 +619,48 @@ y2internal ("other group to check: %1", gname);
 	});
 	modified_groups[gname, "save"] = group_save;
     });
-
+    return true;
 }
-
 
 /**
  * Sets the "save" flag of all resources belonging to selected resource group
- * the opposite value.
+ * to the opposite value. Also sets "save_mode" of each resource to "normal"
  * @param groupname resource group name
  * @return the new value
  */
-global define boolean SetGroupSaveFlag(string groupname) ``{
+global define boolean SetGroupSaveFlag (string groupname) ``{
 
+    list groups_to_check = [];
     boolean ret = !modified_groups[groupname, "save"]:false;
     foreach (`index, `resource, modified_groups[groupname]:$[], ``{
 	if (is (index, integer))
 	{
 	    resource["save"] = ret;
+	    resource["save_mode"] = "normal";
 	    switch_info["modified_resources", index, "save"] = ret;
+	    switch_info["modified_resources", index, "save_mode"] = "normal";
+	    // set other groups (this resource belongs to) for later check
+	    foreach (`g, resource["groups"]:[], ``{
+		if (g["name"]:"" != groupname)
+		    groups_to_check = union (groups_to_check, [ g["name"]:"" ]);
+	    });
 	}
     });
     modified_groups [groupname, "save"] = ret;
+    // unset "m" flag now
+    modified_groups [groupname, "modified"] = false;
+    UpdateOtherGroups (groups_to_check);
     return ret;
 }
 
+/**
+ * Creates the item list for the Table widget (to use in Switch dialog).
+ * @return list of items
+ */
 global define list GetGroupsAsItems() ``{
 
     list items = [];
     foreach (`name, `group, modified_groups, ``{
-y2warning ("group %1: %2", name, group);
-
 	string save = group ["save"]:default_save ? "X":"";
 	if (group["modified"]:false)
 	    save = "m";
@@ -605,7 +720,6 @@ global define boolean Read() ``{
 	],
 	""
     );
-
     // initialize
     if(Abort()) return false;
     Progress::NextStage();
@@ -839,8 +953,8 @@ global define boolean WriteUserSettings() ``{
 define boolean Initialize() ``{
 
     // popup label, %1 is required application
-    if (!Require::RequireAndConflict (["scpm"], [], _("<p>For using profile manager, the package <b>%1</b> is necessary.</p>
-<p>Install it now?</p>")))
+    if (!Require::RequireAndConflict (["scpm"], [], _("<p>For using profile manager, the package <b>%1</b> is necessary.<br>
+Install it now?</p>")))
          return false;
 
     tmpdir = SCR::Read(.target.tmpdir);
@@ -855,6 +969,9 @@ define boolean Initialize() ``{
     if (ret == false)
         SetError();
 
+    // FIXME: read use_rg status! - check scpm_version from status?
+    string version = lookup (SCR::Execute (.target.bash_output, "rpm -qi scpm | grep Version"), "stdout", "");
+    list v_l = splitstring (version, " \t\n:");
     return ret;
 }
 
@@ -998,23 +1115,20 @@ global define boolean RenameProfile(string old, string new) ``{
  * Sets the parameters of the profile.
  * Uses the global variable profile_settings.
  * @param name Name of the affected profile
+ * @param settings The map of profile settings
  * @return true on success
  */
-global define boolean SetProfile(string name) ``{
+global define boolean SetProfile(string name, map settings) ``{
 
-    string desc = deletechars(lookup(profile_settings, "description",""), "\n");
-
+    string desc = settings ["description"]:"";
 
     boolean ret = SCR::Write(.scpm.profiles.description, desc, name);
 
-    ret = ret &&  SCR::Write(.scpm.profiles.prestart,
-        lookup(profile_settings, "prestart",""), name);
-    ret = ret &&  SCR::Write(.scpm.profiles.poststart,
-        lookup(profile_settings, "poststart",""), name);
-    ret = ret &&  SCR::Write(.scpm.profiles.prestop,
-        lookup(profile_settings, "prestop",""), name);
-    ret = ret &&  SCR::Write(.scpm.profiles.poststop,
-        lookup(profile_settings, "poststop",""), name);
+    ret = ret &&
+	SCR::Write(.scpm.profiles.prestart, settings ["prestart"]:"", name) &&
+	SCR::Write(.scpm.profiles.poststart, settings ["poststart"]:"", name) &&
+	SCR::Write(.scpm.profiles.prestop, settings ["prestop"]:"", name) &&
+	SCR::Write(.scpm.profiles.poststop, settings ["poststop"]:"", name);
 
     if (ret)
         profiles = add (profiles, name, desc);
@@ -1022,37 +1136,6 @@ global define boolean SetProfile(string name) ``{
         SetError();
 
     return ret;
-}
-
-
-/**
- * Sets the file permitions of scripts from profile_settings to 700.
- * @return true on success
- */
-global define boolean SetFilePermitions() ``{
-
-	string file = "";
-	file = lookup(profile_settings, "prestart","");
-	if (file != "" &&
-		(SCR::Execute (.target.bash, sformat("/bin/chmod 700 %1",file))) != 0)
-	return false;
-
-	file = lookup(profile_settings, "poststart","");
-	if (file != "" &&
-		(SCR::Execute (.target.bash, sformat("/bin/chmod 700 %1",file))) != 0)
-	return false;
-
-	file = lookup(profile_settings, "prestop","");
-	if (file != "" &&
-		(SCR::Execute (.target.bash, sformat("/bin/chmod 700 %1",file))) != 0)
-	return false;
-
-	file = lookup(profile_settings, "poststop","");
-	if (file != "" &&
-		(SCR::Execute (.target.bash, sformat("/bin/chmod 700 %1",file))) != 0)
-	return false;
-
-    return true;
 }
 
 
@@ -1072,7 +1155,7 @@ global define boolean DeleteProfile(string to_delete) ``{
 }
 
 /**
- * Calls SCPM::PrepareSwitch(), which drops switch_info map to file
+ * Calls PrepareSwitch(), which drops switch_info map to file
  */
 global define void PrepareSwitch() ``{
 
@@ -1236,6 +1319,8 @@ global define list GetProfilesAsItems() ``{
 
     list items = [];
     items = maplist (`name, `descr, profiles, ``{
+	// take 1st line from description
+	descr = substring (descr, 0, find (descr, "\n"));
         if (name == active_profile)
             return `item(`id(name),"---->",name,descr);
         else
@@ -1294,38 +1379,39 @@ global define boolean CheckNameValidity(string name) ``{
 
 /**
  * Checks the existence of the scripts from
- * @param new_settings The map with paths to scripts
- * @return true if ok
+ * @param settings The map with paths to scripts
+ * @return list of non-executable files (empty when all is OK)
  */
-global define boolean CheckFilesValidity(map new_settings) ``{
+global define list CheckFilesValidity(map settings) ``{
 
-    string file ="";
+    list not_executable = [];
+    foreach (`type, [ "prestart", "poststart", "prestop", "poststop" ], ``{
 
-    // TODO: better return value (file)
-    // test -x ???
-
-    file = lookup(new_settings, "prestart","");
-    if (file != "" &&
-	(SCR::Execute (.target.bash, sformat("/usr/bin/test -e %1",file))) != 0)
-	return false;
-
-    file = lookup(new_settings, "poststart","");
-    if (file != "" &&
-	(SCR::Execute (.target.bash, sformat("/usr/bin/test -e %1",file))) != 0)
-	return false;
-
-    file = lookup(new_settings, "prestop","");
-    if (file != "" &&
-	(SCR::Execute (.target.bash, sformat("/usr/bin/test -e %1",file))) != 0)
-	return false;
-
-    file = lookup(new_settings, "poststop","");
-    if (file != "" &&
-	(SCR::Execute (.target.bash, sformat("/usr/bin/test -e %1",file))) != 0)
-	return false;
-
-    return true;
+	string file = settings[type]:"";
+	if (file != "" && (SCR::Execute (.target.bash,
+	    sformat("/usr/bin/test -x %1 -a ! -d %1",file))) != 0)
+	    not_executable = union (not_executable, [ file ]);
+    });
+    return not_executable;
 }
+
+/**
+ * Sets the file permitions of scripts from profile_settings to 700.
+ * @param settings The map with paths to scripts
+ * @return true on success
+ */
+global define boolean SetFilePermitions (map settings) ``{
+
+    boolean ret = true;
+    foreach (`type, [ "prestart", "poststart", "prestop", "poststop" ], ``{
+	string file = settings[type]:"";
+	if (file != "" && (SCR::Execute (.target.bash,
+	    sformat("/bin/chmod 700 %1", file))) != 0)
+	    ret = false;
+    });
+    return ret;
+}
+
 
 /**
  * Checks if the profile settings was modified.
@@ -1362,7 +1448,6 @@ global define integer GetHashMarks() ``{
  */
 global define string GetProgressText(boolean everything) ``{
 
-    // TODO: rewrite this function
     string ret = "";
     string all = SCR::Read(.target.string, progresspath);
 
@@ -1417,6 +1502,7 @@ global define string GetProgressText(boolean everything) ``{
  */
 global define boolean ReadSwitchInfo() ``{
 
+    switch_info = $[];
     switch_info = SCR::Read(.target.ycp, tmppath);
     if (switch_info == nil)
     {
@@ -1442,13 +1528,13 @@ global define boolean Wait() ``{
 
 /**
  * This function is called when some scpm command failed.
- * The error message is read and shown in ErrorPopup.
+ * The error message is read and shown in Popup::Error.
  */
 define void ShowError () ``{
 
     string err = SCR::Read (.scpm.error);
     if (err != nil && err != "")
-        UI::ErrorPopup (err);
+        Popup::Error (err);
 }
 
 /**
@@ -1463,7 +1549,6 @@ define void SetError () ``{
     else
         scpm_error = "";
 }
-
 
 /* EOF */
 }

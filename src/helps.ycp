@@ -217,7 +217,10 @@ These scripts are executed as the user root. Make sure no users can change or ev
     /* Write dialog help 1/1 */
     "write" : _("<p><b><big>Writing Profile Manager Configuration</big></b><br>
 Please wait...<br></p>
-")
+"),
+
+    /* Configure Resources Dialog help 1/ FIXME */
+    "resources": "FIXME!",
 
 ];
 

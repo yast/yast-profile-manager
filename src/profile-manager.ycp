@@ -21,7 +21,7 @@ textdomain "profile-manager";
 y2milestone ("----------------------------------------");
 y2milestone ("Profile-manager module started");
 
-//include "./wizards.ycp";
+import "Popup";
 include "profile-manager/wizards.ycp";
 
 /*
@@ -34,7 +34,7 @@ list l_res = splitstring(lookup(res, "stdout", ""), "\n");
 if( size(l_res) > 0 &&  select(l_res, 0, "") != "root")
 {
     // Popup label (user is not root)
-    UI::MessagePopup(_("Log in as root to run SCPM."));
+    Popup::Message(_("Log in as root to run SCPM."));
     return;
 }
 

@@ -1,4 +1,15 @@
 -------------------------------------------------------------------
+Mon Jul 14 19:44:49 CEST 2003 - jsuchome@suse.de
+
+- agent-scpm: used RenameResourceGroup for renaming; comments
+- enabled creating resource group with the name of deleted one
+- adapting resource groups when its resources are modified (SwitchDialog)
+- browse buttons for profile scripts
+- Label/Popup interface
+- adapted testsuite
+- 2.8.2
+
+-------------------------------------------------------------------
 Fri May 30 17:56:12 CEST 2003 - jsuchome@suse.de
 
 - saving modified resource groups to SCPM database

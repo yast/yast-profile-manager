@@ -15,8 +15,8 @@ import "Wizard";
 
 import "ProfileManager";
 
-include "ui/common_popups.ycp";
-include "ui/common_messages.ycp";
+import "Popup";
+import "Label";
 
 include "profile-manager/helps.ycp";
 include "profile-manager/routines.ycp";
@@ -60,7 +60,6 @@ global define any MainDialog () ``{
     // Alternative state label text:
     _("SCPM is disabled.");
 
-    // FIXME: workaround for resource groups
     boolean use_rg = ProfileManager::use_rg;
     if (use_rg)
 	state_label = (enabled) ? _("SCPM is enabled."):_("SCPM is disabled.");
@@ -122,15 +121,16 @@ global define any MainDialog () ``{
     Wizard::SetContentsButtons ( caption,
 				contents,
                 HELPS["main"]:"",
-                BackButtonLabel (),
-				CloseButtonLabel () );
+                Label::BackButton (),
+				Label::CloseButton () );
 
     Wizard::ReplaceBackButton (`PushButton (`id(`intro), `opt(`key_F2),
         // pushbutton
         _("&Introduction to SCPM")));
     Wizard::ReplaceAbortButton (`Empty());
 
-    UI::ChangeWidget(`id(`profiles), `Items, ProfileManager::GetProfilesAsItems());
+    UI::ChangeWidget(`id(`profiles), `Items,
+	ProfileManager::GetProfilesAsItems());
 
     if (enabled) {
         UI::ChangeWidget(`id(`profiles), `CurrentItem, ProfileManager::active_profile);
@@ -155,16 +155,16 @@ global define any MainDialog () ``{
 	    selected = UI::QueryWidget(`id(`profiles), `CurrentItem);
 	    if (selected == active)
 		// Popup text (user wants to delete active profile):
-		UI::MessagePopup(_("You cannot delete the active profile."));
+		Popup::Message(_("You cannot delete the active profile."));
 	    else
 	    {
 		// Popup text (confirmation)
-		if (UI::YesNoPopup(sformat(_("Really delete profile %1?"), selected)))
+		if (Popup::YesNo(sformat(_("Really delete profile %1?"), selected)))
 		{
 		    if (!ProfileManager::DeleteProfile(selected))
 		    {
 			// Error popup text: %1 is additional error message
-			UI::ErrorPopup(sformat(
+			Popup::Error(sformat(
 			    _("Deleting the profile was not successful:
 %1
 "),
@@ -201,13 +201,13 @@ global define any MainDialog () ``{
 	    if (!ProfileManager::Wait())
 	    {
 		// Error popup text, %1 is additional translated error message
-		UI::ErrorPopup(sformat(_("Switching to another profile is not possible:\n%1"), ProfileManager::scpm_error));
+		Popup::Error(sformat(_("Switching to another profile is not possible:\n%1"), ProfileManager::scpm_error));
 		continue;
 	    }
 	    if (!ProfileManager::ReadSwitchInfo())
 	    {
 		// Error popup text
-		UI::ErrorPopup(_("Switching to another profile is not possible."));
+		Popup::Error(_("Switching to another profile is not possible."));
 		continue;
 	    }
 
@@ -217,15 +217,6 @@ global define any MainDialog () ``{
 	{
 	    IntroductionTextPopup();
 	    continue;
-	}
-	else if (ret == `options_button && use_rg)
-	{
-	    // FIXME read in initial Read?
-	    if (!ProfileManager::ListResourceGroups())
-		Report::Error(sformat(_("Cannot read resource groups:\n%1"),
-		    ProfileManager::scpm_error));
-	    y2internal ("resource groups read...");
-	    break;
 	}
 	else if (ret == `next || ret == `options_button || ret == `cancel)
 	    break;
@@ -249,11 +240,9 @@ global define any OptionsDialog () ``{
     list resource_sets = union( union (ProfileManager::resource_sets_predefined, [ separator ]), ProfileManager::resource_sets_individual);
     boolean close_popups = ProfileManager::close_popups;
 
-    // TODO new features: --------------------
-
     list switch_modes = ["normal", "skip", "force"];
     list boot_modes = ["backup", "skip", "force"];
-    // TODO how should the module behave according to this values?
+    // FIXME how should the module behave according to this values?
 
     boolean use_rg = ProfileManager::use_rg;
     // -------------------------
@@ -354,6 +343,7 @@ global define any OptionsDialog () ``{
         )),
         `VSpacing(1),
 	`Bottom(
+	    // button label
 	    `Right (`PushButton(`id(`resources), _("Configure &Resources")))
 	),
 	`VSpacing(1)
@@ -364,9 +354,9 @@ global define any OptionsDialog () ``{
     Wizard::RestoreBackButton ();
 
     Wizard::SetContentsButtons ( caption, contents, HELPS["options"]:"",
-				BackButtonLabel (), OKButtonLabel () );
+				Label::BackButton (), Label::OKButton () );
 
-    if (ProfileManager::enabled)
+    if (ProfileManager::enabled || ProfileManager::tmp_enabled)
     {
         UI::ChangeWidget(`id(`rb), `CurrentButton, `ena);
     }
@@ -395,17 +385,20 @@ global define any OptionsDialog () ``{
     ret = UI::UserInput ();
     if (ret == `dis)
     {
+	ProfileManager::tmp_enabled = false;
         UI::ChangeWidget(`id(`resources), `Enabled, false);
         continue;
     }
     else if (ret == `ena)
     {
+	ProfileManager::tmp_enabled = true;
         UI::ChangeWidget(`id(`resources), `Enabled, true);
         continue;
     }
     else if (ret == `resources && use_rg)
     {
-	break; // TODO only for resource groups!
+	// for resource groups there is another dialog defined
+	break;
     }
     else if (ret == `next)
     {
@@ -420,7 +413,7 @@ global define any OptionsDialog () ``{
             if (selected == separator || selected == nil)
             {
 		// Popup label:
-                UI::MessagePopup(_("Choose a resource set first."));
+                Popup::Message(_("Choose a resource set first."));
                 continue;
             }
 
@@ -439,7 +432,7 @@ global define any OptionsDialog () ``{
                     if (!ProfileManager::Wait())
                     {
                         // Error popup text, %1 is additional error message
-                        UI::ErrorPopup(sformat (_("Enabling SCPM was not successful:
+                        Popup::Error(sformat (_("Enabling SCPM was not successful:
 %1
 "), ProfileManager::scpm_error));
                         ProfileManager::enabled = false;
@@ -458,7 +451,7 @@ global define any OptionsDialog () ``{
 
                     if (!ProfileManager::WriteSCPMStatus())
                     {
-                        UI::ErrorPopup(sformat(
+                        Popup::Error(sformat(
                             // Error popup text, %1 is additional error text
                             _("Enabling SCPM was not successful:
 %1
@@ -467,7 +460,6 @@ global define any OptionsDialog () ``{
                         ProfileManager::enabled = false;
                         break;
                     }
-
                     ProfileManager::ReadProfiles(); // on some other place?
 	            ProfileManager::ReadActiveProfile();
 		    ProfileManager::ReadProfilesDescriptions();
@@ -476,7 +468,7 @@ global define any OptionsDialog () ``{
 	    else if (ProfileManager::current_resources != selected)
             {
 		// Popup label (confirmation)
-		if (UI::YesNoPopup(_("Changing the resource set may drop some of your configuration settings. Proceed?")))
+		if (Popup::YesNo(_("Changing the resource set may drop some of your configuration settings. Proceed?")))
 		{
 		    ProfileManager::current_resources = selected;
 		    // maybe WriteResources should be run every time
@@ -494,7 +486,7 @@ global define any OptionsDialog () ``{
                 ProfileManager::current_resources = "";
                 if (!ProfileManager::WriteSCPMStatus())
                 {
-                    UI::ErrorPopup(sformat(
+                    Popup::Error(sformat(
                         // Error popup text, %1 is additional error text
                         _("Disabling SCPM was not successful:
 %1
@@ -510,35 +502,21 @@ global define any OptionsDialog () ``{
 
         y2debug("enabled=%1",ProfileManager::enabled);
         y2debug("close_popups=%1",ProfileManager::close_popups);
-        y2milestone("current_resources=%1",ProfileManager::current_resources);
+        y2debug("current_resources=%1",ProfileManager::current_resources);
 
-	if (!ProfileManager::SaveResourceGroups ())
-	{
-            // Error popup text, %1 is additional error text
-            UI::ErrorPopup(sformat(_("Saving resource groups failed:
-%1
-"),
-		ProfileManager::scpm_error));
-		// TODO FIXME only the last error message!
-	}
         break;
     }
     else if (ret == `back || ret == `cancel) break;
 
-    else {
-        y2error("Undefined return value");
-        continue;
-    }
+    else continue;
     };
 
-    if (ret != `back && ret != `cancel)
+    if (ret == `next)
     {
 	// moving to other dialog (OK or resources) -> save config values
 	foreach (`key, `value, ProfileManager::scpm_conf, ``{
 	    ProfileManager::scpm_conf[key] = UI::QueryWidget (`id(key), `Value);
 	});
-	// TODO use some modified flag and save only when neccessary...
-	// FIXME save only on OK!
     }
     return ret;
 }

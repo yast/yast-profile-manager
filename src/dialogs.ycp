@@ -14,9 +14,11 @@ textdomain "profile-manager";
 import "ProfileManager";
 import "Console";
 import "Runlevel";
+import "Report";
+import "Wizard";
 
-include "ui/common_popups.ycp";
-include "ui/common_messages.ycp";
+import "Popup";
+import "Label";
 include "ui/file_popups.ycp";
 
 include "profile-manager/helps.ycp";
@@ -37,12 +39,19 @@ global define any ProfileSettingsDialog () ``{
 
     map settings = ProfileManager::profile_settings;
 
-	// Dialog caption label
+    map string2symbol = $[
+	"prestart"	: `prestart,
+	"poststart"	: `poststart,
+	"prestop"	: `prestop,
+	"poststop"	: `poststop,
+    ];
+
+    // Dialog caption label
     string caption = _("Special profile settings");
     term contents = `HBox(`HSpacing(1.5),
         `VBox(
         `VSpacing(1),
-		// frame label
+	// frame label
         `Frame(_("Special profile settings"), `HBox(`HSpacing(1),
             `VBox(
                 `VSpacing(0.2),
@@ -52,45 +61,62 @@ global define any ProfileSettingsDialog () ``{
                 `HBox(
                     `HSpacing(0.5),
                     // Text entry label (profile description)
-                    `MultiLineEdit(`id(`desc),_("&Description")),
+                    `MultiLineEdit(`id(`desc),_("&Description"),
+			settings ["description"]:""),
                     `HSpacing(0.5)
                     ),
                 `VSpacing(0.2),
-                // Text entry label
-                `TextEntry(`id(`prestart),_("Pr&e Start Script")),
+		`HBox(
+		    // text entry
+		    `TextEntry(`id(`prestart),_("Pr&e Start Script"),
+			settings ["prestart"]:""),
+		    `VBox(
+			`Label (""),
+			// button label
+			`PushButton(`id("prestart"), _("Bro&wse...")))
+		),
                 `VSpacing(0.2),
-                // Text entry label
-                `TextEntry(`id(`poststart),_("Po&st Start Script")),
+		`HBox(
+		    // text entry
+                    `TextEntry(`id(`poststart),_("Po&st Start Script"),
+			settings ["poststart"]:""),
+		    `VBox(
+			`Label (""),
+			`PushButton(`id("poststart"), _("Bro&wse...")))
+		),
                 `VSpacing(0.2),
-                // Text entry label
-                `TextEntry(`id(`prestop),_("P&re Stop Script")),
+		`HBox(
+		    // text entry
+		    `TextEntry(`id(`prestop),_("P&re Stop Script"),
+			settings ["prestop"]:""),
+		    `VBox(
+			`Label (""),
+			`PushButton(`id("prestop"), _("Bro&wse...")))
+		),
                 `VSpacing(0.2),
-                // Text entry label
-                `TextEntry(`id(`poststop),_("Pos&t Stop Script")),
+		`HBox(
+		    // text entry
+		    `TextEntry(`id(`poststop), _("Pos&t Stop Script"),
+			settings ["poststop"]:""),
+		    `VBox(
+			`Label (""),
+			`PushButton(`id("poststop"), _("Bro&wse...")))
+		),
                 `VSpacing(0.2),
                 `Left(`CheckBox(`id(`secure_ch),
-				// checkbox label
-                    _("Set file &permissions of all scripts secure (0700)."))),
+		    // checkbox label
+                    _("Set file &permissions of all scripts secure (0700)."), true)),
                 `VSpacing(0.2)
             ),
             `HSpacing(1))),
 	    `VSpacing(1)),
         `HSpacing(1.5));
 
-
     Wizard::RestoreBackButton ();
 
-    Wizard::SetContentsButtons ( caption,
-				contents,
-                HELPS["profilesettings"]:"",
-				CancelButtonLabel (),
-				OKButtonLabel () );
+    Wizard::SetContentsButtons ( caption, contents, HELPS["profilesettings"]:"",
+	Label::CancelButton (), Label::OKButton () );
 
-    UI::ChangeWidget(`id(`desc), `Value, lookup(settings,"description",""));
-    UI::ChangeWidget(`id(`prestart), `Value, lookup(settings,"prestart",""));
-    UI::ChangeWidget(`id(`poststart), `Value, lookup(settings,"poststart",""));
-    UI::ChangeWidget(`id(`prestop), `Value, lookup(settings,"prestop",""));
-    UI::ChangeWidget(`id(`poststop), `Value, lookup(settings,"poststop",""));
     if (action == "edit")
         UI::ChangeWidget(`id(`name), `Value, edited);
     else
@@ -100,148 +126,161 @@ global define any ProfileSettingsDialog () ``{
     while (true)
     {
 	ret = UI::UserInput ();
-	if (ret == `back || ret == `cancel)
+	if (is (ret, string))
+	{
+	    symbol file_s = string2symbol [ret]:nil;
+	    if (file_s == nil)
+		continue;
+	    string file = UI::QueryWidget(`id(file_s), `Value);
+	    file = PopupFile ((file != "")? "/" : file);
+	    UI::ChangeWidget (`id(file_s), `Value, file);
+	}
+	else if (ret == `back || ret == `cancel)
 	{
 	    break;
 	}
-    else if (ret == `next)
+	else if (ret == `next)
 	{
-        boolean secure = UI::QueryWidget(`id(`secure_ch), `Value);
-        string selected = UI::QueryWidget(`id(`name), `Value);
+	    boolean secure = UI::QueryWidget(`id(`secure_ch), `Value);
+	    string selected = UI::QueryWidget(`id(`name), `Value);
 
-        if (!ProfileManager::CheckNameValidity(selected))
-        {
-			// Popup text (wrong data):
-            UI::MessagePopup(_("Choose valid name."));
-            continue;
-        }
+	    if (!ProfileManager::CheckNameValidity(selected))
+	    {
+		// Popup text (wrong data):
+		Popup::Message(_("Choose valid name."));
+		continue;
+	    }
 
-        map new_settings = $[];
-        new_settings = add (new_settings, "prestart", UI::QueryWidget(`id(`prestart), `Value));
-        new_settings = add (new_settings, "poststart", UI::QueryWidget(`id(`poststart), `Value));
-        new_settings = add (new_settings, "prestop", UI::QueryWidget(`id(`prestop), `Value));
-        new_settings = add (new_settings, "poststop", UI::QueryWidget(`id(`poststop), `Value));
+	    map new_settings = $[];
+	    new_settings["prestart"] = UI::QueryWidget(`id(`prestart), `Value);
+	    new_settings["poststart"]= UI::QueryWidget(`id(`poststart), `Value);
+	    new_settings["prestop"] = UI::QueryWidget(`id(`prestop), `Value);
+	    new_settings["poststop"] = UI::QueryWidget(`id(`poststop), `Value);
 
-        if (!ProfileManager::CheckFilesValidity(new_settings))
-        {
-			// Popup text (file paths are wrong):
-			UI::MessagePopup(_("Choose valid paths to scripts."));
-            continue;
-        }
+	    list files = ProfileManager::CheckFilesValidity(new_settings);
+	    if (files != [])
+	    {
+		// Popup text (file paths are wrong):
+		Popup::Error(sformat (_("These are not executable files:
 
-        // we don't need to check description
-        new_settings = add (new_settings, "name", selected);
-        new_settings = add (new_settings, "description", UI::QueryWidget(`id(`desc), `Value));
+%1"), mergestring (files, "\n")));
+		continue;
+	    }
 
-        if (action == "new")
-        {
-            if (lookup(profiles, selected, nil) != nil)
-            {
-				// Popup text:
-                UI::MessagePopup(_("A profile with this name already exists."));
-                continue;
-            }
-            ProfileManager::AddProfile(selected);
-            ProgressPopup("", 0, 100);
-            if (!ProfileManager::Wait())
-            {
-                // Error popup text, %1 is additional translated error message
-                UI::ErrorPopup(sformat(_("Adding new profile was not successful:
+	    new_settings ["name"] = selected;
+	    new_settings ["description"] = UI::QueryWidget(`id(`desc), `Value);
+
+	    if (action == "new")
+	    {
+		if (haskey (profiles, selected))
+		{
+		    // Popup text:
+		    Popup::Message(_("A profile with this name already exists."));
+		    continue;
+		}
+		ProfileManager::AddProfile(selected);
+		ProgressPopup("", 0, 100);
+		if (!ProfileManager::Wait())
+		{
+		    // Error popup text, %1 is additional error message
+		    Popup::Error(sformat(_("Adding new profile was not successful:
 %1
 "), ProfileManager::scpm_error));
-                // continue;
-            }
-            else
-            {
-                ProfileManager::profiles = add (ProfileManager::profiles,
+		    continue;
+		}
+		else
+		{
+		    ProfileManager::profiles = add (ProfileManager::profiles,
                         selected, "");
 
-                if (ProfileManager::auto)
-                    ProfileManager::active_profile = selected;
+		    if (ProfileManager::auto)
+			ProfileManager::active_profile = selected;
 
-                ProfileManager::profile_settings = new_settings;
-                if (!ProfileManager::SetProfile(selected))
-                {
-                    UI::ErrorPopup(sformat(
-                        // Error popup text, %1 is additional error message
-                        _("Writing profile settings was not successful:
+		    ProfileManager::profile_settings = new_settings;
+		    if (!ProfileManager::SetProfile (selected, new_settings))
+		    {
+			Popup::Error(sformat(
+			    // Error popup text, %1 is additional error message
+			    _("Writing profile settings was not successful:
 %1
 "),
-                        ProfileManager::scpm_error));
-                }
-            }
-        }
-        else if (action == "copy")
-        {
-            if (lookup(profiles, selected, nil) != nil)
-            {
-				// Popup text
-                UI::MessagePopup(_("A profile with this name already exists."));
-                continue;
-            }
-            ProfileManager::CopyProfile(edited, selected);
-            ProgressPopup("",0,100);
-            if (!ProfileManager::Wait())
-            {
-                // Error popup text, %1 is additional translated error message
-                UI::ErrorPopup(sformat(_("Copying profile was not successful:
+			    ProfileManager::scpm_error));
+		    }
+		}
+	    }
+	    else if (action == "copy")
+	    {
+		if (haskey (profiles, selected))
+		{
+		    // Popup text
+		    Popup::Message(_("A profile with this name already exists."));
+		    continue;
+		}
+		ProfileManager::CopyProfile(edited, selected);
+		ProgressPopup("",0,100);
+		if (!ProfileManager::Wait())
+		{
+		    // Error popup text, %1 is additional error message
+		    Popup::Error(sformat(_("Copying profile was not successful:
 :%1
 "), ProfileManager::scpm_error));
-                //    continue;
-            }
-            else
-            {
-                ProfileManager::profiles = add (ProfileManager::profiles,
+		    continue;
+		}
+		else
+		{
+		    ProfileManager::profiles = add (ProfileManager::profiles,
                         selected, "");
 
-                ProfileManager::profile_settings = new_settings;
-                if (!ProfileManager::SetProfile(selected))
-                {
-                    UI::ErrorPopup(sformat(
-                        // Error popup text, %1 is additional error message
-                        _("Writing profile settings was not successful:
+		    ProfileManager::profile_settings = new_settings;
+		    if (!ProfileManager::SetProfile(selected, new_settings))
+		    {
+			Popup::Error(sformat(
+			    // Error popup text, %1 is additional error message
+			    _("Writing profile settings was not successful:
 %1
 "),
-                        ProfileManager::scpm_error));
-                }
-            }
-        }
-        else if (action == "edit")
-        {
-            if (selected != edited)
-            {
+			    ProfileManager::scpm_error));
+		    }
+		}
+	    }
+	    else if (action == "edit")
+	    {
+		if (selected != edited)
+		{
 
-                if (lookup(profiles, selected, nil) != nil)
-                {
-					// Popup text
-                    UI::MessagePopup(_("A profile with this name already exists."));
-                    continue;
-                }
-                if (!ProfileManager::RenameProfile(edited, selected))
-                {
-                    // Error popup text, %1 is additional error text
-                    UI::ErrorPopup(sformat(_("Renaming profile was not successful:
-%1
-"), ProfileManager::scpm_error));
-                    continue;
-                }
-            }
-            if (ProfileManager::ModifiedSettings(new_settings))
-            {
-                ProfileManager::profile_settings = new_settings;
-                if (!ProfileManager::SetProfile(selected))
-                {
-                    // Error popup text, %1 is additional error message
-                    UI::ErrorPopup(sformat(
-                        _("Writing profile settings was not successful:
+		    if (haskey (profiles, selected))
+		    {
+			// Popup text
+			Popup::Message(_("A profile with this name already exists."));
+			continue;
+		    }
+		    if (!ProfileManager::RenameProfile(edited, selected))
+		    {
+			// Error popup text, %1 is additional error text
+			Popup::Error(sformat(_("Renaming profile was not successful:
 %1
 "),
-                        ProfileManager::scpm_error));
-                }
-            }
-        }
-        if (secure)
-            ProfileManager::SetFilePermitions();
+			    ProfileManager::scpm_error));
+			continue;
+		    }
+		}
+		if (ProfileManager::ModifiedSettings(new_settings))
+		{
+		    ProfileManager::profile_settings = new_settings;
+		    if (!ProfileManager::SetProfile (selected, new_settings))
+		    {
+			// Error popup text, %1 is additional error message
+			Popup::Error(sformat(
+			    _("Writing profile settings was not successful:
+%1
+"),
+			    ProfileManager::scpm_error));
+		    }
+		}
+	    }
+	    if (secure && !ProfileManager::SetFilePermitions (new_settings))
+		// Error popup text
+		Popup::Error(_("Settings file permitions was not successful."));
 	    break;
 	}
     };
@@ -255,7 +294,6 @@ global define any ProfileSettingsDialog () ``{
  */
 global define any SwitchDialog () ``{
 
-    // FIXME: workaround for resource groups
     boolean use_rg = ProfileManager::use_rg;
     string active_group = "";
 
@@ -279,9 +317,8 @@ global define any SwitchDialog () ``{
         `HBox(
             `HSpacing(1),
             // Label text
-            `Left(`Label(_("New Profile:"))),
+            `Label(_("New Profile:")),
             `Right(`Heading(selected)),
-	    `HStretch(),
             `HSpacing(2)
             ),
         `VSpacing(1),
@@ -340,7 +377,6 @@ global define any SwitchDialog () ``{
             // Label text
             `Left(`Label(_("New Profile"))),
             `Right(`Heading(selected)),
-	    `HStretch(),
             `HSpacing(2)
             ),
         `VSpacing(1),
@@ -384,7 +420,7 @@ global define any SwitchDialog () ``{
     Wizard::RestoreBackButton ();
 
     Wizard::SetContentsButtons ( caption, contents, HELPS["switch"]:"",
-				CancelButtonLabel (), OKButtonLabel () );
+				Label::CancelButton (), Label::OKButton () );
 
     list resources_as_items = (!use_rg)? ProfileManager::GetResourcesAsItems():
 	ProfileManager::GetGroupsAsItems();
@@ -431,8 +467,8 @@ global define any SwitchDialog () ``{
     {
 	ret = UI::UserInput ();
 
-	// FIXME: string|integer instead of any
-	any selected = UI::QueryWidget(`id(`modified), `CurrentItem);
+	// TODO string|integer instead of any?
+	any selected_res = UI::QueryWidget(`id(`modified), `CurrentItem);
 	if (ret == `back || ret == `cancel)
 	{
             break;
@@ -440,17 +476,20 @@ global define any SwitchDialog () ``{
 	// only for resource groups
 	else if (contains ([`save_b,`ignore_b, `modified], ret) && use_rg)
 	{
-	    // FIXME: disable changing when modified is set or
-	    // unset "modified" flag sometimes (when we are on default_save)?
-	    boolean set = ProfileManager::SetGroupSaveFlag (selected);
-	    UI::ChangeWidget(`id(`modified), `Item (selected,0), set ? "X":"");
+	    boolean set = ProfileManager::SetGroupSaveFlag (selected_res);
+	    UI::ChangeWidget(`id(`modified), `Items,
+		ProfileManager::GetGroupsAsItems());
+//	    UI::ChangeWidget(`id(`modified), `Item (selected_res,0),
+//		set ? "X":"");
+	    UI::ChangeWidget(`id(`modified), `CurrentItem, selected_res);
 	}
 	// only for resource groups!
 	else if (ret == `details)
 	{
-	    ProfileManager::current_resource_group = selected;
+	    ProfileManager::current_resource_group = selected_res;
 	    break;
 	}
+	// only for resource sets...
         else if (ret ==`modified || ret ==`select_button)
         {
             ProfileManager::active_resource =
@@ -467,7 +506,6 @@ global define any SwitchDialog () ``{
             ProfileManager::SaveSwitchInfo();
             UI::ChangeWidget(`id(`modified), `Items,
                     ProfileManager::GetResourcesAsItems());
-            // is this necessary? TODO change only one item
             UI::ChangeWidget(`id(`modified), `CurrentItem,
                     ProfileManager::active_resource);
             continue;
@@ -497,7 +535,7 @@ global define any SwitchDialog () ``{
             if (!ProfileManager::Wait())
             {
                 // Error popup text, %1 is additional translated error message
-                UI::ErrorPopup (sformat(_("Saving the profile was not successful:
+                Popup::Error (sformat(_("Saving the profile was not successful:
 %1
 "),
                     ProfileManager::scpm_error));
@@ -507,17 +545,15 @@ global define any SwitchDialog () ``{
             ProgressPopup("last",15,100);
             if (!ProfileManager::Wait())
                 // Error popup text, %1 is additional translated error message
-                UI::ErrorPopup (sformat(_("Switching was not successful:
+                Popup::Error (sformat(_("Switching was not successful:
 %1
 "),
                     ProfileManager::scpm_error));
             else
                 ProfileManager::active_profile = selected;
 	    break;
-	    // FIXME active profile was not seleceted after switch!
 	    }
-        };
-
+    };
     return ret;
 }
 
@@ -567,16 +603,25 @@ global define symbol DetailsSwitchDialog () ``{
     }
 
     list actions_list = [
-	 `item(`id(`save), _("&Save")),
-	 `item(`id(`ignore), _("&Ignore")),
+	// button label
+	 `item(`id(`save), _("&Save resource")),
+	// button label
+	 `item(`id(`ignore), _("&Ignore resource")),
+	// button label
 	 `item(`id(`save_p), _("Save to &all profiles")),
+	// button label
 	 `item(`id(`patch), _("&Patch all profiles")),
-	// TODO: own button for "all resources"?
-	 `item(`id(`save_all), _("Save all &resources")),
-	 `item(`id(`ignore_all), _("I&gnore all resources"))
+    ];
+    list all_actions_list = [
+	// button label
+	 `item(`id(`save_all), _("&Save all resources")),//&r
+	// button label
+	 `item(`id(`ignore_all), _("&Ignore all resources"))//&g
     ];
     list show_list = [
+	// button label
 	 `item(`id(`show_ch), _("Sho&w changes")),
+	// button label FIXME
 	 `item(`id(`show_r), _("Show &resource"))
     ];
     string groupname = ProfileManager::current_resource_group;
@@ -614,10 +659,14 @@ global define symbol DetailsSwitchDialog () ``{
                 ),
                 `VSpacing(0.2),
 		`HBox(
-		    // menubutton label
-		    `MenuButton(`id(`action_b), `opt(`key_F3), _("&Action"),
+		    `MenuButton(`id(`action_b), `opt(`key_F3),
+			// menubutton label
+			_("&Action"),
 			actions_list),
-		    `Left(
+		    `PushButton(`id(`all_action_b), `opt(`key_F4),
+			// button label
+			_("Save / Ignore A&ll")), // all_actions_list),
+		    `Right(
 			// menubutton label
 			`MenuButton(`id(`show_b), `opt(`key_F2), _("&Show"),
 			    show_list))
@@ -632,7 +681,7 @@ global define symbol DetailsSwitchDialog () ``{
     );
 
     Wizard::SetContentsButtons ( caption, contents, HELPS["switchdetails"]:"",
-                BackButtonLabel (), OKButtonLabel () );
+                Label::BackButton (), Label::OKButton () );
 
     Wizard::ReplaceAbortButton (`Empty());
 
@@ -684,21 +733,48 @@ global define symbol DetailsSwitchDialog () ``{
 	    resources[selected,"save_mode"] = "patch_all";
 	    UI::ChangeWidget (`id(`resources), `Item (selected,0),_("patch"));
 	}
+	else if (ret == `all_action_b)
+	{
+	    foreach (`i, `resource, resources, ``{
+		if (!is(i, integer) || ! is(resource,map))
+		    return;
+		resource["save"] = !(resource["save"]:false);
+		resource["save_mode"] = "normal";
+		UI::ChangeWidget (`id(`resources), `Item (i,0),
+		    resource["save"]:true ? _("save") : _("ignore"));
+	    });
+	}
+	/*
 	else if (ret ==`save_all)
 	{
-	    foreach (`name, `resource, resources, ``{
+	    foreach (`i, `resource, resources, ``{
+		if (!is(i, integer) || ! is(resource,map))
+		    return;
 		resource["save"] = true;
 		resource["save_mode"] = "normal";
-		UI::ChangeWidget (`id(`resources), `Item (name,0),_("save"));
+		UI::ChangeWidget (`id(`resources), `Item (i,0),_("save"));
 	    });
 	}
 	else if (ret ==`ignore_all)
 	{
-	    foreach (`name, `resource, resources, ``{
+	    foreach (`i, `resource, resources, ``{
+		if (!is(i, integer) || ! is(resource,map))
+		    return;
 		resource["save"] = false;
 		resource["save_mode"] = "normal";
-		UI::ChangeWidget (`id(`resources), `Item (name,0),_("ignore"));
+		UI::ChangeWidget (`id(`resources), `Item (i,0),_("ignore"));
 	    });
+	}
+	*/
+	else if (ret == `show_ch)
+	{
+	    ProfileManager::active_resource = selected;
+	    ShowChangesPopup();
+	}
+	// FIXME show_r: no action
+	else if (ret == `show_r)
+	{
+	    y2internal ("?");
 	}
 	else if (ret == `back || ret == `cancel)
 	{
@@ -752,13 +828,12 @@ profile nor does it start or stop services."))),
             `SelectionBox(`id(`profiles),
                  "", maplist(`name, `desc, profiles, ``{ return name; })),
             `VSpacing(1),
-	    // FIXME what about styleguide? (=OK on the left)
 	        `HBox(
 	            `HSpacing(1),
 	            `Left(`PushButton(`id(`cancel), `opt (`key_F9),
-                    CancelButtonLabel())),
+                    Label::CancelButton())),
 	            `Right(`PushButton(`id(`ok), `opt(`default, `key_F10),
-                    OKButtonLabel())),
+                    Label::OKButton())),
 	            `HSpacing(1)
 	            ),
             `VSpacing(1)),
@@ -791,7 +866,7 @@ profile nor does it start or stop services."))),
                 if (selected == nil)
                 {
 					// Popup text
-                    UI::MessagePopup(_("Select a profile to copy."));
+                    Popup::Message(_("Select a profile to copy."));
                     continue;
                 }
                 ProfileManager::profile_action = "copy";
@@ -844,7 +919,7 @@ global define boolean ProgressPopup(string position, integer start, integer end)
             `VSpacing(1),
 	        `HBox(
 	            `Right(`PushButton(`id(`close), `opt(`default, `key_F10),
-                    CloseButtonLabel())),
+                    Label::CloseButton())),
 	            `HSpacing(1)
 	            ),
             `VSpacing(1)),
@@ -963,7 +1038,7 @@ global define boolean IntroductionTextPopup() ``{
             `VSpacing(1),
             `RichText(`id(`info),""),
             `VSpacing(0.5),
-            `PushButton(`id(`ok), `opt(`default, `key_F10), OKButtonLabel()),
+            `PushButton(`id(`ok), `opt(`default, `key_F10), Label::OKButton()),
             `VSpacing(0.5)),
         `HSpacing(1.5)
         ));
@@ -993,7 +1068,7 @@ global define boolean ShowChangesPopup() ``{
             `VSpacing(1),
             `RichText(recoded),
             `VSpacing(1),
-            `PushButton(`id(`ok), `opt(`default, `key_F10), OKButtonLabel()),
+            `PushButton(`id(`ok), `opt(`default, `key_F10), Label::OKButton()),
             `VSpacing(1)),
         `HSpacing(1.5)
         ));
@@ -1010,15 +1085,13 @@ global define boolean ShowChangesPopup() ``{
  */
 global define symbol ConfigureResourcesDialog () ``{
 
-    map resource_groups = ProfileManager::GetResourceGroups();
-
     /**
      * helper function for building table items with resource groups
      */
     define list resource_groups_items() ``{
 
 	list items = [];
-	foreach (`name, `group, resource_groups, ``{
+	foreach (`name, `group, ProfileManager::GetResourceGroups(), ``{
 	    if (group["what"]:"" == "deleted")
 		return;
 	    if (group["active"]:false)
@@ -1029,6 +1102,14 @@ global define symbol ConfigureResourcesDialog () ``{
 		    `item(`id(name),"", name, group["description"]:""));
 	});
 	return items;
+    }
+
+    // read resource groups every time entering the dialog
+    if (!ProfileManager::ReadResourceGroups())
+    {
+	// error message
+	Report::Error( sformat(_("Cannot read resource groups:\n%1"),
+	    ProfileManager::scpm_error));
     }
 
     // Caption of the dialog:
@@ -1071,7 +1152,7 @@ global define symbol ConfigureResourcesDialog () ``{
     );
 
     Wizard::SetContentsButtons ( caption, contents, HELPS["resources"]:"",
-                BackButtonLabel (), OKButtonLabel () );
+                Label::CancelButton (), Label::OKButton () );
 
     Wizard::ReplaceAbortButton (`Empty());
 
@@ -1083,24 +1164,22 @@ global define symbol ConfigureResourcesDialog () ``{
 
     any ret = nil;
     string selected = "";
+    boolean modified = false;
     while (true)
     {
 	ret = UI::UserInput ();
 	selected = UI::QueryWidget(`id(`rgroups), `CurrentItem);
 	if (ret == `delete_button)
 	{
-	    if (!(resource_groups[selected, "user_defined"]:false))
-		// Popup text (user wants to delete predefined resource group)
-		UI::MessagePopup(_("You cannot delete predefined resource group."));
-	    else
+	    if (!ProfileManager::GroupDeletable (selected))
+		// Popup text
+		Popup::Message(_("You cannot delete predefined resource group."));
+	    // yes/no popup
+	    else if (Popup::YesNo(sformat(_("Delete group %1?"), selected)))
 	    {
-		if (resource_groups[selected, "what"]:"" == "added")
-		{
-		    resource_groups = remove (resource_groups, selected);
-		}
-		else
-		    resource_groups[selected, "what"] = "deleted";
+		ProfileManager::MarkGroupDeleted (selected);
 		UI::ChangeWidget(`id(`rgroups),`Items, resource_groups_items());
+		modified = true;
 	    }
 	    continue;
 	}
@@ -1110,27 +1189,21 @@ global define symbol ConfigureResourcesDialog () ``{
 	    if (ret == `add_button)
 		group = ResourceGroupPopup($[]);
 	    else
-		group = ResourceGroupPopup(eval(resource_groups[selected]:$[]));
+		group = ResourceGroupPopup (ProfileManager::GetGroup(selected));
 	    if (group != $[])
 	    {
-		// if name was changed, mark the old key as deleted
-		if (group["what"]:"" == "renamed")
-		{
-		    resource_groups = remove (resource_groups, group["org_name"]:"");
-		}
-		resource_groups = add (resource_groups, group["name"]:"",group);
+		ProfileManager::ChangeGroup (group);
 		UI::ChangeWidget(`id(`rgroups),`Items, resource_groups_items());
 		UI::ChangeWidget(`id(`rgroups), `CurrentItem, group["name"]:"");
+		modified = true;
 	    }
 	    continue;
 	}
 	else if (ret == `rgroups)
 	{
-	    boolean active = !resource_groups[selected, "active"]:false;
-	    resource_groups[selected,"active"] = active;
-	    // TODO: set user_modified now?
-	    resource_groups[selected,"user_modified"] = true;
+	    boolean active = ProfileManager::MarkGroupActive (selected);
 	    UI::ChangeWidget (`id(`rgroups),`Item (selected, 0), active?"X":"");
+	    modified = true;
 	}
 	else if (ret == `back || ret == `cancel)
 	{
@@ -1139,13 +1212,28 @@ global define symbol ConfigureResourcesDialog () ``{
 	}
 	else if (ret == `next)
 	{
-	    // really delete/add/modify
-	    // TODO now copy local structure to global resource_groups
-	    if (UI::YesNoPopup (_("Apply changes to Resource Groups?")))
+	    if (!modified)
+		break;
+	    // yes/no popup
+	    if (Popup::YesNo (_("Apply changes to Resource Groups now?
+(Resource database will be rebuilded.)")))
 	    {
-		ProfileManager::UpdateResourceGroups(resource_groups);
-		// TODO if there is "Apply", writing could be done now
+		// really delete/add/modify
+		if (!ProfileManager::SaveResourceGroups ())
+		{
+		    // Error popup text, %1 is additional error text
+		    Popup::Error(sformat(_("Saving resource groups failed:
+%1"),
+			ProfileManager::scpm_error));
+	}
+		// TODO ask for rebuild?
+		else
+		{
+		    ProfileManager::RebuildDB();
+		}
 	    }
+	    else
+		continue;
 	    break;
 	}
     };
@@ -1177,8 +1265,8 @@ global define string GetService() ``{
 	    `ComboBox( `id(`services), _("Available &Services"), service_items),
 	    `VSpacing(0.2),
 	    `HBox(
-		`PushButton(`id(`ok),`opt(`default, `key_F10), OKButtonLabel()),
-		`PushButton(`id(`cancel), `opt (`key_F9), CancelButtonLabel())
+		`PushButton(`id(`ok),`opt(`default, `key_F10), Label::OKButton()),
+		`PushButton(`id(`cancel), `opt (`key_F9), Label::CancelButton())
 	    ),
 	    `VSpacing(0.2)),
 	`HSpacing(1)
@@ -1197,15 +1285,15 @@ global define string GetService() ``{
 	}
 	else if (ret == `ok)
 	{
-	    // check service existence TODO it has to exist, if combo is not editable
+	    // check service existence
+	    // TODO it has to exist, if combo is not editable
 	    if (service != "" && !SCR::Read (.init.scripts.exists, service))
 	    {
-		UI::ErrorPopup (sformat(_("Service %1 does not exist."),
-		    service));
-		// TODO: ask if really use it
-		continue;
+		// yes/no popup
+		if (!Popup::YesNo (sformat(_("Service %1 does not exist.
+Are you sure?"), service)))
+		    continue;
 	    }
-	    y2milestone ("service %1 selected", service);
 	}
     } while (ret != `ok && ret != `cancel);
 
@@ -1236,8 +1324,8 @@ global define string GetFile() ``{
 	    ),
 	    `VSpacing(0.2),
 	    `HBox(
-		`PushButton(`id(`ok),`opt(`default, `key_F10), OKButtonLabel()),
-		`PushButton(`id(`cancel), `opt (`key_F9), CancelButtonLabel())
+		`PushButton(`id(`ok),`opt(`default, `key_F10), Label::OKButton()),
+		`PushButton(`id(`cancel), `opt (`key_F9), Label::CancelButton())
 	    ),
 	    `VSpacing(0.2)),
 	`HSpacing(1)
@@ -1261,14 +1349,12 @@ global define string GetFile() ``{
 	}
 	else if (ret == `ok)
 	{
-	    // TODO: could it be directory?
 	    if (filename != "" && SCR::Read (.target.size, filename) < 0)
 	    {
 		// error popup
-		UI::ErrorPopup (_("Such a file does not exist."));
+		Popup::Error (_("Such a file does not exist."));
 		continue;
 	    }
-	    y2milestone ("file %1 selected", filename);
 	}
     } while (ret != `ok && ret != `cancel);
 
@@ -1283,8 +1369,6 @@ global define string GetFile() ``{
  */
 global define map ResourceGroupPopup (map group) ``{
 
-y2internal ("current group: %1", group);
-
     /**
      * Scan table items for presence of given resource
      */
@@ -1296,8 +1380,9 @@ y2internal ("current group: %1", group);
 
     string groupname = group["name"]:"";
     string descr = group["description"]:"";
-    string what = (group == $[])? "added": "edited";
+    string what = (group == $[]|| group["what"]:""=="added")? "added": "edited";
     list items = [];
+    map org_group = eval (group);
     // map for saving user_defined flags of each resource
     map user_defined = $[];
 
@@ -1337,12 +1422,11 @@ y2internal ("current group: %1", group);
 	),
         `VSpacing(0.5),
 	`HBox(
-	    // FIXME what about styleguide? (=OK on the left)
 	    `HSpacing(1.5),
 	    `Left(
-		`PushButton(`id(`cancel),`opt (`key_F9), CancelButtonLabel())),
+		`PushButton(`id(`cancel),`opt (`key_F9), Label::CancelButton())),
 	    `Right(
-		`PushButton(`id(`ok), `opt(`default,`key_F10),OKButtonLabel())),
+		`PushButton(`id(`ok), `opt(`default,`key_F10),Label::OKButton())),
 	    `HSpacing(1.5)
 	),
         `VSpacing(0.5)
@@ -1364,11 +1448,19 @@ y2internal ("current group: %1", group);
     UI::ChangeWidget(`id(`resources), `Items, items);
     UI::SetFocus(`id(`name));
 
+    y2milestone ("edited group: %1", group);
+    if (group["user_defined"]:true == false)
+    {
+	// default group cannot be renamed
+	UI::ChangeWidget(`id(`name), `Enabled, false);
+    }
+
     any ret = nil;
     do
     {
-        ret = UI::UserInput();
-	selected = UI::QueryWidget(`id(`resources), `CurrentItem);
+        ret		= UI::UserInput ();
+	groupname	= UI::QueryWidget (`id(`name), `Value);
+	string selected	= UI::QueryWidget (`id(`resources), `CurrentItem);
 
 	if (ret == `resources)
 	{
@@ -1388,14 +1480,15 @@ y2internal ("current group: %1", group);
 	    if (!user_defined[selected]:false)
 	    {
 		// Popup text (user wants to delete predefined resource)
-		UI::MessagePopup(_("You cannot delete predefined resource."));
+		Popup::Message(_("You cannot delete predefined resource."));
 		continue;
 	    }
-	    // Popup text (confirmation), %1 is name of file or service
-	    if (UI::YesNoPopup(sformat(_("Really delete \'%1\' from this group?"),
+	    if (Popup::YesNo(sformat(
+// Popup text (confirmation), %1 is name of file or service
+_("Really delete resource \'%1\' from this group?"),
 		selected)))
 	    {
-		y2milestone ("deleting %1", selected);
+		y2debug ("deleting %1 from group %2", selected, groupname);
 		// delete entry from local items
 		items = filter (`i, items, ``(select(i,2,"") != selected));
 		UI::ChangeWidget(`id(`resources), `Items, items);
@@ -1406,7 +1499,7 @@ y2internal ("current group: %1", group);
 	    string service = GetService ();
 	    if (service != "" && !has_resource (service,"service"))
 	    {
-		y2milestone ("new service %1 for group %2", service, groupname);
+		y2debug ("new service %1 for group %2", service, groupname);
 		items = add (items, `item(`id(service), "", service,"service"));
 		user_defined [service] = true;
 		UI::ChangeWidget(`id(`resources), `Items, items);
@@ -1417,7 +1510,7 @@ y2internal ("current group: %1", group);
 	    string file = GetFile ();
 	    if (file != "" && !has_resource (file,"file"))
 	    {
-		y2milestone ("new file %1 for group %2", file, groupname);
+		y2debug ("new file %1 for group %2", file, groupname);
 		items = add (items, `item(`id(file), "", file, "file"));
 		user_defined [file] = true;
 		UI::ChangeWidget(`id(`resources), `Items, items);
@@ -1425,36 +1518,59 @@ y2internal ("current group: %1", group);
 	}
 	if (ret == `ok)
 	{
-	    y2milestone ("(temporary) saving resource group %1", groupname);
-	    // ---------- check if all is OK:TODO unique name
-	    groupname = UI::QueryWidget (`id(`name), `Value);
-	    descr = UI::QueryWidget (`id(`descr), `Value);
-	    list resources = maplist (`i, items, ``{
+	    // check name contents
+	    if (!ProfileManager::CheckNameValidity (groupname))
+	    {
+		// Popup text (wrong data):
+		Popup::Message(_("Choose valid name."));
+		continue;
+	    }
+	    // check possible name conflicts
+	    if (groupname != group["name"]:"")
+	    {
+		if (ProfileManager::GroupnameExists (groupname))
+		{
+		    // error message, %1 is group name
+		    Popup::Error(sformat(_("Resource group \"%1\" already exists.
+Choose another name."), groupname));
+		    continue;
+		}
+		if (group["name"]:"" != "")
+		{
+		    group["org_name"]	= group["name"]:"";
+		}
+		if (what != "added")
+		{
+		    what		= "renamed";
+		}
+		group["name"]		= groupname;
+	    }
+	    group["description"]	= UI::QueryWidget (`id(`descr), `Value);
+	    group["resources"]		= maplist (`i, items, ``{
 		return $[
-		    "active":	(select (i,1,"") == "X"),
+		    "active":	select (i,1,"") == "X",
 		    "name":	select (i,2,""),
 		    "type":	select (i,3,""),
 		    "user_defined": user_defined[select (i,2,"")]:false
 		];
 	    });
-	    // TODO
-	    if (what == "added" || true) // check are OK and anything changed
+	    if (what == "added")
 	    {
-		if (groupname != group["name"]:groupname)
-		{
-		    // FIXME workaround for renaming groups
-		    group["org_name"]	= group["name"]:"";
-		    what		= "renamed";
-		}
-		group["what"]		= what;
-		group["name"]		= groupname;
-		group["description"]	= descr;
-		group["resources"]	= resources;
-		group["user_modified"]	= true;
-		if (what == "added")
-		    group["user_defined"] = true;
-y2warning ("group: %1", group);
+		group["user_defined"]	= true;
+		group["active"]		= true;
 	    }
+	    boolean group_modified = false;
+	    foreach (`k,`v, group,``{
+		if (org_group[k]:nil != v)
+		    group_modified = true;
+	    });
+	    if (group_modified)
+	    {
+		group["user_modified"]	= true;
+		group["what"]		= what;
+		y2milestone ("resource group %1 modified", groupname);
+	    }
+	    else ret = `back;
 	}
 	if (ret == `cancel || ret == `back)
 	{
@@ -1466,7 +1582,6 @@ y2warning ("group: %1", group);
 
     return group;
 }
-
 
 /* EOF */
 }
