@@ -1,4 +1,9 @@
 -------------------------------------------------------------------
+Sun Sep 14 21:05:31 CEST 2003 - adrian@suse.de
+
+- make it working in kcontrol
+
+-------------------------------------------------------------------
 Fri Sep 12 14:14:13 CEST 2003 - jsuchome@suse.cz
 
 - do not recode mesages from scpm (#30498)
