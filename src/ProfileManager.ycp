@@ -22,7 +22,7 @@ import "Summary";
 //include "./routines.ycp";
 include "profile-manager/routines.ycp";
 
-global boolean first_time = false; // to some file!
+global boolean first_time = false;
 global boolean enabled = false;
 global boolean close_popups = false;
 
@@ -40,7 +40,8 @@ global list resource_sets_predefined = [];//[ "typical", "network_only" ];
 global list resource_sets_individual = [];//[ "my_lovely_one" ]; // user cannot create this !
 
 global map switch_info = $[];
-global string profile_action = nil;
+global string profile_action = "";
+global map state = $[];
 
 /**
  * Abort function
@@ -72,7 +73,7 @@ global define boolean Modified() ``{
  */
 global define boolean Read() ``{
 
-    /* Xprofile-manager read dialog caption */
+    // profile-manager read dialog caption:
     string caption = _("Initializing profile-manager configuration");
 
     integer steps = 5;
@@ -82,68 +83,78 @@ global define boolean Read() ``{
 
 
     Progress::New( caption, " ", steps, [
+		// progress stage
 	    _("Read the SCPM state"),
+		// progress stage
 	    _("Read the list of profiles"),
+		// progress stage
 	    _("Read the profiles descriptions"),
+		// progress stage
 	    _("Read current resource set"),
 	], [
+		// progress stage
 	    _("Reading the SCPM state..."),
+		// progress stage
 	    _("Reading the profiles..."),
+		// progress stage
 	    _("Reading the profiles descriptions..."),
+		// progress stage
 	    _("Reading current resource set..."),
+		// progress stage
 	    _("Finished")
 	],
 	""
     );
 
 
-/*
-    first_time = SCR::Read(.target.yast2, "scpm.ycp");
-    if (first_time) {
-        SCR::Write(.target.yast2, "scpm.ycp",false);
-    }*/
 
     SCR::Execute (.target.bash, "/bin/touch /var/lib/YaST2/scpm.ycp");
-    map state = SCR::Read (.target.ycp, "/var/lib/YaST2/scpm.ycp");
+    state = SCR::Read (.target.ycp, "/var/lib/YaST2/scpm.ycp");
 
-    if (state == nil || state == $[]) {
-        state = $[];
-        first_time = true;
-        state = add (state, "first_time", false);
-        state = add (state, "close_popups", false);
-        SCR::Write(.target.ycp, "/var/lib/YaST2/scpm.ycp", state);
-    }
-/*
-    first_time = SCR::Read(.target.ycp, "/tmp/scpm.ycp");
-    if (first_time) {
-        SCR::Write(.target.ycp, "/tmp/scpm.ycp",false);
-    }*/
+    if (state == nil || state == $[])
+	{
+		first_time = true;
+		UpdateState();
+	}
+	else
+		close_popups = lookup(state, "close_popups", false);
 
     // read
     if(Abort()) return false;
     Progress::NextStage();
-    if(!ReadSCPMStatus()) Report::Error(_("Can not read SCPM status!"));
+    if(!ReadSCPMStatus())
+		// Error message:
+		Report::Error(_("Can not read SCPM status!"));
     sleep(sl);
 
     // read
     if(Abort()) return false;
     Progress::NextStage();
-    if(!ReadProfiles()) Report::Error(_("Can not read profiles!"));
+	if (enabled)
+	    if(!ReadProfiles())
+			// Error message:
+			Report::Error(_("Can not read profiles!"));
     sleep(sl);
 
     // read
     if(Abort()) return false;
     Progress::NextStep();
-    if(!ReadProfilesDescriptions()) Report::Error(_("Can not read profiles descriptions!"));
+	if (enabled)
+	    if(!ReadProfilesDescriptions())
+			// Error message:
+			Report::Error(_("Can not read profiles descriptions!"));
     sleep(sl);
 
     // read current resources
     if(Abort()) return false;
     Progress::NextStage();
-    if(!ReadCurrentResources()) Report::Error(_("Can not read current resources!"));
+	if(!ReadCurrentResources())
+		// Error message:
+		Report::Error(_("Can not read current resources!"));
     sleep(sl);
 
     if(Abort()) return false;
+	// progress stage
     ProgressNextStage(_("Finished"));
     sleep(sl);
 
@@ -158,7 +169,7 @@ global define boolean Read() ``{
  */
 global define boolean Write() ``{
 
-    string caption = _("Saving profile-manager configuration");
+    string caption = "";
 
     integer steps = 1;
 
@@ -215,7 +226,7 @@ global define map Export () ``{
 /**
  * @return true on success
  */
-define boolean ReadProfiles() ``{
+global define boolean ReadProfiles() ``{
 
     list profiles_l = SCR::Read(.scpm.profiles);
 
@@ -230,7 +241,7 @@ define boolean ReadProfiles() ``{
 /**
  * @return true on success
  */
-define boolean ReadProfilesDescriptions() ``{
+global define boolean ReadProfilesDescriptions() ``{
 
     // read the descriptions of each profile
     map profilesm = profiles;
@@ -255,10 +266,12 @@ define boolean ReadSCPMStatus() ``{
 /**
  * @return true on success
  */
-define boolean ReadCurrentResources() ``{
+global define boolean ReadCurrentResources() ``{
 
     // reads the current res
     current_resources = SCR::Read(.scpm.resources.current);
+    // STRANGE!!!!
+    current_resources = deletechars(current_resources, "\"");
     return true;
 }
 
@@ -343,9 +356,28 @@ global define boolean SetProfile(string name) ``{
 }
 
 
-global define boolean SetSecure() ``{
+global define boolean SetFilePermitions() ``{
 
-    // set file permitions
+	string file = "";
+	file = lookup(profile_settings, "prestart","");
+	if (file != "" &&
+		(SCR::Execute (.target.bash, sformat("/bin/chmod 700 %1",file))) != 0)
+	return false;
+
+	file = lookup(profile_settings, "poststart","");
+	if (file != "" &&
+		(SCR::Execute (.target.bash, sformat("/bin/chmod 700 %1",file))) != 0)
+	return false;
+
+	file = lookup(profile_settings, "prestop","");
+	if (file != "" &&
+		(SCR::Execute (.target.bash, sformat("/bin/chmod 700 %1",file))) != 0)
+	return false;
+
+	file = lookup(profile_settings, "poststop","");
+	if (file != "" &&
+		(SCR::Execute (.target.bash, sformat("/bin/chmod 700 %1",file))) != 0)
+	return false;
 
     return true;
 }
@@ -360,26 +392,8 @@ global define boolean DeleteProfile(string to_delete) ``{
 
 global define boolean PrepareSwitch() ``{
 
-    /* I should get the map like this:
-    map sw_i = $[ "profile_modified": true,
-                  "profile_name": selected_profile,
-                  "modified_resources": [
-                        $[ "resource_name": "sendmail",
-                           "resource_type": "service",
-                           "is_new": false,
-                           "is_deleted": true,
-                           "save": false ],
-                        $[ "resource_name": "/etc/sendmail.cf",
-                           "resource_type": "file",
-                           "is_new": false,
-                           "is_deleted": false,
-                           "save": true ]
-                  ]
-                ];*/
-
-
     switch_info = SCR::Execute(.scpm.switch.prepare, selected_profile);
-    y2milestone("switch_info: %1",switch_info);
+    y2debug("switch_info: %1",switch_info);
 
 }
 
@@ -395,7 +409,7 @@ global define boolean SaveSwitchInfo() ``{
 
     switch_info = add(switch_info,"modified_resources",saved_resources);
 
-    y2milestone("switch_info:%1", switch_info);
+    y2debug("switch_info:%1", switch_info);
 
     return true;
 }
@@ -412,7 +426,7 @@ global define boolean DropSwitchInfo() ``{
 
     switch_info = add(switch_info,"modified_resources",saved_resources);
 
-    y2milestone("switch_info:%1", switch_info);
+    y2debug("switch_info:%1", switch_info);
 
     return true;
 }
@@ -425,21 +439,21 @@ global define boolean Switch() ``{
 
 }
 
-global define boolean WriteStatus() ``{
+global define boolean WriteSCPMStatus() ``{
 
     SCR::Write(.scpm.status.enabled, enabled);
-    if (enabled) // this should be on some other place
-    {
-        ReadProfiles();
-        ReadProfilesDescriptions();
-        ReadCurrentResources(); //not necessary
-    }
 
 }
 
 global define boolean WriteResources(string resource_set) ``{
 
     SCR::Write(.scpm.resources.current, resource_set);
+
+}
+
+global define boolean RebuildDB() ``{
+
+    SCR::Execute(.scpm.resources.rebuild);
 
 }
 
@@ -461,6 +475,16 @@ global define string ShowChanges(integer resource_no) ``{
     // read -> string (ze streamu!)
 
     return name + "(" + type + ")" + "<br> not implemented yet";
+}
+
+global define boolean UpdateState() ``{
+
+    state = $[];
+    state = add (state, "first_time", false);
+    state = add (state, "close_popups", close_popups);
+    SCR::Write(.target.ycp, "/var/lib/YaST2/scpm.ycp", state);
+
+	return true;
 }
 
 global define list GetProfilesAsItems() ``{
@@ -513,6 +537,29 @@ global define boolean CheckNameValidity(string name) ``{
 
 global define boolean CheckFilesValidity(map new_settings) ``{
 
+	string file ="";
+
+	// test -x ???
+	file = lookup(new_settings, "prestart","");
+	if (file != "" &&
+		(SCR::Execute (.target.bash, sformat("/usr/bin/test -e %1",file))) != 0)
+	return false;
+
+	file = lookup(new_settings, "poststart","");
+	if (file != "" &&
+		(SCR::Execute (.target.bash, sformat("/usr/bin/test -e %1",file))) != 0)
+	return false;
+
+	file = lookup(new_settings, "prestop","");
+	if (file != "" &&
+		(SCR::Execute (.target.bash, sformat("/usr/bin/test -e %1",file))) != 0)
+	return false;
+
+	file = lookup(new_settings, "poststop","");
+	if (file != "" &&
+		(SCR::Execute (.target.bash, sformat("/usr/bin/test -e %1",file))) != 0)
+	return false;
+
     return true;
 }
 
@@ -525,6 +572,12 @@ global define boolean ModifiedSettings(map new_settings) ``{
             if (value != lookup(new_settings, type, "")) ret = true;
     });
 
+    return ret;
+}
+
+global define string GetProgressText() ``{
+
+    string ret = SCR::Read(.target.string, "/tmp/scpm.out");
     return ret;
 }
 

@@ -30,6 +30,7 @@ global define any SwitchDialog () ``{
     string active = ProfileManager::active_profile;
     string selected = ProfileManager::selected_profile;
 
+	// Dialog caption label
     string caption = _("Confirm Switch");
     term contents = `HBox(
 	`HSpacing(1.5),
@@ -49,6 +50,7 @@ global define any SwitchDialog () ``{
             `HSpacing(2)
             ),
         `VSpacing(1),
+		// frame label
         `Frame(_("Modified Resources of active Profile"), `HBox(`HSpacing(1),
             `VBox(
                 `VSpacing(0.2),
@@ -124,12 +126,15 @@ global define boolean AddProfilePopup() ``{
     UI::OpenDialog(`opt(`decorated), `HBox(`HSpacing(1.5),
         `VBox(
             `VSpacing(1),
+			// Popup text, part 1/3
 	        `Left(`Label(_("Add a new profile based"))),
             `VSpacing(1),
             `RadioButtonGroup(`id(`rb),
 	            `VBox(
+					// Popup text, part 2/3
 			        `Left(`RadioButton(`id(`new), _("on the c&urrent system configuration"))),
                     `VSpacing(1),
+					// Popup text, part 3/3
                     `Left(`RadioButton(`id(`copy), _("on an &existing profile:")))
                     )),
             `SelectionBox(`id(`profiles),
@@ -137,8 +142,8 @@ global define boolean AddProfilePopup() ``{
             `VSpacing(1),
 	        `HBox(
 	            `HSpacing(1),
-	            `Left(`PushButton(`id(`cancel), _("&Cancel"))),
-	            `Right(`PushButton(`id(`ok), `opt(`default), _("&OK"))),
+	            `Left(`PushButton(`id(`cancel), CancelButtonLabel())),
+	            `Right(`PushButton(`id(`ok), `opt(`default), OKButtonLabel())),
 	            `HSpacing(1)
 	            ),
             `VSpacing(1)),
@@ -158,6 +163,7 @@ global define boolean AddProfilePopup() ``{
                 string selected = UI::QueryWidget(`id(`profiles), `CurrentItem);
                 if (selected == nil)
                 {
+					// Popup text
                     UI::MessagePopup(_("Please select a profile which you want to copy."));
                     continue;
                 }
@@ -195,11 +201,13 @@ global define boolean ProgressPopup() ``{
     UI::OpenDialog(`opt(`decorated), `HBox(`HSpacing(1.5),
         `VBox(
             `VSpacing(1),
-            `LogView(`id(`log),_("Progress informations"), 10, 0),
+			// LogView label:
+            `LogView(`id(`progress),_("Progress informations"), 10, 0),
 //            `Left(`Label(note_label)),
             `VSpacing(1),
             `ProgressBar(`id(`pb), "", 100, 0),
             `VSpacing(1),
+			// checkbox label:
             `CheckBox(`id(`close_ch),_("Close progress popups &automatically (reenable it in SCPM Setup)"),close_popups),
             `VSpacing(1),
 	        `HBox(
@@ -213,6 +221,10 @@ global define boolean ProgressPopup() ``{
     UI::ChangeWidget(`id(`close), `Enabled, false);
     UI::ChangeWidget(`id(`close_ch), `Enabled, false);
 
+    string progresstext = ProfileManager::GetProgressText();
+    UI::ChangeWidget(`id(`progress), `LastLine, progresstext);
+
+
     integer steps = 0;
     while (steps<100)
     {
@@ -225,6 +237,7 @@ global define boolean ProgressPopup() ``{
         UI::ChangeWidget(`id(`close), `Enabled, true);
         any ret = UI::UserInput();
     }
+//  temporary unused
     UI::CloseDialog();
     return true;
 }
@@ -233,10 +246,12 @@ global define boolean ProgressPopup() ``{
  */
 global define boolean IntroductionPopup() ``{
 
+	// Inroduction text, part 1/2
     string intro_text = _("<p>SCPM is currently disabled.<br>
 To enable it use the Options button<br></p>") +
 
-    _("<br><p>If you are new to SCPM then please read at least the help texts. Better read the introduction in the info pages. You should know what we mean with 'active profile' or 'current configuration' before you start using SCPM.<br></p>");
+	// Inroduction text, part 2/2
+ _("<br><p>If you are new to SCPM then please read at least the help texts. Better read the introduction in the info pages. You should know what we mean with 'active profile' or 'current configuration' before you start using SCPM.<br></p>");
 
     UI::OpenDialog(`opt(`decorated), `HBox(`HSpacing(1.5),
         `VSpacing(15),
@@ -278,12 +293,13 @@ global define boolean ShowChangesPopup(integer resource_no) ``{
         `VBox(
             `HSpacing(40),
             `VSpacing(1),
+			// Popup text, part 1
             `Label(_("Changes of the resource")),
 //            `Label(resource + " :"),
             `VSpacing(1),
             `RichText(changes),
             `VSpacing(1),
-            `PushButton(`id(`ok), `opt(`default), _("&OK")),
+            `PushButton(`id(`ok), `opt(`default), OKButtonLabel()),
             `VSpacing(1)),
         `HSpacing(1.5)
         ));

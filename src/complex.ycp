@@ -66,6 +66,7 @@ global define symbol WriteDialog() ``{
  * @return any Returned value from UserInput() call
  */
 global define any MainDialog () ``{
+	// Caption of the dialog:
     string caption = _("System configuration profile management");
 
 	map profiles = ProfileManager::profiles;
@@ -79,6 +80,7 @@ global define any MainDialog () ``{
 	`HSpacing(1.5),
 	`VBox(
         `VSpacing(1),
+		// frame label:
         `Frame(_("Profile management"), `HBox(`HSpacing(1),
             `VBox(
                 `VSpacing(0.2),
@@ -86,12 +88,6 @@ global define any MainDialog () ``{
                     `header(_("active"),
                             _("Name"),
                             _("Description")),
-/*                    maplist (`name, `descr, profiles, ``{
-                        if (name == active)
-                            return `item(`id(name),"---->",name,descr);
-                        else
-                            return `item(`id(name),"",name,descr);
-                    })*/
                     ProfileManager::GetProfilesAsItems()
                     ),
                 `VSpacing(0.2),
@@ -107,7 +103,8 @@ global define any MainDialog () ``{
             `HSpacing(1)
                 )),
         `VSpacing(1),
-        `Frame(_("General Setup"), `VBox(`VSpacing(0.2),
+		// frame label:
+		`Frame(_("General Setup"), `VBox(`VSpacing(0.2),
             `HBox(
                 `HSpacing(1),
 			    `Label (state_label),
@@ -137,10 +134,11 @@ global define any MainDialog () ``{
     if (ProfileManager::first_time)
         IntroductionPopup();
 
-    UI::ChangeWidget(`id(`profiles), `CurrentItem, ProfileManager::active_profile);
 
-    if (enabled)
+    if (enabled) {
+        UI::ChangeWidget(`id(`profiles), `CurrentItem, ProfileManager::active_profile);
         UI::SetFocus(`id(`profiles));
+    }
 
     UI::ChangeWidget(`id(`profiles), `Enabled, enabled);
     UI::ChangeWidget(`id(`add_button), `Enabled, enabled);
@@ -157,13 +155,16 @@ global define any MainDialog () ``{
 	{
         selected = UI::QueryWidget(`id(`profiles), `CurrentItem);
         if (selected == active)
+			// Popup text (user wants to delete active profile):
             UI::MessagePopup(_("You cannot delete the active profile."));
         else
         {
+			// Popup text (confirmation)
             if (UI::YesNoPopup(sformat(_("Do you really want to delete profile %1?"), selected)))
             {
                 if (!ProfileManager::DeleteProfile(selected))
-                    UI::ErrorPopup(_("Deleting profile was not succesfull.")); // spravny text !
+					// Error popup text
+                    UI::ErrorPopup(_("Deleting profile was not succesfull.")); 
                 break;
             }
         }
@@ -185,6 +186,7 @@ global define any MainDialog () ``{
     {
         selected = UI::QueryWidget(`id(`profiles), `CurrentItem);
         if (selected == active) {
+			// Popup text:
             UI::MessagePopup(_("It does not make a sense to switch to the active profile."));
             continue;
         }
@@ -216,10 +218,12 @@ global define any OptionsDialog () ``{
     list resource_sets = union( union (ProfileManager::resource_sets_predefined, [ separator ]), ProfileManager::resource_sets_individual);
     boolean close_popups = ProfileManager::close_popups;
 
+	// Dialog caption label:
     string caption = _("SCPM Options");
     term contents = `HBox(`HSpacing(1.5),
         `VBox(
         `VSpacing(1),
+		// frame label:
         `Frame(_("Enable SCPM"), `VBox(
             `VSpacing(0.5),
                 `RadioButtonGroup(`id(`rb),
@@ -231,10 +235,12 @@ global define any OptionsDialog () ``{
 		    `VSpacing(0.5)
             )),
         `VSpacing(1),
+		// frame label
 		`Frame(_("Resource Sets"), `VBox(
             `VSpacing(0.2),
             `HBox(
                 `HSpacing(1),
+				// selection box label:
                 `SelectionBox(`id(`resources), _("Choose a &resource set:"), resource_sets),
 //                `Left(`HSquash(`SelectionBox(`id(`resources), _("Choose a &resource set:"), resource_sets))),
                 `HSpacing(1)
@@ -242,10 +248,12 @@ global define any OptionsDialog () ``{
             `VSpacing(0.5)
             )),
         `VSpacing(1),
+		// frame label:
 		`Frame(_("Other settings"), `VBox(
             `VSpacing(0.5),
             `HBox(
                 `HSpacing(1),
+				// checkbox label
 		        `Left(`CheckBox(`id(`close_popups_ch), _("Close progress popups &automaticaly"), close_popups))
                 ),
             `VSpacing(0.5)
@@ -279,7 +287,7 @@ global define any OptionsDialog () ``{
     }
     else if (ret == `next)
     {
-        ProfileManager::close_popups = UI::QueryWidget(`id(`close_popups_ch), `Value);
+        close_popups = UI::QueryWidget(`id(`close_popups_ch), `Value);
         boolean run_progress = false;
 
         if (UI::QueryWidget(`id(`rb), `CurrentButton) == `ena) {
@@ -287,6 +295,7 @@ global define any OptionsDialog () ``{
             string selected = UI::QueryWidget(`id(`resources), `CurrentItem);
             if (selected == separator || selected == nil)
             {
+				// Popup label:
                 UI::MessagePopup(_("You should choose a resource set first."));
                 continue;
             }
@@ -294,14 +303,29 @@ global define any OptionsDialog () ``{
             if (!ProfileManager::enabled)
             {
                 ProfileManager::enabled = true;
-                ProfileManager::WriteStatus();
-                run_progress = true;
-            }
-            if (ProfileManager::current_resources != selected)
-            {
+                ProfileManager::WriteSCPMStatus();
+
                 ProfileManager::current_resources = selected;
                 ProfileManager::WriteResources(selected);
-                run_progress = true; // not necessary ?
+
+				ProfileManager::ReadProfiles(); // on some other place!
+				ProfileManager::ReadProfilesDescriptions();
+				run_progress = true;
+            }
+			else if (ProfileManager::current_resources != selected)
+            {
+                y2milestone("----------- current: %1 ------ selected: %2",
+                        ProfileManager::current_resources, selected);
+				// Popup label (confirmation)
+				if (UI::YesNoPopup(_("Changing the Resource Set may drop some of your configuration settings. Are you sure you want to proceed?")))
+				{
+					ProfileManager::current_resources = selected;
+					// maybe WriteResources should be run every time
+					ProfileManager::WriteResources(selected);
+					ProfileManager::RebuildDB();
+					run_progress = true; // not necessary ?
+				}
+				else continue;
             }
             if (run_progress) ProgressPopup();
         }
@@ -311,9 +335,14 @@ global define any OptionsDialog () ``{
             {
                 ProfileManager::enabled = false;
                 ProfileManager::current_resources = "";
-                ProfileManager::WriteStatus(); // show the progress bar ??
+                ProfileManager::WriteSCPMStatus(); // show the progress bar ??
             }
         }
+		if (close_popups != ProfileManager::close_popups)
+		{
+			ProfileManager::close_popups = close_popups;
+			ProfileManager::UpdateState();
+		}
 
         y2debug("enabled=%1",ProfileManager::enabled);
         y2debug("close_popups=%1",ProfileManager::close_popups);
@@ -344,10 +373,12 @@ global define any ProfileSettingsDialog () ``{
 
     map settings = ProfileManager::profile_settings;
 
+	// Dialog caption label
     string caption = _("Special profile settings");
     term contents = `HBox(`HSpacing(1.5),
         `VBox(
         `VSpacing(1),
+		// frame label
         `Frame(_("Special profile settings"), `HBox(`HSpacing(1),
             `VBox(
                 `VSpacing(0.2),
@@ -367,6 +398,7 @@ global define any ProfileSettingsDialog () ``{
                 `VSpacing(0.2),
                 `TextEntry(`id(`poststop),_("Pos&t Stop Script")),
                 `VSpacing(0.2),
+				// checkbox label
                 `Left(`CheckBox(`id(`secure_ch),
                     _("Set file &permitions of all scripts secure (0700)."))),
                 `VSpacing(0.2)
@@ -409,6 +441,7 @@ global define any ProfileSettingsDialog () ``{
 
         if (!ProfileManager::CheckNameValidity(selected))
         {
+			// Popup text (wrong data):
             UI::MessagePopup(_("You have to choose valid name."));
             continue;
         }
@@ -421,7 +454,8 @@ global define any ProfileSettingsDialog () ``{
 
         if (!ProfileManager::CheckFilesValidity(new_settings))
         {
-            UI::MessagePopup(_("You have to choose valid paths to scripts."));
+			// Popup text (file paths are wrong):
+			UI::MessagePopup(_("You have to choose valid paths to scripts."));
             continue;
         }
 
@@ -433,6 +467,7 @@ global define any ProfileSettingsDialog () ``{
         {
             if (lookup(profiles, selected, nil) != nil)
             {
+				// Popup text:
                 UI::MessagePopup(_("Profile with this name already exists"));
                 continue;
             }
@@ -444,6 +479,7 @@ global define any ProfileSettingsDialog () ``{
         {
             if (lookup(profiles, selected, nil) != nil)
             {
+				// Popup text
                 UI::MessagePopup(_("Profile with this name already exists"));
                 continue;
             }
@@ -458,6 +494,7 @@ global define any ProfileSettingsDialog () ``{
 
                 if (lookup(profiles, selected, nil) != nil)
                 {
+					// Popup text
                     UI::MessagePopup(_("Profile with this name already exists"));
                     continue;
                 }
@@ -470,7 +507,9 @@ global define any ProfileSettingsDialog () ``{
             }
         }
         if (secure)
-            ProfileManager::SetSecure();
+            ProfileManager::SetFilePermitions();
+        if (action != "edit")
+            ProfileManager::ProgressPopup();
 
 	    break;
 	}
