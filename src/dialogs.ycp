@@ -573,7 +573,7 @@ define any SwitchDialog () ``{
 	{
 	    active_group = ProfileManager::current_resource_group;
 	    if (active_group == "")
-		active_group = (string) select (resources_as_items[0]:[],2,"");
+		active_group = (string) select (resources_as_items[0]:`item(),2,"");
 	    UI::ChangeWidget(`id(`modified), `CurrentItem,
 		active_group);
 	}
@@ -694,9 +694,12 @@ define symbol DetailsSwitchDialog () ``{
     define list resources_items() ``{
 
 	list items = [];
-	foreach (any i, map resource, (map<any,map>) resources, ``{
+	foreach (any i, any res, resources, ``{
 	    if (!is(i, integer))
 		return;
+	    map resource	= $[];
+	    if (is (res,map))
+		resource	= (map) res;
 	    // flag for resource action
 	    string save = _("save");
 	    if (resource["save_mode"]:"normal" == "normal")

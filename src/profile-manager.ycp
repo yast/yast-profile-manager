@@ -27,36 +27,34 @@ include "profile-manager/wizards.ycp";
 /*
  * exit when running for non-root
  */
+map out = (map) SCR::Execute (.target.bash_output, "/usr/bin/id --user");
+boolean root = out["stdout"]:"" == "0\n";
 
-// FIXME use 'id -u' or Confirm::MustBeRoot
-map res = (map) SCR::Execute(.target.bash_output, "/usr/bin/whoami", $[]);
-list l_res = splitstring(res["stdout"]:"", "\n");
-
-if( size(l_res) > 0 &&  select(l_res, 0, "") != "root")
+if (!root)
 {
     // Popup label (user is not root)
     Popup::Message(_("Log in as root to run profile manager."));
-    return nil;
+    return `abort;
 }
 
-
-/* is this proposal or not? */
-boolean propose = false;
-list args = WFM::Args();
-if(size(args) > 0) {
-    if(is(WFM::Args(0), path) && WFM::Args(0) == .propose) {
-        y2milestone("Using PROPOSE mode");
-        propose = true;
+list args		= WFM::Args();
+string switch_to	= "";
+if (size(args) > 0) {
+    if(is(WFM::Args(0), string) && WFM::Args(0) == "switch") {
+	if (size (args) > 1 && is (WFM::Args(1), string)) {
+	    switch_to	= (string) WFM::Args(1);
+	    y2milestone ("Using direct switch to profile %1", switch_to);
+	}
     }
-    else
-        y2error("Bad argument for profile-manager: %1", WFM::Args(0));
+    if (is(WFM::Args(0), string) && WFM::Args(0) == "help") {
+	y2warning ("Command line interface is not supported for Profile Manager, use 'scpm' tool instead.
+If you want to switch to some profile and see the list of modified resources, it is possible to call Profile Manager with parameters 'switch <profile_name>'. This will invoke 'Confirm Switch' dialog.");
+	return `abort;
+    }
 }
 
-/* main ui function */
-any ret = nil;
+symbol ret = ProfileManagerSequence (switch_to);
 
-if(propose) ret = ProfileManagerAutoSequence();
-else ret = ProfileManagerSequence();
 y2debug("ret == %1", ret);
 
 /* Finish */

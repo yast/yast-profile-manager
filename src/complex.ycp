@@ -44,6 +44,31 @@ define symbol WriteDialog() ``{
 }
 
 /**
+ * Open progress window and do the actions for preparing the switch
+ * @param selected profile to switch to
+ */
+define boolean PreparePopup (string selected) {
+
+    ProfileManager::selected_profile = selected;
+    ProfileManager::PrepareSwitch (selected);
+    ProgressPopup("",0,100);
+
+    if (!ProfileManager::Wait())
+    {
+	// Error popup text, %1 is additional translated error message
+	Popup::Error(sformat(_("Switching to another profile is not possible:\n%1"), ProfileManager::scpm_error));
+	return false;
+    }
+    if (!ProfileManager::ReadSwitchInfo())
+    {
+	// Error popup text
+	Popup::Error(_("Switching to another profile is not possible."));
+	return false;
+    }
+    return true;
+}
+
+/**
  * Main dialog
  * @return any Returned value from UserInput() call
  */
@@ -197,24 +222,10 @@ define any MainDialog () ``{
 	else if (ret == `switch_button)
 	{
 	    selected = (string) UI::QueryWidget(`id(`profiles), `CurrentItem);
-	    ProfileManager::selected_profile = selected;
-	    ProfileManager::PrepareSwitch();
-	    ProgressPopup("",0,100);
-
-	    if (!ProfileManager::Wait())
-	    {
-		// Error popup text, %1 is additional translated error message
-		Popup::Error(sformat(_("Switching to another profile is not possible:\n%1"), ProfileManager::scpm_error));
+	    if (PreparePopup (selected))
+		break;
+	    else
 		continue;
-	    }
-	    if (!ProfileManager::ReadSwitchInfo())
-	    {
-		// Error popup text
-		Popup::Error(_("Switching to another profile is not possible."));
-		continue;
-	    }
-
-	    break;
 	}
 	else if (ret == `intro) // help button
 	{
@@ -224,7 +235,6 @@ define any MainDialog () ``{
 	else if (ret == `next || ret == `options_button || ret == `cancel)
 	    break;
     };
-
     return ret;
 }
 

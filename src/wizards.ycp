@@ -14,6 +14,7 @@ textdomain "profile-manager";
 import "Label";
 import "Popup";
 import "ProfileManager";
+import "Report";
 import "Sequencer";
 import "Wizard";
 
@@ -34,7 +35,7 @@ define symbol Cancel() ``{
  * Main sequence of profile-manager
  * @return sequence result
  */
-define any MainSequence () ``{
+define any MainSequence (string switch_to) ``{
     map aliases =
 	$[
 	    "main"	:	``( MainDialog () ),
@@ -95,8 +96,27 @@ define any MainSequence () ``{
 	]
     ];
 
+    if (switch_to != "")
+    {
+	if (haskey (ProfileManager::profiles, switch_to))
+	{
+	    sequence["ws_start"]	= "switch";
+	    sequence["switch", `next]	= `next;
+	    sequence["switch", `abort]	= "cancel";
+	    if (!PreparePopup (switch_to))
+		return `abort;
+	    Wizard::HideAbortButton();
+	}
+	else
+	{
+	    // error popup
+	    Report::Error (sformat (_("There is no profile '%1'"), switch_to));
+	    return Cancel ();
+	}
+    }
     any ret = Sequencer::Run (aliases, sequence);
-
+    if (ret == `back && switch_to != "")
+	return Cancel ();
     return ret;
 }
 
@@ -104,12 +124,12 @@ define any MainSequence () ``{
  * Whole configuration of profile-manager
  * @return sequence result
  */
-define symbol ProfileManagerSequence() ``{
+define symbol ProfileManagerSequence (string switch_to) ``{
 
     map aliases = $[
 	"read"	: [ ``( ReadDialog() ), true ],
-	"main"	:   ``( MainSequence() ),
-    "write"	: [ ``( WriteDialog() ), true ]
+	"main"	:   ``( MainSequence (switch_to) ),
+	"write"	: [ ``( WriteDialog() ), true ]
     ];
 
     map sequence = $[
@@ -121,8 +141,8 @@ define symbol ProfileManagerSequence() ``{
 	"main" : $[
 	    `abort	: `abort,
 	    `next	: "write"
-	]
-	,"write" : $[
+	],
+	"write" : $[
 	    `abort	: `abort,
 	    `next	: `next
 	]
@@ -152,7 +172,7 @@ define symbol ProfileManagerAutoSequence() ``{
     Wizard::SetContentsButtons(caption, contents, "",
 	    Label::BackButton(), Label::NextButton());
 
-    any ret = MainSequence();
+    any ret = MainSequence ("");
 
     UI::CloseDialog();
     return (symbol) ret;

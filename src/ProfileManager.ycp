@@ -321,9 +321,6 @@ global define boolean ReadResourceGroups() ``{
     }
     foreach (string name, map group, (map<string,map<string,any> >)resource_groups, ``{
 	resource_groups[name,"resources"] = GetResourceGroupResources (name);
-// FIXME looks like description is not in UTF-8?
-	resource_groups[name,"description"]	= (string) UI::Recode (
-	    WFM::GetEnvironmentEncoding(),"UTF-8", group["description"]:"");
     });
 
     return true;
@@ -500,7 +497,7 @@ global define boolean SaveResourceGroups () ``{
 	    if (!SCR::Write (
 		    add (.scpm.rg.group.set, name),
 		    group["resources"]:[],
-		    group["description"]:""))// FIXME recode back from utf
+		    group["description"]:""))
 		SetError();
 	}
 	// do Activation/Deactivation (it is not done in Set/Rename)
@@ -676,9 +673,12 @@ global define boolean CheckAndUpdateResources (string name, map resources) ``{
     list groups_to_check = [];
     boolean group_save = false;
     // go through all resources of current group
-    foreach (any i, map resource, (map<any,map<string,any> >) resources, ``{
+    foreach (any i, any res, resources, ``{
 	if (!is (i,integer))
 	    return;
+	map resource = $[];
+	if (is (res,map))
+	    resource        = (map) res;
 	integer pos = (integer) i;
 	group_save = resource["save"]:default_save || group_save;
 	foreach (string key, ["save", "save_mode"], ``{
@@ -742,7 +742,7 @@ global define boolean SetGroupSaveFlag (string groupname) ``{
 global define list GetGroupsAsItems() ``{
 
     list items = [];
-    foreach (string name, map group, (map<string,map<string,any> >)modified_groups, ``{
+    foreach (string name, map group, (map<string,map>) modified_groups, ``{
 	string save = group ["save"]:default_save ? "X":"";
 	if (group["modified"]:false)
 	    save = "m";
@@ -1270,11 +1270,11 @@ global define boolean DeleteProfile(string to_delete) ``{
 
 /**
  * Calls PrepareSwitch(), which drops switch_info map to file
+ * @param profile Name of profile to switch to
  */
-global define void PrepareSwitch() ``{
+global define void PrepareSwitch (string profile) ``{
 
-    SCR::Execute(.scpm.switch.prepare, selected_profile);
-
+    SCR::Execute (.scpm.switch.prepare, profile);
 }
 
 /**
@@ -1317,7 +1317,7 @@ global define boolean DropSwitchInfo() ``{
 /**
  * Saves modified resources of the profile
  */
-global define void Save() ``{
+global define void Save () ``{
 
     y2debug ("Saving...");
     SCR::Execute(.scpm.save, switch_info);
@@ -1326,11 +1326,11 @@ global define void Save() ``{
 /**
  * Switchs to the selected profile.
  */
-global define void Switch() ``{
+global define void Switch () ``{
 
     y2milestone ("Switching from profile \"%1\" to profile \"%2\"...",
         active_profile, selected_profile);
-    SCR::Execute(.scpm.switch, switch_info);
+    SCR::Execute (.scpm.switch, switch_info);
 }
 
 /**
