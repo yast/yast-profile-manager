@@ -19,6 +19,7 @@ import "Progress";
 import "Report";
 
 include "profile-manager/routines.ycp";
+include "require.ycp";
 
 /**
  * Is the module runing for the first time?
@@ -649,17 +650,14 @@ global define boolean PrepareSwitch() ``{
 global define boolean SaveSwitchInfo() ``{
 
     list resources = lookup(switch_info, "modified_resources",[]);
-    list saved_resources = [];
 
-    foreach (`resource, resources, ``{
-        resource = add(resource, "save", true);
-        saved_resources = add(saved_resources,resource);
-    });
-
-    switch_info = add(switch_info,"modified_resources",saved_resources);
+    integer i = 0;
+    while (i<size (resources)) {
+        switch_info["modified_resources",i,"save"] = true;
+        i = i + 1;
+    }
 
     y2debug("switch_info:%1", switch_info);
-
     return true;
 }
 
@@ -670,14 +668,12 @@ global define boolean SaveSwitchInfo() ``{
 global define boolean DropSwitchInfo() ``{
 
     list resources = lookup(switch_info, "modified_resources",[]);
-    list saved_resources = [];
 
-    foreach (`resource, resources, ``{
-        resource = add(resource, "save", false);
-        saved_resources = add(saved_resources,resource);
-    });
-
-    switch_info = add(switch_info,"modified_resources",saved_resources);
+    integer i = 0;
+    while (i<size (resources)) {
+        switch_info["modified_resources",i,"save"] = false;
+        i = i + 1;
+    }
 
     y2debug("switch_info:%1", switch_info);
 
@@ -778,8 +774,13 @@ global define boolean CopyResourceSet(string set, string newset) ``{
  */
 global define boolean RunIntro() ``{
 
-    if (! SCR::Execute(.background.run,"konqueror info:/scpm/introduction") )
+    if (IsPackageInstalled("kdebase3") || IsPackageInstalled("kdebase3-konqueror"))
+        SCR::Execute(.background.run,"konqueror info:/scpm/introduction");
+    else if (IsPackageInstalled("texinfo"))
         SCR::Execute(.background.run,"xterm -e info scpm");
+    else
+        SCR::Execute(.background.run,"xterm -e man scpm");
+
     return true;
 }
 
@@ -816,31 +817,10 @@ global define string ShowChanges() ``{
  */
 global define boolean SetSaveFlag() ``{
 
-    list resources = lookup(switch_info, "modified_resources",[]);
-    list new_resources = [];
-    map resource = select (resources, active_resource, $[]);
-
-    boolean flag = lookup(resource, "save", false);
-    resource = add (resource, "save", !flag);
-
-    integer i=0;
-    while (i < active_resource)
-    {
-        new_resources = add(new_resources, select(resources,i,$[]));
-        i = i + 1;
-    }
-    new_resources = add (new_resources, resource);
-    i = i + 1;
-    while (i < size(resources))
-    {
-        new_resources = add(new_resources, select(resources,i,$[]));
-        i = i + 1;
-    }
-
-    switch_info = add(switch_info,"modified_resources",new_resources);
+    boolean s = switch_info["modified_resources",active_resource,"save"]:false;
+    switch_info["modified_resources",active_resource,"save"] = !s;
 
     return true;
-
 }
 
 /**
