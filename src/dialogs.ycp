@@ -280,7 +280,7 @@ global define any ProfileSettingsDialog () ``{
 	    }
 	    if (secure && !ProfileManager::SetFilePermitions (new_settings))
 		// Error popup text
-		Popup::Error(_("Settings file permitions was not successful."));
+		Popup::Error(_("Setting file permissions was not successful."));
 	    break;
 	}
     };
@@ -398,7 +398,7 @@ global define any SwitchDialog () ``{
 		`HBox(
 		    `PushButton (`id(`save_b), `opt(`key_F4),
 			// Push button label
-			_("&Save / Ignore")),
+			_("&Save or Ignore")),
 		    /*
 		    `PushButton (`id(`ignore_b), `opt(`key_F5),
 			// Push button label
@@ -433,7 +433,6 @@ global define any SwitchDialog () ``{
 	if (use_rg)
 	{
 	    UI::ChangeWidget(`id(`save_b), `Enabled, false);
-//	    UI::ChangeWidget(`id(`ignore_b), `Enabled, false);
 	    UI::ChangeWidget(`id(`details), `Enabled, false);
 	}
 	else
@@ -604,25 +603,25 @@ global define symbol DetailsSwitchDialog () ``{
 
     list actions_list = [
 	// button label
-	 `item(`id(`save), _("&Save resource")),
+	 `item(`id(`save), _("&Save Resource")),
 	// button label
-	 `item(`id(`ignore), _("&Ignore resource")),
+	 `item(`id(`ignore), _("&Ignore Resource")),
 	// button label
-	 `item(`id(`save_p), _("Save to &all profiles")),
+	 `item(`id(`save_p), _("Save to &All Profiles")),
 	// button label
-	 `item(`id(`patch), _("&Patch all profiles")),
+	 `item(`id(`patch), _("&Patch All Profiles")),
     ];
     list all_actions_list = [
 	// button label
-	 `item(`id(`save_all), _("&Save all resources")),//&r
+	 `item(`id(`save_all), _("&Save All Resources")),//&r
 	// button label
-	 `item(`id(`ignore_all), _("&Ignore all resources"))//&g
+	 `item(`id(`ignore_all), _("&Ignore All Resources"))//&g
     ];
     list show_list = [
 	// button label
-	 `item(`id(`show_ch), _("Sho&w changes")),
+	 `item(`id(`show_ch), _("Sho&w Changes")),
 	// button label
-	 `item(`id(`show_r), _("Show &resource"))
+	 `item(`id(`show_r), _("Show &Resource"))
     ];
     string groupname = ProfileManager::current_resource_group;
 
@@ -665,7 +664,7 @@ global define symbol DetailsSwitchDialog () ``{
 			actions_list),
 		    `PushButton(`id(`all_action_b), `opt(`key_F4),
 			// button label
-			_("Save / Ignore A&ll")), // all_actions_list),
+			_("Save or Ignore A&ll")), // all_actions_list),
 		    `Right(
 			// button label
 			`PushButton(`id(`show_ch), `opt(`key_F2),
@@ -751,28 +750,6 @@ global define symbol DetailsSwitchDialog () ``{
 		    resource["save"]:true ? _("save") : _("ignore"));
 	    });
 	}
-	/*
-	else if (ret ==`save_all)
-	{
-	    foreach (`i, `resource, resources, ``{
-		if (!is(i, integer) || ! is(resource,map))
-		    return;
-		resource["save"] = true;
-		resource["save_mode"] = "normal";
-		UI::ChangeWidget (`id(`resources), `Item (i,0),_("save"));
-	    });
-	}
-	else if (ret ==`ignore_all)
-	{
-	    foreach (`i, `resource, resources, ``{
-		if (!is(i, integer) || ! is(resource,map))
-		    return;
-		resource["save"] = false;
-		resource["save_mode"] = "normal";
-		UI::ChangeWidget (`id(`resources), `Item (i,0),_("ignore"));
-	    });
-	}
-	*/
 	else if (ret == `show_ch)
 	{
 	    ProfileManager::active_resource = selected;
@@ -943,6 +920,7 @@ global define boolean ProgressPopup(string position, integer start, integer end)
     UI::BusyCursor();
     do
     {
+	// TODO check the process status here!!!
         sleep(5);
         hashmarks = ProfileManager::GetHashMarks();
         UI::ChangeWidget(`id(`pb), `Value, hashmarks);
@@ -1181,11 +1159,7 @@ global define symbol ConfigureResourcesDialog () ``{
 	selected = UI::QueryWidget(`id(`rgroups), `CurrentItem);
 	if (ret == `delete_button)
 	{
-	    if (!ProfileManager::GroupDeletable (selected))
-		// Popup text FIXME can be?
-		Popup::Message(_("You cannot delete predefined resource group."));
-	    // yes/no popup
-	    else if (Popup::YesNo(sformat(_("Delete group %1?"), selected)))
+	    if (Popup::YesNo(sformat(_("Delete group %1?"), selected)))
 	    {
 		ProfileManager::MarkGroupDeleted (selected);
 		UI::ChangeWidget(`id(`rgroups),`Items, resource_groups_items());
@@ -1251,8 +1225,9 @@ Are you sure to do it now?")))
 	    if (!modified)
 		break;
 	    // yes/no popup
-	    if (Popup::YesNo (_("Apply changes to Resource Groups now?
-(Resource database will be rebuilt.)")))
+	    if (Popup::YesNo (_("Apply changes to resource groups now?
+(Resource database will be rebuilt.)
+")))
 	    {
 		// really delete/add/modify
 		if (!ProfileManager::SaveResourceGroups ())
@@ -1420,7 +1395,7 @@ global define map ResourceGroupPopup (map group) ``{
 
 	return maplist (`res, group["resources"]:[], ``{
 	    string name = res["name"]:"";
-	    user_defined [name] = res["user_defined"]:false; //FIXME not needed?
+	    user_defined [name] = res["user_defined"]:false; //TODO not needed?
 	    if (res["active"]:false)
 		return `item(`id(name), "X", name, res["type"]:"");
 	    else
@@ -1498,7 +1473,7 @@ global define map ResourceGroupPopup (map group) ``{
     y2milestone ("edited group: %1", group);
     if (group["user_defined"]:true == false)
     {
-	// default group cannot be renamed FIXME or can?
+	// default group cannot be renamed
 	UI::ChangeWidget(`id(`name), `Enabled, false);
     }
     else
@@ -1539,21 +1514,16 @@ Are you sure to do it now?")))
 			ProfileManager::scpm_error));
 		    continue;
 		}
-		group = ProfileManager::GetGroup (groupname);
+		map orig_group = ProfileManager::ReadResourceGroup (groupname);
+		group["resources"] = eval (orig_group["resources"]:[]);
+		group["description"] = eval (orig_group["description"]:"");
 		items = resource_group_items ();
 		UI::ChangeWidget(`id(`resources), `Items, items);
+		UI::ChangeWidget(`id(`descr), `Value, group["description"]:"");
 	    }
 	}
 	if (ret == `delete_b)
 	{
-	    /*
-	    if (!user_defined[selected]:false)
-	    {
-		// Popup text (user wants to delete predefined resource)
-		Popup::Message(_("You cannot delete predefined resource."));
-		continue;
-	    }
-	    */
 	    if (Popup::YesNo(sformat(
 // Popup text (confirmation), %1 is name of file or service
 _("Really delete resource \'%1\' from this group?"),

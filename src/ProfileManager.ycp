@@ -257,11 +257,11 @@ define boolean SetResourceGroup(string groupname, list resources, string descr) 
 }
 
 /**
- * Gets resource group information.
+ * Gets resources of resource group.
  * @param groupname resource group name
  * @return list of resources
  */
-define list GetResourceGroup(string groupname) ``{
+global define list GetResourceGroupResources(string groupname) ``{
 
     list resource_group = SCR::Read(.scpm.rg.group, groupname);
     if (resource_group == nil)
@@ -286,10 +286,21 @@ global define boolean ReadResourceGroups() ``{
 	return false;
     }
     foreach (`name, `group, resource_groups, ``{
-	group["resources"] = GetResourceGroup (name);
+	group["resources"] = GetResourceGroupResources (name);
     });
 
     return true;
+}
+
+global define map ReadResourceGroup(string groupname) ``{
+
+    map resource_group = SCR::Read(.scpm.rg.group_map, groupname);
+    if (resource_group == nil)
+    {
+	SetError();
+	return $[];
+    }
+    return resource_group;
 }
 
 /**
@@ -771,7 +782,6 @@ global define boolean Read() ``{
 
         return false;
     }
-    // FIXME re-initialization needed
     if (needs_reinit)
     {
 	// yes/no popup
@@ -783,7 +793,7 @@ SCPM. This also means the saved profiles get lost and need to be
 setup up again from scratch.
 Perform the reinitialization now?")))
 	{
-	    // force enabling TODO test it...
+	    // force enabling
 	    SCR::Write(.scpm.status.enabled.force, true);
 	}
     }
@@ -887,7 +897,7 @@ global define boolean Write() ``{
     Progress::NextStage();
     if(!WriteConfigFile())
 	// Error message:
-        Report::Error (_("Cannot write SCPM settings!"));
+        Report::Error (_("Cannot write SCPM settings."));
 
     Progress::NextStage();
     if(!WriteUserSettings())
@@ -1001,7 +1011,7 @@ global define boolean WriteUserSettings() ``{
 define boolean Initialize() ``{
 
     // popup label, %1 is required application
-    if (!Require::RequireAndConflict (["scpm"], [], _("<p>For using profile manager, the package <b>%1</b> is necessary.<br>
+    if (!Require::RequireAndConflict (["scpm"], [], _("<p>To use the profile manager, the package <b>%1</b> is necessary.<br>
 Install it now?</p>")))
          return false;
 
@@ -1017,11 +1027,6 @@ Install it now?</p>")))
     if (ret == false)
         SetError();
 
-    // FIXME: read use_rg status! - check scpm_version from status?
-    /*
-    string version = lookup (SCR::Execute (.target.bash_output, "rpm -qi scpm | grep Version"), "stdout", "");
-    list v_l = splitstring (version, " \t\n:");
-    */
     return ret;
 }
 
@@ -1040,7 +1045,9 @@ define boolean ReadSCPMStatus() ``{
 
     enabled = select (stat, 0, false);
     initialized = select (stat, 1, false);
-    needs_reinit = select (stat, 3, false);
+    // resource groups are available from some version of scpm...
+    use_rg = select (stat, 2, true) > "0.9";
+    needs_reinit = initialized && select (stat, 3, false);
     return true;
 }
 

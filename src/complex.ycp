@@ -241,16 +241,7 @@ global define any OptionsDialog () ``{
     list resource_sets = union( union (ProfileManager::resource_sets_predefined, [ separator ]), ProfileManager::resource_sets_individual);
     boolean close_popups = ProfileManager::close_popups;
 
-    /* FIXME which values?
-    list switch_modes = ["normal", "skip", "force"];
-    list boot_modes = ["backup", "skip", "force"];
-    */
-    // FIXME radiobuttons
-    list switch_modes = [_("save changes"), _("drop changes")];
-    list boot_modes = [_("save changes"), _("drop changes")];
-
     boolean use_rg = ProfileManager::use_rg;
-    // -------------------------
 
     // Dialog caption label:
     string caption = _("SCPM Options");
@@ -299,7 +290,7 @@ global define any OptionsDialog () ``{
 	`VSpacing(1)),
         `HSpacing(1.5));
 
-    if (use_rg)
+    if (use_rg) // ---------------------- dialog for resource groups
 	contents = `HBox(`HSpacing(1.5),
         `VBox(
         `VSpacing(1),
@@ -329,14 +320,16 @@ global define any OptionsDialog () ``{
 		`VSpacing(0.5),
 		`Left(`CheckBox(`id("verbose"),
 		    // checkbox label
-                    _("&Verbose messages"), false)),
+                    _("&Verbose Messages"), false)),
 		`VSpacing(2),
 		`HBox(
 		    `HSpacing(0.5),
 		    // frame label
-		    `Frame (_("Switch mode"), `VBox(
+		    `Frame (_("Switch Mode"), `VBox(
 			`VSpacing (0.5),
 			`RadioButtonGroup (`id(`rb_sw), `HBox(`VBox (
+			    // radiobutton label
+			    `Left(`RadioButton (`id(`swn), _("&Normal"))),
 			    // radiobutton label
 			    `Left(`RadioButton (`id(`sws), _("&Save changes"))),
 			    // radiobutton label
@@ -346,7 +339,7 @@ global define any OptionsDialog () ``{
 		    )),
 		    `HSpacing (),
 		    // frame label
-		    `Frame (_("Boot mode"), `VBox(
+		    `Frame (_("Boot Mode"), `VBox(
 			`VSpacing (0.5),
 			`RadioButtonGroup (`id(`rb_bo), `VBox (
 			    // radiobutton label
@@ -354,6 +347,7 @@ global define any OptionsDialog () ``{
 			    // radiobutton label
 			    `Left(`RadioButton (`id(`bd), _("Drop c&hanges")))
 			)),
+			`Label (""),
 			`VSpacing (0.5)
 		    )),
 		    `HSpacing()
@@ -363,12 +357,12 @@ global define any OptionsDialog () ``{
 		    `HSpacing(),
 		    `Left(
 		    // combobox label
-		     `ComboBox(`id("switch_mode"), _("S&witch mode"),
+		     `ComboBox(`id("switch_mode"), _("S&witch Mode"),
 			switch_modes)),
 		    `HSpacing(),
 		    `Left(
 		    // combobox label
-		    `ComboBox(`id("boot_mode"), _("Boo&t mode"), boot_modes)),
+		    `ComboBox(`id("boot_mode"), _("Boo&t Mode"), boot_modes)),
 		    `HSpacing()
 		),
 		*/
@@ -402,18 +396,24 @@ global define any OptionsDialog () ``{
         UI::ChangeWidget(`id(`resources), `CurrentItem,
             ProfileManager::current_resources);
 
-    // set the initial values of comboboxes
+    // set the initial values of config (scpm.conf) values
     if (use_rg)
     {
-	/*
-	foreach (`key, `value, ProfileManager::scpm_conf, ``{
-	    UI::ChangeWidget (`id(key), `Value, value);
-	});
-	*/
-	UI::ChangeWidget (`id("verbose"), `Value, ProfileManager::scpm_conf["verbose"]:true);
-	// FIXME mode values???
-	UI::ChangeWidget(`id(`rb_sw), `CurrentButton, `sws);
-	UI::ChangeWidget(`id(`rb_bo), `CurrentButton, `bs);
+	map sw_mode = $[
+	    "normal" :	`swn,
+	    "skip" :	`swd,
+	    "force":	`sws
+	];
+	map b_mode = $[
+	    "skip" :	`bd,
+	    "force":	`bs
+	];
+	UI::ChangeWidget (`id("verbose"), `Value,
+	    ProfileManager::scpm_conf["verbose"]:true);
+	UI::ChangeWidget(`id(`rb_sw), `CurrentButton,
+	    sw_mode[ProfileManager::scpm_conf["switch_mode"]:"normal"]:`swn);
+	UI::ChangeWidget(`id(`rb_bo), `CurrentButton,
+	    b_mode[ProfileManager::scpm_conf["boot_mode"]:"force"]:`bs);
     }
 
     any ret = nil;
@@ -552,9 +552,14 @@ global define any OptionsDialog () ``{
     if (ret == `next)
     {
 	// moving to other dialog (OK or resources) -> save config values
-	foreach (`key, `value, ProfileManager::scpm_conf, ``{
-	    ProfileManager::scpm_conf[key] = UI::QueryWidget (`id(key), `Value);
-	});
+	ProfileManager::scpm_conf["verbose"] = UI::QueryWidget (`id("verbose"),
+	    `Value);
+	map sw_mode =	$[ `swn: "normal", `swd: "skip", `sws: "force" ];
+	map b_mode =	$[ `bd:	"skip", `bs: "force" ];
+	ProfileManager::scpm_conf["switch_mode"] =
+	    sw_mode [UI::QueryWidget (`id(`rb_sw), `CurrentButton)]:"normal";
+	ProfileManager::scpm_conf["boot_mode"] =
+	    b_mode [UI::QueryWidget (`id(`rb_bo), `CurrentButton)]:"force";
     }
     return ret;
 }

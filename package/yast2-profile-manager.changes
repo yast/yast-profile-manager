@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Mon Aug 11 11:06:18 CEST 2003 - jsuchome@suse.de
+
+- proofread texts, 1st round
+- fixed reseting groups
+- 2.8.3
+
+-------------------------------------------------------------------
 Thu Aug  7 14:54:59 CEST 2003 - jsuchome@suse.de
 
 - new function: Reset resource group(s)

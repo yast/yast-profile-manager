@@ -168,17 +168,17 @@ you want to have a more detailed resource setup, then click the
 <b>Configure Resources</b> button.</p>") +
 
     // Options dialog help 3/6
-    _("<p>The <b>switch mode</b> defines the behaviour of SCPM when switching
-profiles. Setting this to <b>normal</b> or <b>save changes</b> has the effect
+    _("<p>The <b>Switch Mode</b> defines the behaviour of SCPM when switching
+profiles. Setting this to <b>Normal</b> or <b>Save changes</b> has the effect
 that modified resources in the switch dialog will be preset to <b>save</b>,
-setting it to <b>drop changes</b> results in preset <b>ignore</b>. This option
+setting it to <b>Drop changes</b> results in preset <b>ignore</b>. This option
 has more effects on the command line SCPM, so please have a look at the info
 page if you intend to use that one, too.</p>") +
 
     // Options dialog help 4/6
-    _("<p><b>Boot mode</b> defines the behaviour of SCPM at system boot time.
-Option <b>save changes</b> will apply all changes to the previous profile,
-<b>drop changes</b> throws them away.</p>") +
+    _("<p><b>Boot Mode</b> defines the behaviour of SCPM at system boot time.
+Option <b>Save changes</b> will apply all changes to the previous profile,
+<b>Drop changes</b> throws them away.</p>") +
 
     // Options dialog help 5/6
     _("<p><b>Verbose messages</b> affects the detail level of progress messages

@@ -319,6 +319,7 @@ YCPValue SCPMAgent::Read(const YCPPath &path, const YCPValue& arg) {
 	else if (path->length() == 2) {
 
 	    // (.scpm.rg.group, name): get info about one resource group
+	    // returns list of resources
 	    if (PC(1) == "group") {
 
 		if (arg.isNull()) {		
@@ -338,6 +339,36 @@ YCPValue SCPMAgent::Read(const YCPPath &path, const YCPValue& arg) {
 			for ( unsigned int i=0; i<group.size(); i++ ) {
 			    resource_group->add (tomap_re (group[i]));
 			}
+			ret = resource_group;
+		    }
+		}
+	    }
+	    // (.scpm.rg.group_map, name): get more info about one rg
+	    // map of group
+	    else if (PC(1) == "group_map") {
+
+		if (arg.isNull()) {		
+		    scpm_error = "Wrong parameter.";
+		    y2error ( scpm_error );
+		}
+		else {
+		    string groupname = arg->asString()->value();
+		    string desc;
+		    vector<resource_entry_t> group;
+				
+		    if (!scpm->GetResourceGroup (groupname, group, desc)) {
+           		y2error ( scpm_error );
+		    }
+		    else {
+			YCPMap resource_group;
+            		YCPList resources;
+			for ( unsigned int i=0; i<group.size(); i++ ) {
+			    resources->add (tomap_re (group[i]));
+			}
+			resource_group->add (
+			    YCPString ("description"), YCPString (desc));
+			resource_group->add (
+			    YCPString ("resources"), resources);
 			ret = resource_group;
 		    }
 		}
@@ -407,17 +438,6 @@ YCPValue SCPMAgent::Read(const YCPPath &path, const YCPValue& arg) {
     // traditional branch with two elements
     else if (path->length() == 2) {
 	
-    /* not necessary any more:
-   	if ((PC(0) == "status") && (PC(1) == "enabled")) {
-        scpm_status_t scpm_status;
-            
-        if (!scpm->Status(scpm_status)) {
-            y2error ( scpm_error );
-        }
-        else 
-            ret = YCPBoolean(scpm_status.enabled);
-    }*/
-
 	if (PC(0) == "profiles") {
 	    if (PC(1) == "current") {
 
