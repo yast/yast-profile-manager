@@ -133,9 +133,9 @@ define any MainDialog () ``{
         `HBox(
 	    `HSpacing(1),
 	    `Label (state_label),
-	    `Right(`PushButton(`id(`options_button), `opt(`key_F7),
-		// Push button label
-                _("O&ptions"))),
+	    `Right (
+		`PushButton(`id(`options_button),`opt(`key_F7),Label::Options())
+	    ),
             `HSpacing(1)
 	),
         `VSpacing(0.2))),

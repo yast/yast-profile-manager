@@ -1055,8 +1055,7 @@ define string GetFile() ``{
 	`VBox(
 	    `VSpacing(0.2),
 	    `HBox (
-		// text entry label
-		`TextEntry(`id(`file), _("&File name:"), ""),
+		`TextEntry (`id(`file), Label::FileName(), ""),
 		`HSpacing (1),
 		`VBox (
 		    `Label(""),
