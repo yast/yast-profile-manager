@@ -14,6 +14,21 @@
 #include <scr/SCRAgent.h>
 #include <scr/SCRInterpreter.h>
 
+using namespace std;
+
+#include <iostream>
+#include "scpm.h"
+//#include <scpm_types.h>
+
+#include <string>
+#include <vector>
+
+#include <unistd.h>
+#include <sys/types.h>
+#include <libintl.h>
+#include <fstream>
+
+
 /**
  * @short An interface class between YaST2 and SCPM Agent
  */
@@ -23,6 +38,9 @@ private:
     /**
      * Agent private variables
      */
+    int options;
+    scpm_status_t scpm_status;
+    SCPM *scpm;
 
 public:
     /**
