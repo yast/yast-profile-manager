@@ -119,7 +119,7 @@ global list resource_sets_individual = [];
  *      ]
  *  ]
  */
-global map switch_info = $[]; // FIXME don't have to be global!
+map switch_info = $[];
 
 /**
  * This variable defines the action whis will be done
@@ -197,10 +197,9 @@ map resource_groups = $[];
 global map scpm_conf = $[];
 
 /**
- * helper structure, where "save" flags of resource groups are stored (to show
- * in Switch dialog without need of going through all resources every time)
+ * helper structure for faster querying modified resource groups (prepared
+ * for Switch) - is filled in GetModifiedGroups()
  */
-//global map groups_flags = $[];//FIXME remove!
 global map modified_groups = $[];
 
 /**
@@ -216,7 +215,6 @@ global boolean canceled = false;
 
 // just a helper TODO remove?
 global boolean use_rg = true;
-
 
 global string current_resource_group = "";
 
@@ -296,12 +294,76 @@ global define map GetResourceGroups() ``{
     return eval (resource_groups);
 }
 
-// temporary fix, FIXME remove later
+// temporary fix, FIXME is it OK?
 global define void UpdateResourceGroups (map groups) ``{
 
     resource_groups = $[];
     resource_groups = eval (groups);
+    // check for de/activated?
+}
 
+// do the "commit" - save to scpm
+global define boolean SaveResourceGroups () ``{
+
+    string error = "";
+
+    // TODO do not call this if Apply not set
+    foreach (`name, `group, resource_groups, ``{
+	string what = group["what"]:"";
+	string name = group["name"]:"";
+
+	// edited/added/modifies -> SetResourceGroup
+	if (what == "deleted")
+	{
+	    if (!SCR::Write (.scpm.rg.group.delete, name))
+		SetError();
+	}
+	if (what == "added" || what == "edited")
+	{
+	    if (!SCR::Write (
+		    add (.scpm.rg.group.set, name),
+		    group["resources"]:[],
+		    group["description"]:""))
+		SetError();
+	}
+	/* TODO use some rename function
+	if (what == "renamed")
+	{
+	    if (!SCR::Write (.scpm.rg.group.delete, group["org_name"]:""))
+		SetError();
+	    if (!SCR::Write (
+		    add (.scpm.rg.group.set, name),
+		    group["resources"]:[],
+		    group["description"]:""))
+		SetError();
+	}
+	*/
+	if (what != "")
+	{
+	    y2internal ("changed: %1", group);
+	    remove (group,"what");
+	}
+	// do Activation/Deactivation
+	// TODO is it needed for groups "edited"/"added"?
+	// or only when "user_modified" is set?
+	else if (group["user_modified"]:false)
+	{
+	    y2internal ("changed: %1", group);
+	    if (!SCR::Write (.scpm.rg.group.activate,name,group["active"]:true))
+		SetError();
+	}
+	// store error messages...
+	if (scpm_error != "")
+	{
+	    if (error != "")
+		error = error + "\n";
+	    error = error + scpm_error;
+	    scpm_error = "";
+	}
+    });
+    if (error != "")
+	scpm_error = error;
+    return (scpm_error == "");
 }
 
 /**

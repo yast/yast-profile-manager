@@ -331,15 +331,15 @@ global define any SwitchDialog () ``{
             `HSpacing(1),
             // Label text
             `Left(`Label(_("Active Profile"))),
-            `Right(`Label(active)),
+            `Right(`Heading(active)),
             `HSpacing(2)
             ),
         `VSpacing(0.2),
         `HBox(
             `HSpacing(1),
             // Label text
-            `Left(`Heading(_("New Profile"))),
-            `Left(`Heading(selected)),
+            `Left(`Label(_("New Profile"))),
+            `Right(`Heading(selected)),
 	    `HStretch(),
             `HSpacing(2)
             ),
@@ -1094,7 +1094,12 @@ global define symbol ConfigureResourcesDialog () ``{
 		UI::MessagePopup(_("You cannot delete predefined resource group."));
 	    else
 	    {
-		resource_groups[selected, "what"] = "deleted";
+		if (resource_groups[selected, "what"]:"" == "added")
+		{
+		    resource_groups = remove (resource_groups, selected);
+		}
+		else
+		    resource_groups[selected, "what"] = "deleted";
 		UI::ChangeWidget(`id(`rgroups),`Items, resource_groups_items());
 	    }
 	    continue;
@@ -1109,12 +1114,11 @@ global define symbol ConfigureResourcesDialog () ``{
 	    if (group != $[])
 	    {
 		// if name was changed, mark the old key as deleted
-		if (haskey (resource_groups, group["org_name"]:""))
+		if (group["what"]:"" == "renamed")
 		{
-		    resource_groups[group["org_name"]:"", "what"] = "deleted";
-		    remove (group, "org_name");
+		    resource_groups = remove (resource_groups, group["org_name"]:"");
 		}
-		resource_groups[group["name"]:""] = group;
+		resource_groups = add (resource_groups, group["name"]:"",group);
 		UI::ChangeWidget(`id(`rgroups),`Items, resource_groups_items());
 		UI::ChangeWidget(`id(`rgroups), `CurrentItem, group["name"]:"");
 	    }
@@ -1124,6 +1128,8 @@ global define symbol ConfigureResourcesDialog () ``{
 	{
 	    boolean active = !resource_groups[selected, "active"]:false;
 	    resource_groups[selected,"active"] = active;
+	    // TODO: set user_modified now?
+	    resource_groups[selected,"user_modified"] = true;
 	    UI::ChangeWidget (`id(`rgroups),`Item (selected, 0), active?"X":"");
 	}
 	else if (ret == `back || ret == `cancel)
@@ -1137,16 +1143,8 @@ global define symbol ConfigureResourcesDialog () ``{
 	    // TODO now copy local structure to global resource_groups
 	    if (UI::YesNoPopup (_("Apply changes to Resource Groups?")))
 	    {
-		y2milestone ("changes applied");
-		foreach (`name, `group, resource_groups, ``{
-		    // edited/added/modifies -> SetResourceGroup
-		    if (group["what"]:"" != "")
-			y2internal ("changed: %1", group);
-
-		    // (de)activated -> (De)Activate
-		});
-		// FIXME temporary -> save in Options dialog...
 		ProfileManager::UpdateResourceGroups(resource_groups);
+		// TODO if there is "Apply", writing could be done now
 	    }
 	    break;
 	}
@@ -1175,18 +1173,8 @@ global define string GetService() ``{
 	`HSpacing(1),
 	`VBox(
 	    `VSpacing(0.2),
-	    // text entry label
-//	    `TextEntry(`id(`service), _("&Service:"), ""),
-	    `HBox (
-		// text entry label
-		`TextEntry(`id(`service), _("&Service:"), ""),
-		`HSpacing (1),
-		`VBox (
-		    `Label(""),
-		    // button label
-		    `PushButton (`id (`choose), `opt (`key_F6), _("Choo&se"))
-		)
-	    ),
+	    // combo box label
+	    `ComboBox( `id(`services), _("Available &Services"), service_items),
 	    `VSpacing(0.2),
 	    `HBox(
 		`PushButton(`id(`ok),`opt(`default, `key_F10), OKButtonLabel()),
@@ -1196,38 +1184,21 @@ global define string GetService() ``{
 	`HSpacing(1)
     ));
 
-    UI::SetFocus (`id (`service));
+    UI::SetFocus (`id (`services));
 
     any ret = nil;
     do {
 	ret = UI::UserInput();
-	service = UI::QueryWidget(`id(`service), `Value);
+	service = UI::QueryWidget(`id(`services), `Value);
 
 	if (ret == `cancel)
 	{
 	    service = "";
 	}
-	else if (ret == `choose)
-	{
-	    // TODO not finished yet...
-	    UI::OpenDialog( `opt(`decorated), `HBox(
-		`HSpacing(1),
-		`VBox(
-		    `VSpacing(0.2),
-		    `MultiSelectionBox( `id(`services),
-			// selection box label
-			_("Available &Services"), service_items),
-		    `VSpacing(0.2),
-		    `PushButton(`id(`ok),`opt(`default, `key_F10),
-			OKButtonLabel())
-		)));
-	    UI::UserInput();
-	    UI::CloseDialog();
-	}
 	else if (ret == `ok)
 	{
-	    // check service existence
-	    if (!SCR::Read (.init.scripts.exists, service))
+	    // check service existence TODO it has to exist, if combo is not editable
+	    if (service != "" && !SCR::Read (.init.scripts.exists, service))
 	    {
 		UI::ErrorPopup (sformat(_("Service %1 does not exist."),
 		    service));
@@ -1314,6 +1285,15 @@ global define map ResourceGroupPopup (map group) ``{
 
 y2internal ("current group: %1", group);
 
+    /**
+     * Scan table items for presence of given resource
+     */
+    define boolean has_resource (string name, string type) ``{
+
+	return (contains (items, `item(`id(name), "X", name, type)) ||
+	    contains (items, `item(`id(name), "", name, type)));
+    }
+
     string groupname = group["name"]:"";
     string descr = group["description"]:"";
     string what = (group == $[])? "added": "edited";
@@ -1371,6 +1351,8 @@ y2internal ("current group: %1", group);
     );
 
     UI::OpenDialog(`opt(`decorated), con);
+
+    // create the table items
     items = maplist (`res, group["resources"]:[], ``{
 	string name = res["name"]:"";
 	user_defined [name] = res["user_defined"]:false;
@@ -1422,7 +1404,7 @@ y2internal ("current group: %1", group);
 	if (ret == `adds_b)
 	{
 	    string service = GetService ();
-	    if (service != "")
+	    if (service != "" && !has_resource (service,"service"))
 	    {
 		y2milestone ("new service %1 for group %2", service, groupname);
 		items = add (items, `item(`id(service), "", service,"service"));
@@ -1433,7 +1415,7 @@ y2internal ("current group: %1", group);
 	if (ret == `addf_b)
 	{
 	    string file = GetFile ();
-	    if (file != "")
+	    if (file != "" && !has_resource (file,"file"))
 	    {
 		y2milestone ("new file %1 for group %2", file, groupname);
 		items = add (items, `item(`id(file), "", file, "file"));
@@ -1444,8 +1426,7 @@ y2internal ("current group: %1", group);
 	if (ret == `ok)
 	{
 	    y2milestone ("(temporary) saving resource group %1", groupname);
-	    // TODO
-	    // ---------- check if all is OK
+	    // ---------- check if all is OK:TODO unique name
 	    groupname = UI::QueryWidget (`id(`name), `Value);
 	    descr = UI::QueryWidget (`id(`descr), `Value);
 	    list resources = maplist (`i, items, ``{
@@ -1463,7 +1444,7 @@ y2internal ("current group: %1", group);
 		{
 		    // FIXME workaround for renaming groups
 		    group["org_name"]	= group["name"]:"";
-		    what		= "added";
+		    what		= "renamed";
 		}
 		group["what"]		= what;
 		group["name"]		= groupname;
@@ -1472,6 +1453,7 @@ y2internal ("current group: %1", group);
 		group["user_modified"]	= true;
 		if (what == "added")
 		    group["user_defined"] = true;
+y2warning ("group: %1", group);
 	    }
 	}
 	if (ret == `cancel || ret == `back)

@@ -512,8 +512,15 @@ global define any OptionsDialog () ``{
         y2debug("close_popups=%1",ProfileManager::close_popups);
         y2milestone("current_resources=%1",ProfileManager::current_resources);
 
-	// TODO FIXME save changed resource groups now!
-
+	if (!ProfileManager::SaveResourceGroups ())
+	{
+            // Error popup text, %1 is additional error text
+            UI::ErrorPopup(sformat(_("Saving resource groups failed:
+%1
+"),
+		ProfileManager::scpm_error));
+		// TODO FIXME only the last error message!
+	}
         break;
     }
     else if (ret == `back || ret == `cancel) break;
@@ -531,6 +538,7 @@ global define any OptionsDialog () ``{
 	    ProfileManager::scpm_conf[key] = UI::QueryWidget (`id(key), `Value);
 	});
 	// TODO use some modified flag and save only when neccessary...
+	// FIXME save only on OK!
     }
     return ret;
 }
