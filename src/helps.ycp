@@ -263,7 +263,7 @@ your resource setup.</p>") +
 
     // Configure Resources Dialog help 4/4
     _("<p>You can return all Resource Groups to its initial state by pressing
-the <b>Reset All</b> button. The changes will be applied immediataly!</b>"),
+the <b>Reset All</b> button. The changes will be applied immediataly!</b></p>"),
 
     /* Write dialog help 1/1 */
     "write" : _("<p><b><big>Writing Profile Manager Configuration</big></b><br>

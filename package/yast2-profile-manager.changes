@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Wed Aug 20 14:05:21 CEST 2003 - jsuchome@suse.de
+
+- removed redundant "initialization dialog" (#28779)
+- do not rebuild SCDB before initialization
+- 2.8.4
+
+-------------------------------------------------------------------
 Mon Aug 11 11:06:18 CEST 2003 - jsuchome@suse.de
 
 - proofread texts, 1st round

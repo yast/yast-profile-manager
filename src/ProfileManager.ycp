@@ -1320,6 +1320,9 @@ global define boolean WriteResources(string resource_set) ``{
  */
 global define boolean RebuildDB() ``{
 
+    if (!initialized)
+	return true; // no need for rebuild
+
     boolean ret = SCR::Execute(.scpm.resources.rebuild);
     if (!ret)
         ShowError();

@@ -49,18 +49,10 @@ global define symbol ProfileManagerSequence() ``{
 	]
     ];
 
-    // Caption of the initialize process
-    string caption = _("Profile Manager Configuration");
-    // Lable of the initialize process
-    term contents = `Label(_("Initializing ..."));
-
     Wizard::CreateDialog();
-    Wizard::SetContentsButtons(caption, contents, "",
-	    Label::BackButton(), Label::NextButton());
-
     any ret = WizardSequencer(aliases, sequence);
-
     UI::CloseDialog();
+
     return ret;
 }
 
