@@ -154,8 +154,10 @@ global define any MainDialog () ``{
             if (UI::YesNoPopup(sformat(_("Really delete profile %1?"), selected)))
             {
                 if (!ProfileManager::DeleteProfile(selected))
-					// Error popup text
-                    UI::ErrorPopup(_("Deleting the profile was not succesful."));
+					// Error popup text: %1 is additional error message
+                    UI::ErrorPopup(sformat(
+                        _("Deleting the profile was not succesful:\n%1"),
+                        ProfileManager::scpm_error));
                 UI::ChangeWidget(`id(`profiles), `Items,
                         ProfileManager::GetProfilesAsItems());
                 UI::ChangeWidget(`id(`profiles), `CurrentItem,
@@ -185,8 +187,8 @@ global define any MainDialog () ``{
 
         if (!ProfileManager::Wait())
         {
-            // Error popup text
-            UI::ErrorPopup(_("Switching to another profile is not possible."));
+            // Error popup text, %1 is additional translated error message
+            UI::ErrorPopup(sformat(_("Switching to another profile is not possible:\n%1"), ProfileManager::scpm_error));
             continue;
         }
         if (!ProfileManager::ReadSwitchInfo())
@@ -379,8 +381,8 @@ global define any OptionsDialog () ``{
                     ProgressPopup();
                     if (!ProfileManager::Wait())
                     {
-                        // Error popup text
-                        UI::ErrorPopup(_("Enabling SCPM was not succesful."));
+                        // Error popup text, %1 is additional error message
+                        UI::ErrorPopup(sformat (_("Enabling SCPM was not succesful:\n%1"), ProfileManager::scpm_error));
                         ProfileManager::enabled = false;
 //                        ProfileManager::initialized = false;??
                         //    continue;
@@ -399,8 +401,10 @@ global define any OptionsDialog () ``{
 
                     if (!ProfileManager::WriteSCPMStatus())
                     {
-                        // Error popup text
-                        UI::ErrorPopup(_("Enabling SCPM was not succesful."));
+                        UI::ErrorPopup(sformat(
+                            // Error popup text, %1 is additional error text
+                            _("Enabling SCPM was not succesful:\n%1"),
+                            ProfileManager::scpm_error));
                         ProfileManager::enabled = false;
                         break;
                     }
@@ -434,8 +438,10 @@ global define any OptionsDialog () ``{
                 ProfileManager::current_resources = "";
                 if (!ProfileManager::WriteSCPMStatus())
                 {
-                    // Error popup text
-                    UI::ErrorPopup(_("Disabling SCPM was not succesful."));
+                    UI::ErrorPopup(sformat(
+                        // Error popup text, %1 is additional error text
+                        _("Disabling SCPM was not succesful:\n%1"),
+                        ProfileManager::scpm_error));
                     ProfileManager::enabled = true;
                     break;
                 }

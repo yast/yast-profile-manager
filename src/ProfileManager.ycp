@@ -19,7 +19,6 @@ import "Progress";
 import "Report";
 
 include "profile-manager/routines.ycp";
-//include "require.ycp";
 
 /**
  * Is the module runing for the first time?
@@ -133,6 +132,11 @@ global string active_resource_name = "";
 global string last_ret = "";
 
 /**
+ *  When scpm action fails, the error message is stored here by SetError()
+ */
+global string scpm_error = "";
+
+/**
  * In this map are written the variables close_popups and first_time.
  * It is read from the file in ReadUserSettings()
  * and written to the file in WriteUserSettings().
@@ -184,10 +188,6 @@ global define boolean Read() ``{
 
     integer steps = 8;
 
-    integer sl = 10;
-    sleep(sl);
-
-
     Progress::New( caption, " ", steps, [
 		// progress stage
 	    _("Initialize SCPM"),
@@ -234,57 +234,54 @@ global define boolean Read() ``{
     Progress::NextStage();
     if(!Initialize())
     {
-		// Error message:
-		Report::Error(_("Cannot initialize SCPM!"));
+		// Error message: %1 is special error message, should be translated
+		Report::Error(sformat(_("Cannot initialize SCPM:\n%1"), scpm_error));
         return false;
     }
-    sleep(sl);
 
     // read
     if(Abort()) return false;
     Progress::NextStage();
     if(!ReadSCPMStatus())
     {
-		// Error message:
-		Report::Error(_("Cannot read SCPM status!"));
+		// Error message: %1 is special error message, should be translated
+		Report::Error(sformat(_("Cannot read SCPM status:\n%1"), scpm_error));
         return false;
     }
-    sleep(sl);
 
     // read
     if(Abort()) return false;
     Progress::NextStage();
 	if (enabled)
 	    if(!ReadProfiles())
-			// Error message:
-			Report::Error(_("Cannot read profiles!"));
-    sleep(sl);
+			// Error message: %1 is special error message, should be translated
+			Report::Error(sformat(_("Cannot read profiles:\n%1"), scpm_error));
 
     // read
     if(Abort()) return false;
     Progress::NextStage();
 	if (enabled)
 	    if(!ReadActiveProfile())
-			// Error message:
-			Report::Error(_("Cannot read active profile!"));
-    sleep(sl);
+			// Error message: %1 is special error message, should be translated
+			Report::Error(sformat(_("Cannot read active profile:\n%1"),
+                scpm_error));
 
     // read
     if(Abort()) return false;
     Progress::NextStep();
 	if (enabled)
 	    if(!ReadProfilesDescriptions())
-			// Error message:
-			Report::Error(_("Cannot read profiles descriptions!"));
-    sleep(sl);
+			// Error message: %1 is special error message, should be translated
+			Report::Error(sformat(_("Cannot read profiles descriptions:\n%1"),
+                scpm_error));
 
     // read current resources
     if(Abort()) return false;
     Progress::NextStage();
 	if(!ReadCurrentResources())
-		// Error message:
-		Report::Error(_("Cannot read current resources!"));
-    sleep(sl);
+		// Error message: %1 is special error message, should be translated
+		Report::Error(sformat(_("Cannot read current resources:\n%1"),
+            scpm_error));
 
     // read user settings
     if(Abort()) return false;
@@ -292,12 +289,10 @@ global define boolean Read() ``{
 	if(!ReadUserSettings())
 		// Error message:
 		Report::Error(_("Cannot read user settings!"));
-    sleep(sl);
 
     if(Abort()) return false;
 	// progress stage
     ProgressNextStage(_("Finished"));
-    sleep(sl);
 
     if(Abort()) return false;
     return true;
@@ -313,9 +308,6 @@ global define boolean Write() ``{
     string caption = _("Writing profile manager configuration");
 
     integer steps = 2;
-
-    integer sl = 10;
-
 
     Progress::New(caption, " ", steps, [
         // progress stage:
@@ -336,19 +328,19 @@ global define boolean Write() ``{
 //    if(Abort()) return false; ... abort is disabled here
     Progress::NextStage();
     if(!SCR::Write(.scpm, nil))
+    {
+        SetError();
 	    // Error message:
-        Report::Error (_("Cannot write SCPM database!"));
-    sleep(sl);
+        Report::Error(sformat(_("Cannot write SCPM database:\n%1"),scpm_error));
+    }
 
     Progress::NextStage();
     if(!WriteUserSettings())
 	    // Error message:
         Report::Error (_("Cannot write user settings!"));
-    sleep(sl);
 
     // progress stage:
     ProgressNextStage(_("Finished"));
-    sleep(sl);
 
     if(Abort()) return false;
     return true;
@@ -362,6 +354,11 @@ global define boolean ReadProfiles() ``{
 
     list profiles_l = SCR::Read(.scpm.profiles);
 
+    if (profiles_l == nil)
+    {
+        SetError();
+        profiles_l = [];
+    }
     foreach (`profile, profiles_l, ``{
         profiles = add (profiles, profile, "");
     });
@@ -381,7 +378,11 @@ global define boolean ReadActiveProfile() ``{
     active_profile = SCR::Read(.scpm.profiles.current);
 
     if (active_profile == nil)
+    {
+        SetError();
+        active_profile = "";
         return false;
+    }
     return true;
 }
 
@@ -396,6 +397,11 @@ global define boolean ReadProfilesDescriptions() ``{
 
     foreach (`profile, `d, profilesm, ``{
         string desc = SCR::Read(.scpm.profiles.description, profile);
+        if (desc == nil)
+        {
+            desc = "";
+            SetError();
+        }
         profiles = add (profiles, profile, desc);
     });
     return true;
@@ -448,6 +454,9 @@ define boolean Initialize() ``{
 
     boolean ret = SCR::Execute(.scpm, tmpdir);
     if (ret == nil) ret = false;
+    if (ret == false)
+        SetError();
+
     return ret;
 }
 
@@ -459,7 +468,10 @@ define boolean ReadSCPMStatus() ``{
 
     list stat = SCR::Read(.scpm.status);
     if (stat == nil)
+    {
+        SetError();
         return false;
+    }
 
     enabled = select (stat, 0, false);
     initialized = select (stat, 1, false);
@@ -476,7 +488,10 @@ global define boolean ReadCurrentResources() ``{
     string cur = SCR::Read(.scpm.resources.current);
 
     if (cur == nil || cur =="")
+    {
+        SetError();
         return false;
+    }
 
     current_resources = cur;
     return true;
@@ -492,7 +507,10 @@ global define boolean ReadResourceSets() ``{
     sets = SCR::Read(.scpm.resources);
 
     if (sets == nil)
+    {
+        ShowError();
         return false;
+    }
 
     resource_sets_predefined = select (sets, 0, []);
     resource_sets_individual = select (sets, 1, []);
@@ -516,14 +534,16 @@ global define boolean GetProfile() ``{
     profile_settings = add (profile_settings, "name", selected_profile);
     profile_settings = add (profile_settings, "description", lookup(profiles, selected_profile,""));
 
-    profile_settings = add (profile_settings, "prestart",
-        SCR::Read(.scpm.profiles.prestart, selected_profile));
-    profile_settings = add (profile_settings, "poststart",
-        SCR::Read(.scpm.profiles.poststart, selected_profile));
-    profile_settings = add (profile_settings, "prestop",
-        SCR::Read(.scpm.profiles.prestop, selected_profile));
-    profile_settings = add (profile_settings, "poststop",
-        SCR::Read(.scpm.profiles.poststop, selected_profile));
+    foreach (`setting, ["prestart", "poststart", "prestop", "poststop"], ``{
+
+        string val = SCR::Read(add(.scpm.profiles, setting), selected_profile);
+        if (val == nil)
+        {
+            ShowError();
+            val = "";
+        }
+        profile_settings = add (profile_settings, setting, val);
+    });
 
     return true;
 }
@@ -569,6 +589,10 @@ global define boolean RenameProfile(string old, string new) ``{
         if (active_profile == old)
             active_profile = new;
     }
+    else
+    {
+        SetError();
+    }
     return ret;
 }
 
@@ -583,7 +607,9 @@ global define boolean SetProfile(string name) ``{
 
     string desc = deletechars(lookup(profile_settings, "description",""), "\n");
 
+
     boolean ret = SCR::Write(.scpm.profiles.description, desc, name);
+
     ret = ret &&  SCR::Write(.scpm.profiles.prestart,
         lookup(profile_settings, "prestart",""), name);
     ret = ret &&  SCR::Write(.scpm.profiles.poststart,
@@ -595,6 +621,8 @@ global define boolean SetProfile(string name) ``{
 
     if (ret)
         profiles = add (profiles, name, desc);
+    else
+        SetError();
 
     return ret;
 }
@@ -641,18 +669,17 @@ global define boolean DeleteProfile(string to_delete) ``{
     boolean ret = SCR::Execute(.scpm.profiles.delete, to_delete);
     if (ret)
         profiles = filter (`name, `desc, profiles, ``(name != to_delete));
+    else
+        SetError();
     return ret;
 }
 
 /**
  * Calls SCPM::PrepareSwitch(), which drops switch_info map to file
- * @return true
  */
-global define boolean PrepareSwitch() ``{
+global define void PrepareSwitch() ``{
 
     SCR::Execute(.scpm.switch.prepare, selected_profile);
-
-    return true;
 
 }
 
@@ -695,14 +722,11 @@ global define boolean DropSwitchInfo() ``{
 
 /**
  * Switchs to the selected profile.
- * @return true on success
  */
-global define boolean Switch() ``{
+global define void Switch() ``{
 
     y2milestone ("Switching from profile \"%1\" to profile \"%2\"...",active_profile,selected_profile);
     SCR::Execute(.scpm.switch, switch_info);
-    return true;
-
 }
 
 /**
@@ -713,17 +737,17 @@ global define boolean Switch() ``{
 global define boolean WriteSCPMStatus() ``{
 
     boolean ret = SCR::Write(.scpm.status.enabled, enabled);
+    if (!ret)
+        SetError();
     return ret;
 
 }
 
 /**
  * Enables SCPM for the first time
- * @return true
  */
-global define boolean WriteStatusFirst() ``{
+global define void WriteStatusFirst() ``{
     SCR::Execute(.scpm.enable.first);
-    return true;
 }
 
 /**
@@ -734,6 +758,8 @@ global define boolean WriteStatusFirst() ``{
 global define boolean WriteResources(string resource_set) ``{
 
     boolean ret = SCR::Write(.scpm.resources.current, resource_set);
+    if (!ret)
+        ShowError();
     return ret;
 
 }
@@ -745,6 +771,8 @@ global define boolean WriteResources(string resource_set) ``{
 global define boolean RebuildDB() ``{
 
     boolean ret = SCR::Execute(.scpm.resources.rebuild);
+    if (!ret)
+        ShowError();
     return ret;
 
 }
@@ -769,40 +797,6 @@ global efine boolean CopyResourceSet(string set, string newset) ``{
     return ret;
 }*/
 
-/**
- * Runs application with an info page
- * @return intro text for ncurses, empty string otherwise
- */
-global define string RunIntroApplication() ``{
-
-    y2debug("textmode = %1", text_mode);
-    string ret = "";
-
-    if (text_mode)
-    {
-        if (SCR::Execute (.target.bash, "/usr/bin/test -x /usr/bin/info") == 0)
-        {
-            string output = tmpdir + "/info.out";
-            SCR::Execute(.target.bash_output,"info scpm >" + output + " 2>/dev/null");
-            ret = SCR::Read(.target.string, output);
-        }
-        else
-            SCR::Execute(.target.bash,"man scpm > output 2>/dev/null");
-    }
-    else
-    {
-/*
-    if (IsPackageInstalled("kdebase3") || IsPackageInstalled("kdebase3-konqueror"))
-*/
-	    if (SCR::Execute (.target.bash, "/usr/bin/test -x /opt/kde3/bin/konqueror") == 0)
-            SCR::Execute(.target.bash_background,"konqueror info:/scpm/introduction");
-        else if (SCR::Execute (.target.bash, "/usr/bin/test -x /usr/bin/info") == 0)
-            SCR::Execute(.target.bash_background,"xterm -e info scpm");
-        else
-            SCR::Execute(.target.bash_background,"xterm -e man scpm");
-    }
-    return ret;
-}
 
 /**
  * Checks, what changes will be done to the selected resource after switch.
@@ -811,6 +805,7 @@ global define string RunIntroApplication() ``{
  */
 global define string ShowChanges() ``{
 
+    string changes = "";
     list resources = lookup (switch_info, "modified_resources", []);
 
     map resource = select (resources, active_resource, $[]);
@@ -818,8 +813,10 @@ global define string ShowChanges() ``{
     active_resource_name = lookup(resource, "resource_name","");
     string type = lookup(resource, "resource_type","");
 
-    SCR::Execute(.scpm.profiles.changes, type, active_resource_name);
-    string changes = SCR::Read(.target.string, changespath); //check for error?
+    if (!SCR::Execute(.scpm.profiles.changes, type, active_resource_name))
+        ShowError();
+    else
+        changes = SCR::Read(.target.string, changespath);
 
     if (changes == "" || changes == nil)
         changes = "";
@@ -916,6 +913,7 @@ global define boolean CheckFilesValidity(map new_settings) ``{
 
 	string file ="";
 
+    // TODO: better return value (file)
 	// test -x ???
 	file = lookup(new_settings, "prestart","");
 	if (file != "" &&
@@ -974,6 +972,7 @@ global define integer GetHashMarks() ``{
  */
 global define string GetProgressText(boolean everything) ``{
 
+    // TODO: rewrite this function
     string ret = "";
     string all = SCR::Read(.target.string, progresspath);
 
@@ -1043,8 +1042,36 @@ global define boolean ReadSwitchInfo() ``{
  * @return boolean true if thread finished succesfully
  */
 global define boolean Wait() ``{
-    return SCR::Read(.scpm.exit_status );
+    boolean ret = SCR::Read(.scpm.exit_status );
+    if (!ret)
+        SetError();
+    return ret;
 }
+
+/**
+ * This function is called when some scpm command failed.
+ * The error message is read and shown in ErrorPopup.
+ */
+define void ShowError () ``{
+
+    string err = SCR::Read (.scpm.error);
+    if (err != nil && err != "")
+        UI::ErrorPopup (err);
+}
+
+/**
+ * This function is called when some scpm command failed.
+ * The error message is read and stored in global variable scpm_error.
+ */
+define void SetError () ``{
+
+    string err = SCR::Read (.scpm.error);
+    if (err != nil && err != "")
+        scpm_error = err;
+    else
+        scpm_error = "";
+}
+
 
 /* EOF */
 }

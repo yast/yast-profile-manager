@@ -143,8 +143,8 @@ global define any ProfileSettingsDialog () ``{
             ProgressPopup();
             if (!ProfileManager::Wait())
             {
-                // Error popup text
-                UI::ErrorPopup(_("Adding new profile was not succesful."));
+                // Error popup text, %1 is additional translated error message
+                UI::ErrorPopup(sformat(_("Adding new profile was not succesful:\n%1"), ProfileManager::scpm_error));
                 // continue;
             }
             else
@@ -158,9 +158,10 @@ global define any ProfileSettingsDialog () ``{
                 ProfileManager::profile_settings = new_settings;
                 if (!ProfileManager::SetProfile(selected))
                 {
-                    UI::ErrorPopup(
-                        // Error popup text
-                        _("Writing profile settings was not succesful."));
+                    UI::ErrorPopup(sformat(
+                        // Error popup text, %1 is additional error message
+                        _("Writing profile settings was not succesful:\n%1"),
+                        ProfileManager::scpm_error));
                 }
             }
         }
@@ -176,8 +177,8 @@ global define any ProfileSettingsDialog () ``{
             ProgressPopup();
             if (!ProfileManager::Wait())
             {
-                // Error popup text
-                UI::ErrorPopup(_("Copying profile was not succesful."));
+                // Error popup text, %1 is additional translated error message
+                UI::ErrorPopup(sformat(_("Copying profile was not succesful:\n:%1"), ProfileManager::scpm_error));
                 //    continue;
             }
             else
@@ -188,9 +189,10 @@ global define any ProfileSettingsDialog () ``{
                 ProfileManager::profile_settings = new_settings;
                 if (!ProfileManager::SetProfile(selected))
                 {
-                    UI::ErrorPopup(
-                        // Error popup text
-                        _("Writing profile settings was not succesful."));
+                    UI::ErrorPopup(sformat(
+                        // Error popup text, %1 is additional error message
+                        _("Writing profile settings was not succesful:\n%1"),
+                        ProfileManager::scpm_error));
                 }
             }
         }
@@ -207,8 +209,8 @@ global define any ProfileSettingsDialog () ``{
                 }
                 if (!ProfileManager::RenameProfile(edited, selected))
                 {
-                    // Error popup text
-                    UI::ErrorPopup(_("Renaming profile was not succesful."));
+                    // Error popup text, %1 is additional error text
+                    UI::ErrorPopup(sformat(_("Renaming profile was not succesful:\n%1"), ProfileManager::scpm_error));
                     continue;
                 }
             }
@@ -217,8 +219,10 @@ global define any ProfileSettingsDialog () ``{
                 ProfileManager::profile_settings = new_settings;
                 if (!ProfileManager::SetProfile(selected))
                 {
-                    // Error popup text
-                    UI::ErrorPopup(_("Writing profile settings was not succesful."));
+                    // Error popup text, %1 is additional error message
+                    UI::ErrorPopup(sformat(
+                        _("Writing profile settings was not succesful:\n%1"),
+                        ProfileManager::scpm_error));
                 }
             }
         }
@@ -374,8 +378,9 @@ global define any SwitchDialog () ``{
             ProfileManager::Switch();
             ProgressPopup();
             if (!ProfileManager::Wait())
-                // Error popup text
-                UI::ErrorPopup(_("Switching was not succesful."));
+                // Error popup text, %1 is additional translated error message
+                UI::ErrorPopup (sformat(_("Switching was not succesful:\n%1"),
+                    ProfileManager::scpm_error));
             else
                 ProfileManager::active_profile = selected;
 	        break;
