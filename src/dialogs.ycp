@@ -12,7 +12,6 @@
 textdomain "profile-manager";
 
 import "ProfileManager";
-import "Runlevel";
 import "Report";
 import "Wizard";
 
