@@ -28,6 +28,7 @@ include "profile-manager/wizards.ycp";
  * exit when running for non-root
  */
 
+// FIXME use 'id -u' or Confirm::MustBeRoot
 map res = (map) SCR::Execute(.target.bash_output, "/usr/bin/whoami", $[]);
 list l_res = splitstring(res["stdout"]:"", "\n");
 
