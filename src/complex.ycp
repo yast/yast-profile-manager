@@ -62,6 +62,7 @@ global define any MainDialog () ``{
 
     boolean use_rg = ProfileManager::use_rg;
     if (use_rg)
+	// State label text
 	state_label = (enabled) ? _("SCPM is enabled."):_("SCPM is disabled.");
 
     string selected = "";

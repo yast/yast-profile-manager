@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Wed Aug  6 14:55:53 CEST 2003 - jsuchome@suse.de
+
+- added .desktop file
+- updated help texts
+
+-------------------------------------------------------------------
 Mon Jul 14 19:44:49 CEST 2003 - jsuchome@suse.de
 
 - agent-scpm: used RenameResourceGroup for renaming; comments

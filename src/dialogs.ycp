@@ -621,7 +621,7 @@ global define symbol DetailsSwitchDialog () ``{
     list show_list = [
 	// button label
 	 `item(`id(`show_ch), _("Sho&w changes")),
-	// button label FIXME
+	// button label
 	 `item(`id(`show_r), _("Show &resource"))
     ];
     string groupname = ProfileManager::current_resource_group;
@@ -667,9 +667,15 @@ global define symbol DetailsSwitchDialog () ``{
 			// button label
 			_("Save / Ignore A&ll")), // all_actions_list),
 		    `Right(
+			// button label
+			`PushButton(`id(`show_ch), `opt(`key_F2),
+			    _("&Show Changes"))
+		    )
+			/*
 			// menubutton label
 			`MenuButton(`id(`show_b), `opt(`key_F2), _("&Show"),
 			    show_list))
+			*/
 		),
 		`VSpacing(0.2)
                 ),
@@ -741,6 +747,7 @@ global define symbol DetailsSwitchDialog () ``{
 		resource["save"] = !(resource["save"]:false);
 		resource["save_mode"] = "normal";
 		UI::ChangeWidget (`id(`resources), `Item (i,0),
+		    // action to do with resource
 		    resource["save"]:true ? _("save") : _("ignore"));
 	    });
 	}
@@ -771,7 +778,7 @@ global define symbol DetailsSwitchDialog () ``{
 	    ProfileManager::active_resource = selected;
 	    ShowChangesPopup();
 	}
-	// FIXME show_r: no action
+	// FIXME show_r: no action yet
 	else if (ret == `show_r)
 	{
 	    y2internal ("?");
