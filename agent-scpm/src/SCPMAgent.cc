@@ -561,6 +561,7 @@ void *SCPMAgent::call_prepare( SCPMAgent *ag )
 {
   static int retval;
   YCPValue ret = YCPBoolean( true );
+
   if ( !ag->scpm->PrepareSwitch( ag->profile, ag->switch_info ) ) {
     y2error ( scpm_error );
     ret = YCPVoid();
@@ -571,9 +572,11 @@ void *SCPMAgent::call_prepare( SCPMAgent *ag )
   const char *tmpf = ag->tmpfile.c_str();
   ofstream tmp;
   
-  tmp.open (tmpf);
+  tmp.open (tmpf, ios::out | ios::trunc);
   tmp.write(ret->toString().c_str(), strlen(ret->toString().c_str()));
   tmp.close();
+  y2debug("switch_info: %s", ret->toString().c_str());
+
   retval=0;
   pthread_exit((void*)&retval);
 }  
