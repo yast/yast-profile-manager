@@ -17,11 +17,10 @@ textdomain "profile-manager";
 global map HELPS = $[
 
     /* SCPM introduction text 1/10 ---new */
-    "intro": _("<qt>
-<h1>Introduction</h1>
+    "intro": _("<h1>Introduction</h1>
 This chapter describes for what SCPM is good, what it can do for
 you, and what it cannot do.
-</p>") +
+") +
 
     /* SCPM introduction text 2/10 */
     _("<p>There are situations that make it necessary to modify your system
@@ -121,8 +120,7 @@ restored.
 come with SCPM. View them by running <code>info scpm</code> or using
 KDE's Konqueror: just open the address \"info:/scpm\" or enter that in the
 <em>execute command</em> box.
-</p>
-</qt>"),
+</p>"),
 
     /* Read dialog help 1/2 */
     "read" : _("<p><b><big>Initializing profile manager configuration</big></b><br>
