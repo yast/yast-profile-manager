@@ -614,29 +614,28 @@ To enable it, use the Options button.<br></p>
 }
 
 /**
+ * Shows the text of scpm introduciton
  * @return boolean true on success
  */
 global define boolean IntroductionTextPopup() ``{
 
-    string info_text = ProfileManager::RunIntroApplication();
+/*    string info_text = ProfileManager::RunIntroApplication();
 
     if (info_text == "")
-        return true;
+        return true;*/
 
     UI::OpenDialog(`opt(`decorated), `HBox(`HSpacing(1.5),
-        `VSpacing(35),
+        `VSpacing(30),
         `VBox(
             `HSpacing(80),
             `VSpacing(1),
-            `VSpacing(1),
-            `LogView(`id(`info),"", 5, 0),
-         //   `RichText(info_text),
+            `RichText(`id(`info),""),
             `VSpacing(1),
             `PushButton(`id(`ok), `opt(`default), OKButtonLabel()),
             `VSpacing(1)),
         `HSpacing(1.5)
         ));
-    UI::ChangeWidget(`id(`info), `Value, info_text);
+    UI::ChangeWidget(`id(`info), `Value, HELPS["intro"]:"");
     any ret = UI::UserInput();
     UI::CloseDialog();
     return true;

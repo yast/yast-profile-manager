@@ -16,6 +16,113 @@ textdomain "profile-manager";
  */
 global map HELPS = $[
 
+    /* SCPM introduction text 1/10 */
+    "intro": _("<qt>
+<h1>Introduction</h1>
+This chapter describes for what SCPM is good, what it can do for
+you, and what it cannot do.
+</p>") +
+
+    /* SCPM introduction text 2/10 */
+    _("<p>There are situations that make it necessary to modify your system
+configuration. If you are running your computer often in
+environments where you need different configuration settings, it may be
+desirable to store your settings once made and restore them when
+needed again. This typically happens to notebook users who work with
+their computers at different locations. It may also be imaginable that
+you have a desktop computer you want to run temporary with another
+configuration, for example, to test something. You usually like to
+have an easy undo mechanism in such a case, so it can be a good idea
+to snapshot current system configuration data and store it in a
+profile. That way, you can restore your configuration any time.
+</p>") +
+
+    /* SCPM introduction text 3/10 */
+    _("<p>SCPM is a system to manage such system configuration profiles on
+your Linux box.  The following example is intended to give a short
+overview of how SCPM can be used.    
+</p>") +
+
+    /* SCPM introduction text 4/10 */
+    _("<p>Assume you have a notebook you want to connect to your home LAN and 
+your company network and to use independently when traveling.
+Usually, that requires configuring your system to fit into the
+different networks. Maybe you need to use a dhcp client in your office,
+but a fixed IP at home. Additionally, you may need to run a system time
+syncer (xnptd), a NIS client, and an automounter at your office, but at
+home only the automounter. None of these are needed when on the road. 
+For cases like this, SCPM can help manage those different
+configurations and makes it easy to switch between them.
+</p>") +
+
+    /* SCPM introduction text 5/10 */
+    _("<p>SCPM can do more. It is quite configurable, so you can handle almost
+all possible scenarios where data in different versions is needed to
+be stored and restored. Even use it to run various scripts depending
+of the profile from which it switched and the one to which it is
+switched.  More information is available in the info pages.
+</p>") +
+
+    /* SCPM introduction text 6/10 */
+    _("<h2>SCPM Limitations</h2>
+SCPM is intented to manage <em>system</em> configuration profiles. It is not
+meant to manage user profiles, such as different KDE desktop settings.
+<h2>Quick Start</h2>") +
+
+    /* SCPM introduction text 7/10 */
+    _("<p>In SCPM languague, there are some terms you need to know to
+successfully use this program. SCPM itself means
+<strong>System Configuration Profile Management</strong>. The
+<strong>system configuration</strong> represents the current status of
+your system settings, such as your network settings, mail
+configuration, and time zone specification. System configurations can
+be captured and saved in <strong>Profiles</strong>. Profiles act as
+containers for a specific state of your system configuration. Because
+it may be undesirable or unreasonable to save every bit of
+configuration data of the system in these profiles, the system
+configuration is organized in <strong>Resources</strong>. Resources
+stand for single pieces of configuration data. A bundle of these form
+a profile, so it clearly defines which parts of your system
+configuration are in the profile. Resources may have different
+<strong>Resource Types</strong> to handle different types of
+configuration data. Configuration data may be a simple file, a whole
+directory, or even a system service (such as the sendmail daemon). You
+are not restricted to a specific predefined bundle of
+resources. Multiple groups, called <strong>Resource Sets</strong>,
+exist. Even create your own resource sets if desired.
+</p>") +
+
+    /* SCPM introduction text 8/10 */
+    _("<p>Consider the SCPM workflow.  Initially, SCPM must be enabled on
+your system. This is needed to specify the resource set to
+use. Usually, the default resource set <code>typical</code> is
+sufficient. When enabled, SCPM creates its database and default
+profile from your current system configuration. Afterwards, use SCPM
+to create new profiles as snapshots of your actual configuration or by
+copying existing profiles as the base for configuration
+modifications. To modify a configuration saved in a profile, switch to
+that profile. Then modify your settings as usual with YaST2 or your
+favorite editor.
+</p>") +
+
+    /* SCPM introduction text 9/10 */
+    _("<p>Switching profiles is the process of
+leaving one profile and entering another. In SCPM, this means the
+current system configuration is compared with the one saved in the
+profile. If they differ, SCPM offers the possibility to make
+those changes permanent by saving them to the profile or to drop them.
+Then the system configuration saved in the destination profile is
+restored.
+</p>") +
+
+    /* SCPM introduction text 10/10 */
+    _("<p>More information is available in the info pages that
+come with SCPM. View them by running <code>info scpm</code> or using
+KDE's Konqueror: just open the address \"info:/scpm\" or enter that in the
+<em>execute command</em> box.
+</p>
+</qt>"),
+
     /* Read dialog help 1/2 */
     "read" : _("<p><b><big>Initializing profile manager configuration</big></b><br>
 Please wait...<br></p>
