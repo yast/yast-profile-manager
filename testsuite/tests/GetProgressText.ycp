@@ -1,0 +1,43 @@
+{
+
+    include "testsuite.ycp";
+
+    import "ProfileManager";
+
+
+    map READ =
+    $[ "target":
+		$[ "string": "Starting...
+Working..."]
+	];
+
+    map READ_continue =
+    $[ "target":
+		$[ "string": "Starting...
+Working... [done]
+Finished" ]
+	];
+
+    map READ_nil =
+    $[ "target":
+		$[ "string": nil ]
+	];
+
+    ProfileManager::progresspath = "/tmp/changes.out";
+    ProfileManager::progress_size = 0;
+    ProfileManager::last_ret = "";
+
+	TEST (``(ProfileManager::GetProgressText(false)), [ READ_nil, $[], $[] ], nil);
+
+	TEST (``(ProfileManager::GetProgressText(false)), [ READ, $[], $[] ], nil);
+
+    // in fact, the function has another settings than following one, but
+    // it returns string with newlines - and this I cannot print from test (?)
+    ProfileManager::last_ret = "";
+
+	TEST (``(ProfileManager::GetProgressText(false)), [ READ, $[], $[] ], nil);
+
+	TEST (``(ProfileManager::GetProgressText(false)), [ READ_continue, $[], $[] ], nil);
+    ProfileManager::last_ret = "";
+	TEST (``(ProfileManager::GetProgressText(false)), [ READ_continue, $[], $[] ], nil);
+}
