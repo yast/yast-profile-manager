@@ -11,10 +11,8 @@
 @YAST2-CHECKS-YCP@
 
 ## special stuff
-#AC_CHECK_LIB(asound, snd_mixer_open, LIBASOUND=-lasound, LIBASOUND=)
-
-AC_CHECK_LIB(scpm, LIBSCPM=-lscpm)
-AC_SUBST(LIBSCPM)
+#AC_CHECK_LIB(scpm,, LIBSCPM=-lscpm, LIBSCPM=)
+#AC_SUBST(LIBSCPM)
 
 ## and generate the output...
 @YAST2-OUTPUT@
