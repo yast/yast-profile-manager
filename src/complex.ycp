@@ -286,7 +286,7 @@ define any OptionsDialog () ``{
                 `HSpacing(1),
 		`Left(`CheckBox(`id(`close_popups_ch),
 		    // checkbox label
-                    _("Close Progress Pop-ups &Automaticaly"), close_popups))
+                    _("Close Progress Pop-ups &Automatically"), close_popups))
             ),
             `VSpacing(0.5)
         )),
@@ -319,7 +319,7 @@ define any OptionsDialog () ``{
 		`VSpacing(0.5),
 		`Left(`CheckBox(`id(`close_popups_ch),
 		    // checkbox label
-                    _("Close Progress Pop-ups &Automaticaly"), close_popups)),
+                    _("Close Progress Pop-ups &Automatically"), close_popups)),
 		`VSpacing(0.5),
 		`Left(`CheckBox(`id("verbose"),
 		    // checkbox label

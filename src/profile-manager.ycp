@@ -34,7 +34,7 @@ list l_res = splitstring(res["stdout"]:"", "\n");
 if( size(l_res) > 0 &&  select(l_res, 0, "") != "root")
 {
     // Popup label (user is not root)
-    Popup::Message(_("Log in as root to run SCPM."));
+    Popup::Message(_("Log in as root to run Profile manager."));
     return nil;
 }
 

@@ -1330,7 +1330,7 @@ define map ResourceGroupPopup (map group) ``{
 	if (ret == `reset_b)
 	{
 	    // yes/no popup
-	    if (Popup::YesNo (_("Current resource group will be reset to its initial default values.
+	    if (Popup::YesNo (_("The current resource group will be reset to its initial default values.
 All user modifications will be lost.
 Really do this now?
 ")))

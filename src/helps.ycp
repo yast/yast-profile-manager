@@ -161,7 +161,7 @@ Safely abort the configuration utility by pressing <b>Abort</b> now.</p>
     // Options dialog help 2/6
     _("<p>A configuration profile covers only the files and services to change
 when switching to another profile. In SCPM terminology, these files and
-services are called resources. Those resources are group into logical units,
+services are called resources. Those resources are grouped into logical units,
 called <b>resource groups</b>. SCPM comes with a predefined set of
 groups handled by default. This is sufficient for most systems. 
 For a more detailed resource setup, click 
@@ -169,16 +169,16 @@ For a more detailed resource setup, click
 ") +
 
     // Options dialog help 3/6
-    _("<p>The <b>Switch Mode</b> defines the behavior of SCPM when switching
+    _("<p><b>Switch Mode</b> defines the behavior of SCPM when switching
 profiles. If set to <b>Normal</b> or <b>Save Changes</b>,
 modified resources in the switch dialog are preset to <b>save</b>.
 Setting it to <b>Drop Changes</b> results in presets to <b>ignore</b>. This option
-has more effects on the command line SCPM, so check the info page if also using that.</p>
+has more effect on the command line SCPM, so check the info page if also using that.</p>
 ") +
 
     // Options dialog help 4/6
     _("<p><b>Boot Mode</b> defines the behavior of SCPM at system boot time.
-<b>Save Changes</b> applies all changes to the previous profile,
+<b>Save Changes</b> applies all changes to the previous profile.
 <b>Drop Changes</b> discards them.</p>
 ") +
 
