@@ -12,7 +12,8 @@
                "poststart": nil,
                "prestop": nil,
                "poststop": nil
-            ]
+            ],
+           "error": "error while reading profiles settings"
         ]
 	];
 
@@ -47,6 +48,7 @@
 
 
     ProfileManager::selected_profile = "default";
+
 	TEST (``(ProfileManager::GetProfile()), [ READ_nil, $[], $[] ], nil);
 
     DUMP(ProfileManager::profile_settings);

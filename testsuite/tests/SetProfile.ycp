@@ -29,6 +29,8 @@
         ]
 	];
 
+    map READ =
+    $[ "scpm": $[ "error": "error while writing profile settings"]];
 
     ProfileManager::profiles =
     $[ "default" : "default description",
@@ -46,11 +48,11 @@
 
     DUMP(ProfileManager::profiles);
 
-	TEST (``(ProfileManager::SetProfile("default")), [ $[], WRITE_false, $[] ], nil);
+	TEST (``(ProfileManager::SetProfile("default")), [ READ, WRITE_false, $[] ], nil);
 
     DUMP(ProfileManager::profiles);
 
-	TEST (``(ProfileManager::SetProfile("default")), [ $[], WRITE_true, $[] ], nil);
+	TEST (``(ProfileManager::SetProfile("default")), [ READ, WRITE_true, $[] ], nil);
 
     DUMP(ProfileManager::profiles);
 

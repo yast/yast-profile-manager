@@ -2,6 +2,7 @@ Dump	$["default":"default description", "home":"My private configuration"]
 Write	.scpm.profiles.description "New description for default profile" "default" true
 Write	.scpm.profiles.prestart "/tmp/default/p1" "default" true
 Write	.scpm.profiles.poststart "" "default" false
+Read	.scpm.error "error while writing profile settings"
 Return	false
 Dump	$["default":"default description", "home":"My private configuration"]
 Write	.scpm.profiles.description "New description for default profile" "default" true
