@@ -22,6 +22,7 @@ Summary:	Configuration of profile-manager
 %dir @yncludedir@/profile-manager
 @yncludedir@/profile-manager/*
 @clientdir@/profile-manager.ycp
+@clientdir@/profile_manager.ycp
 @clientdir@/profile-manager_*.ycp
 @moduledir@/ProfileManager.ycp
 @configdir@/profile-manager.y2cc

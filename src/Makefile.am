@@ -6,6 +6,7 @@ yncludedir = @yncludedir@/profile-manager
 
 client_DATA =			\
 	profile-manager.ycp		\
+	profile_manager.ycp		\
 	profile-manager_auto.ycp	\
 	profile-manager_proposal.ycp	\
 	profile-manager_write.ycp
