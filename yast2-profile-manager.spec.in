@@ -26,6 +26,7 @@ Summary:	Configuration of profile-manager
 @clientdir@/profile-manager_*.ycp
 @moduledir@/ProfileManager.ycp
 @configdir@/profile-manager.y2cc
+@desktopdir@/profile-manager.desktop
 @scrconfdir@/*.scr
 @plugindir@/libpy2ag_scpm.so.*
 @plugindir@/libpy2ag_scpm.so
