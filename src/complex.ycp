@@ -78,7 +78,7 @@ global define any MainDialog () ``{
                             _("Name"),
                             // Header of the table with the aviable profiles 3/3
                             _("Description")),
-                    ProfileManager::GetProfilesAsItems()
+                    []
                     ),
                 `VSpacing(0.2),
 		        `HBox(
@@ -124,6 +124,7 @@ global define any MainDialog () ``{
     if (ProfileManager::first_time && !enabled)
         IntroductionPopup();
 
+    UI::ChangeWidget(`id(`profiles), `Items, ProfileManager::GetProfilesAsItems());
 
     if (enabled) {
         UI::ChangeWidget(`id(`profiles), `CurrentItem, ProfileManager::active_profile);
@@ -155,7 +156,10 @@ global define any MainDialog () ``{
                 if (!ProfileManager::DeleteProfile(selected))
 					// Error popup text
                     UI::ErrorPopup(_("Deleting profile was not succesfull."));
-                break;
+                UI::ChangeWidget(`id(`profiles), `Items,
+                        ProfileManager::GetProfilesAsItems());
+                UI::ChangeWidget(`id(`profiles), `CurrentItem,
+                        ProfileManager::active_profile);
             }
         }
 		continue;
@@ -191,15 +195,10 @@ global define any MainDialog () ``{
 
             }
 
-            block func = ``{};
-/*            if (!ProfileManager::PrepareSwitch())
-            {
-                // Error popup text
-                UI::ErrorPopup(_("Switching to another profile is not possible."));
-                continue;
-
-            }
-            };*/
+            block func = ``{
+                ProfileManager::Wait();
+                ProfileManager::ReadSwitchInfo();
+            };
             ProgressPopup( func );
             break;
         }
@@ -214,6 +213,8 @@ global define any MainDialog () ``{
 
 
 /**
+ * Options dialog
+ * @return any Returned value from UserInput() call
  */
 global define any OptionsDialog () ``{
 
@@ -316,8 +317,7 @@ global define any OptionsDialog () ``{
         }
         string newset = CopyResourcePopup();
         if (newset != "")
-            ProfileManager::CopyResourceSet(selected, newset);
-        break;*/
+            ProfileManager::CopyResourceSet(selected, newset); */
         continue;
     }
     else if (ret == `ed_button)
@@ -337,16 +337,12 @@ global define any OptionsDialog () ``{
 
         if (UI::YesNoPopup(sformat(
             _("Do you really want to delete resource set %1?"), selected)))
-        {
-            ProfileManager::DeleteResourceSet(selected);
-            break;
-        }*/
+            ProfileManager::DeleteResourceSet(selected); */
         continue;
     }
     else if (ret == `next)
     {
         close_popups = UI::QueryWidget(`id(`close_popups_ch), `Value);
-        boolean run_progress = false;
 
         if (UI::QueryWidget(`id(`rb), `CurrentButton) == `ena) {
 
@@ -361,28 +357,49 @@ global define any OptionsDialog () ``{
             if (!ProfileManager::enabled)
             {
                 ProfileManager::enabled = true;
-                if (!ProfileManager::WriteSCPMStatus())
-                {
-                    // Error popup text
-                    UI::ErrorPopup(_("Enabling SCPM was not succesfull."));
-                    ProfileManager::enabled = false;
-                    break;
-                }
-                block func = ``{};
-                ProgressPopup(func);
-
-                ProfileManager::current_resources = selected;
-                ProfileManager::WriteResources(selected);
 
 				if (!ProfileManager::initialized)
                 {
                     ProfileManager::initialized = true;
-                    run_progress = true;
-                }
+                    ProfileManager::WriteStatusFirst();
+                    block func = ``{
+                        if (!ProfileManager::Wait())
+                        {
+                            UI::ErrorPopup(
+                                // Error popup text
+                                _("Enabling SCPM was not succesfull."));
+                            ProfileManager::enabled = false;
 
-				ProfileManager::ReadProfiles(); // on some other place!
-				ProfileManager::ReadActiveProfile();
-				ProfileManager::ReadProfilesDescriptions();
+                        }
+                        else
+                        {
+                            ProfileManager::current_resources = selected;
+                            ProfileManager::WriteResources(selected);
+
+                            ProfileManager::ReadProfiles();
+                            ProfileManager::ReadActiveProfile();
+				            ProfileManager::ReadProfilesDescriptions();
+                        }
+                    };
+                    ProgressPopup(func);
+                }
+                else
+                {
+                    if (!ProfileManager::WriteSCPMStatus())
+                    {
+                        // Error popup text
+                        UI::ErrorPopup(_("Enabling SCPM was not succesfull."));
+                        ProfileManager::enabled = false;
+                        break;
+                    }
+
+                    ProfileManager::current_resources = selected;
+                    ProfileManager::WriteResources(selected);
+
+                    ProfileManager::ReadProfiles(); // on some other place!
+	                ProfileManager::ReadActiveProfile();
+		            ProfileManager::ReadProfilesDescriptions();
+                }
             }
 
 			else if (ProfileManager::current_resources != selected)
@@ -394,9 +411,9 @@ global define any OptionsDialog () ``{
 					// maybe WriteResources should be run every time
 					ProfileManager::WriteResources(selected);
 					ProfileManager::RebuildDB();
-					run_progress = true; // not necessary ?
+                    /*
                     block func = ``{};
-                    ProgressPopup(func);
+                    ProgressPopup(func);*/
 				}
 				else continue;
             }

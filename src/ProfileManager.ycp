@@ -138,7 +138,8 @@ global map state = $[];
 global integer progress_size = 0;
 global integer active_resource = 0;
 global string active_resource_name = "";
-
+global boolean end_of_progress = false;
+global integer start_of_progress=0;
 /**
  * The name of the file, where the progress state is beeing written.
  * (The same name must use the scpm agent!)
@@ -152,9 +153,11 @@ global string hashfile = "/scpm.hash";
  * (The same name must use the scpm agent!)
  */
 global string changesfile = "/scpm.changes";
+global string tmpfile = "/scpm.tmp";
 global string progresspath = "";
 global string hashpath = "";
 global string changespath = "";
+global string tmppath = "";
 
 global boolean proposal_valid = false;
 global boolean write_only = false;
@@ -433,6 +436,8 @@ define boolean Initialize() ``{
     progresspath = tmpdir + progressfile;
     hashpath = tmpdir + hashfile;
     changespath = tmpdir + changesfile;
+    tmppath = tmpdir + tmpfile;
+    y2milestone ("progress = %1", progresspath);
 
     boolean ret = SCR::Execute(.scpm, tmpdir);
 
@@ -445,7 +450,7 @@ define boolean Initialize() ``{
  */
 define boolean ReadSCPMStatus() ``{
 
-    list stat = SCR::Read(.scpm.status.enabled);
+    list stat = SCR::Read(.scpm.status);
     if (stat == nil)
         return false;
 
@@ -514,30 +519,32 @@ global define boolean GetProfile() ``{
 /**
  * Creates a new profile.
  * @param name Name of the new profile
- * @return true on success
+ * @return true
  */
 global define boolean AddProfile(string name) ``{
 
-    boolean ret = SCR::Execute(.scpm.profiles.add, name, auto);
-    if (ret)
+//    boolean ret = 
+    SCR::Execute(.scpm.profiles.add, name, auto);
+/*    if (ret)
         profiles = add (profiles, name, "");
-
-    return ret;
+*/
+    return true;
 }
 
 /**
  * Creates a new profile by copying old one.
  * @param source Name of the source profile
  * @param new Name of the new profile
- * @return true on success
+ * @return true
  */
 global define boolean CopyProfile(string source, string new) ``{
 
-    boolean ret = SCR::Execute(.scpm.profiles.copy, source, new);
-    if (ret)
-        profiles = add (profiles, new, "");
+    //boolean ret = 
+    SCR::Execute(.scpm.profiles.copy, source, new);
+/*    if (ret)
+        profiles = add (profiles, new, "");*/
 
-    return ret;
+    return true;
 }
 
 /**
@@ -640,13 +647,14 @@ global define boolean DeleteProfile(string to_delete) ``{
  */
 global define boolean PrepareSwitch() ``{
 
-    switch_info = SCR::Execute(.scpm.switch.prepare, selected_profile);
-//    switch_info = SCR::Read(.scpm.switch.prepare);
+//    switch_info =
+    SCR::Execute(.scpm.switch.prepare, selected_profile);
 
+/*    switch_info = SCR::Read(.target.ycp, "/tmp/scpm.tmp");
     if (switch_info == nil)
-        return false;
+        return false;*/
 
-    y2debug("switch_info: %1",switch_info);
+    y2milestone("switch_info: %1",switch_info);
     return true;
 
 }
@@ -699,11 +707,10 @@ global define boolean DropSwitchInfo() ``{
  */
 global define boolean Switch() ``{
 
-    boolean ret = SCR::Execute(.scpm.switch, switch_info);
+/*    boolean ret = SCR::Execute(.scpm.switch, switch_info);
     if (ret == nil || ret == false)
-        return false;
-
-    active_profile = selected_profile;
+        return false;*/
+    SCR::Execute(.scpm.switch, switch_info);
     return true;
 
 }
@@ -718,6 +725,15 @@ global define boolean WriteSCPMStatus() ``{
     boolean ret = SCR::Write(.scpm.status.enabled, enabled);
     return ret;
 
+}
+
+/**
+ * Enables SCPM for the first time
+ * @return true
+ */
+global define boolean WriteStatusFirst() ``{
+    SCR::Execute(.scpm.enable.first);
+    return true;
 }
 
 /**
@@ -743,6 +759,11 @@ global define boolean RebuildDB() ``{
 
 }
 
+/**
+ * Not implemented yet
+ * @param set
+ * @return true on success
+ */
 global define boolean DeleteResourceSet(string set) ``{
 
     boolean ret = SCR::Execute(.scpm.resources.delete, set);
@@ -752,6 +773,12 @@ global define boolean DeleteResourceSet(string set) ``{
     return ret;
 }
 
+/**
+ * Not implemented yet
+ * @param set
+ * @param newset
+ * @return true on success
+ */
 global define boolean CopyResourceSet(string set, string newset) ``{
 
     boolean ret = SCR::Execute(.scpm.resources.copy, set, newset);
@@ -774,7 +801,7 @@ global define integer RunIntro() ``{
 
 /**
  * Checks, what changes will be done to the selected resource after switch.
- * @param resource_no Number of the resource in the list of modified resources.
+ * Uses global variable active_resource.
  * @return string The changes.
  */
 global define string ShowChanges() ``{
@@ -896,7 +923,7 @@ global define boolean CheckNameValidity(string name) ``{
 
 /**
  * Checks the existence of the scripts from
- * @param new_setting The map with paths to scripts
+ * @param new_settings The map with paths to scripts
  * @return true if ok
  */
 global define boolean CheckFilesValidity(map new_settings) ``{
@@ -962,11 +989,37 @@ global define string GetProgressText() ``{
         i = i + 1;
     }
 
-    progress_size = size (all_l) - 1;
+    progress_size = size (all_l);
+    if (select(all_l, size(all_l)-1,"") == "") {
+        progress_size = progress_size - 1;
+        if (start_of_progress < progress_size)
+            end_of_progress = true;
+    }
 
     string ret = mergestring (ret_l, "\n");
     return ret;
 }
+
+/**
+ * Reads the switch info, which was dumped to file by agent's thread
+ * @return boolean true on success
+ */
+global define boolean ReadSwitchInfo() ``{
+
+    switch_info = SCR::Read(.target.ycp, tmppath);
+    if (switch_info == nil)
+        switch_info = $[];
+    y2milestone("switch_info: %1",switch_info);
+}
+
+/**
+ * Checks the return value of agent's thread
+ * @return boolean true if thread finished succesfully
+ */
+global define boolean Wait() ``{
+    return SCR::Read(.scpm.exit_status );
+}
+
 
 /* EOF */
 }

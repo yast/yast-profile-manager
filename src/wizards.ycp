@@ -85,6 +85,10 @@ global define symbol ProfileManagerAutoSequence() ``{
 }
 
 
+/**
+ * Main sequence of profile-manager
+ * @return sequence result
+ */
 global define any MainSequence () ``{
     map aliases =
 	$[
@@ -102,22 +106,16 @@ global define any MainSequence () ``{
 	    `next	: `next,
 		`switch_button : "switch",
 	    `options_button: "options",
-        `delete_button: "main", // refresh table after deleting profile
 	    `edit_button: "edit",
 	],
 	"switch" :
 	$[
 	    `abort	: `abort,
-		`save_button : "switch", // refresh table ??
-		`drop_button : "switch", // refresh table ??
-		`modified : "switch", // refresh table ??
 		`next	: "main"
 	],
 	"options" :
 	$[
 	    `abort	: `abort,
-        `cp_button : "options",
-        `del_button : "options",
 	    `next	: "main"
 	],
     "edit" :

@@ -27,6 +27,7 @@ using namespace std;
 #include <sys/wait.h>
 #include <libintl.h>
 #include <fstream>
+#include <pthread.h>
 
 
 /**
@@ -38,10 +39,19 @@ private:
     /**
      * Agent private variables
      */
-    int options;
     SCPM *scpm;
+    int options;
     ofstream output, hash;
-    string changesfile;    
+    string changesfile, tmpfile;    
+    static void *call_prepare( SCPMAgent *);
+    static void *call_switch( SCPMAgent *);
+    static void *call_add( SCPMAgent *);
+    static void *call_copy( SCPMAgent *);
+    static void *call_enable( SCPMAgent *);
+    bool auto_switch;
+    pthread_t pt;
+    switch_info_t switch_info;
+    string profile, dest_profile;
 
 public:
     /**

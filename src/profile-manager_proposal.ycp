@@ -60,8 +60,12 @@ else if(func == "AskUser") {
 /* create titles */
 else if(func == "Description") {
     ret = $[
-	"rich_text_title" : _("Profile manager"),
-	"menu_title" : _("&Profile manager"),
+	"rich_text_title" :
+        // RichText title
+        _("Profile manager"),
+	"menu_title" :
+        // Menu title
+        _("&Profile manager"),
 	"id" : "profile-manager",
     ];
 }

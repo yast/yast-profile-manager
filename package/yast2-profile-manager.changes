@@ -1,4 +1,15 @@
 -------------------------------------------------------------------
+Tue Jul 30 09:27:23 2002 - jsuchome@suse.cz
+
+- fixed testsuite failing
+
+-------------------------------------------------------------------
+Mon Jul 29 17:18:13 2002 - jsuchome@suse.cz
+
+- fixed bugs
+- agent works now
+
+-------------------------------------------------------------------
 Mon Jul 22 19:05:04 2002 - jsuchome@suse.cz
 
 - implemented workflow

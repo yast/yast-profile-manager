@@ -20,12 +20,15 @@ include "profile-manager/helps.ycp";
 include "profile-manager/routines.ycp";
 
 /**
+ * Profile settings dialog
+ * @return any Returned value from UserInput() call
  */
 global define any ProfileSettingsDialog () ``{
 
     string edited = ProfileManager::selected_profile;
     string action = ProfileManager::profile_action;
     map profiles = ProfileManager::profiles;
+    block func = {};
 
     // reading the profile settings
     ProfileManager::GetProfile();
@@ -63,8 +66,8 @@ global define any ProfileSettingsDialog () ``{
                 // Text entry label
                 `TextEntry(`id(`poststop),_("Pos&t Stop Script")),
                 `VSpacing(0.2),
-				// checkbox label
                 `Left(`CheckBox(`id(`secure_ch),
+				// checkbox label
                     _("Set file &permitions of all scripts secure (0700)."))),
                 `VSpacing(0.2)
             ),
@@ -133,45 +136,59 @@ global define any ProfileSettingsDialog () ``{
             if (lookup(profiles, selected, nil) != nil)
             {
 				// Popup text:
-                UI::MessagePopup(_("Profile with this name already exists"));
+                UI::MessagePopup(_("Profile with this name already exists."));
                 continue;
             }
-            if (!ProfileManager::AddProfile(selected))
-            {
-                // Error popup text
-                UI::ErrorPopup(_("Adding new profile was not succesfull."));
-                continue;
-            }
-            if (ProfileManager::auto)
-                ProfileManager::active_profile = selected;
+            ProfileManager::AddProfile(selected);
+            func = ``{
+                if (!ProfileManager::Wait())
+                    // Error popup text
+                    UI::ErrorPopup(_("Adding new profile was not succesfull."));
+                else
+                {
+                    ProfileManager::profiles = add (ProfileManager::profiles,
+                            selected, "");
 
-            ProfileManager::profile_settings = new_settings;
-            if (!ProfileManager::SetProfile(selected))
-            {
-                // Error popup text
-                UI::ErrorPopup(_("Writing profile settings was not succesfull."));
-            }
+                    if (ProfileManager::auto)
+                        ProfileManager::active_profile = selected;
+
+                    ProfileManager::profile_settings = new_settings;
+                    if (!ProfileManager::SetProfile(selected))
+                    {
+                        UI::ErrorPopup(
+                            // Error popup text
+                            _("Writing profile settings was not succesfull."));
+                    }
+                }
+            };
         }
         else if (action == "copy")
         {
             if (lookup(profiles, selected, nil) != nil)
             {
 				// Popup text
-                UI::MessagePopup(_("Profile with this name already exists"));
+                UI::MessagePopup(_("Profile with this name already exists."));
                 continue;
             }
-            if (!ProfileManager::CopyProfile(edited, selected))
-            {
-                // Error popup text
-                UI::ErrorPopup(_("Copying profile was not succesfull."));
-                continue;
-            }
-            ProfileManager::profile_settings = new_settings;
-            if (!ProfileManager::SetProfile(selected))
-            {
-                // Error popup text
-                UI::ErrorPopup(_("Writing profile settings was not succesfull."));
-            }
+            ProfileManager::CopyProfile(edited, selected);
+               func = ``{
+                if (!ProfileManager::Wait())
+                    // Error popup text
+                    UI::ErrorPopup(_("Copying profile was not succesfull."));
+                else
+                {
+                    ProfileManager::profiles = add (ProfileManager::profiles,
+                            selected, "");
+
+                    ProfileManager::profile_settings = new_settings;
+                    if (!ProfileManager::SetProfile(selected))
+                    {
+                        UI::ErrorPopup(
+                            // Error popup text
+                            _("Writing profile settings was not succesfull."));
+                    }
+                }
+            };
         }
         else if (action == "edit")
         {
@@ -181,7 +198,7 @@ global define any ProfileSettingsDialog () ``{
                 if (lookup(profiles, selected, nil) != nil)
                 {
 					// Popup text
-                    UI::MessagePopup(_("Profile with this name already exists"));
+                    UI::MessagePopup(_("Profile with this name already exists."));
                     continue;
                 }
                 if (!ProfileManager::RenameProfile(edited, selected))
@@ -205,7 +222,6 @@ global define any ProfileSettingsDialog () ``{
             ProfileManager::SetFilePermitions();
         if (action != "edit")
         {
-            block func = ``{};
             ProgressPopup(func);
         }
 	    break;
@@ -216,6 +232,8 @@ global define any ProfileSettingsDialog () ``{
 }
 
 /**
+ * Switch dialog
+ * @return any Returned value from UserInput() call
  */
 global define any SwitchDialog () ``{
 
@@ -260,7 +278,7 @@ global define any SwitchDialog () ``{
                             _("Resource"),
                             // Header of the table with modified resources 4/4
                             _("type")),
-                    resources_as_items
+                    []
                     ),
                 `VSpacing(0.2),
 		        `HBox(
@@ -287,8 +305,11 @@ global define any SwitchDialog () ``{
 				CancelButtonLabel (),
 				OKButtonLabel () );
 
+    UI::ChangeWidget(`id(`modified), `Items, resources_as_items);
+
     if (resources_as_items == [] || resources_as_items == nil)
     {
+        UI::ChangeWidget(`id(`modified), `Enabled, false);
         UI::ChangeWidget(`id(`save_button), `Enabled, false);
         UI::ChangeWidget(`id(`drop_button), `Enabled, false);
         UI::ChangeWidget(`id(`changes_button), `Enabled, false);
@@ -308,17 +329,31 @@ global define any SwitchDialog () ``{
             ProfileManager::active_resource =
                 UI::QueryWidget(`id(`modified), `CurrentItem);
             ProfileManager::SetSaveFlag();
-            break;
+            UI::ChangeWidget(`id(`modified), `Items,
+                    ProfileManager::GetResourcesAsItems());
+            UI::ChangeWidget(`id(`modified), `CurrentItem,
+                    ProfileManager::active_resource);
+            continue;
         }
         else if (ret == `save_button)
 	    {
             ProfileManager::SaveSwitchInfo();
-            break;
+            UI::ChangeWidget(`id(`modified), `Items,
+                    ProfileManager::GetResourcesAsItems());
+            // is this necessary?
+            UI::ChangeWidget(`id(`modified), `CurrentItem,
+                    ProfileManager::active_resource);
+            continue;
         }
         else if (ret == `drop_button)
         {
             ProfileManager::DropSwitchInfo();
-            break;
+            UI::ChangeWidget(`id(`modified), `Items,
+                    ProfileManager::GetResourcesAsItems());
+            // is this necessary?
+            UI::ChangeWidget(`id(`modified), `CurrentItem,
+                    ProfileManager::active_resource);
+            continue;
         }
         else if (ret == `changes_button)
         {
@@ -329,16 +364,15 @@ global define any SwitchDialog () ``{
         }
         else if (ret == `next)
 	    {
-            if (!ProfileManager::Switch())
-            {
-                // Error popup text
-                UI::ErrorPopup(_("Switching was not succesfull."));
-            }
-            else
-            {
-                block func = ``{};
-                ProgressPopup(func);
-            }
+            ProfileManager::Switch();
+            block func = ``{
+                if (!ProfileManager::Wait())
+                    // Error popup text
+                    UI::ErrorPopup(_("Switching was not succesfull."));
+                else
+                    ProfileManager::active_profile = selected;
+            };
+            ProgressPopup(func);
 	        break;
 	    }
         };
@@ -347,6 +381,8 @@ global define any SwitchDialog () ``{
 }
 
 /**
+ * Popup for adding new profile
+ * @return boolean true if user confirms action
  */
 global define boolean AddProfilePopup() ``{
 
@@ -431,6 +467,10 @@ profile nor does it start or stop services."))),
 }
 
 /**
+ * Popup for showing progress informations
+ * @param function actions to execute after finish of agent's thread
+ * generating progress output
+ * @return boolean true on success
  */
 global define boolean ProgressPopup( block function) ``{
 
@@ -460,11 +500,22 @@ global define boolean ProgressPopup( block function) ``{
     UI::ChangeWidget(`id(`close_ch), `Enabled, false);
 
     // evaluating function
+
+    string progresstext = "";
+    ProfileManager::end_of_progress = false;
+    ProfileManager::start_of_progress = ProfileManager::progress_size;
+    do
+    {
+        UI::BusyCursor();
+        sleep(1);
+        progresstext = ProfileManager::GetProgressText();
+        if (progresstext != "")
+            UI::ChangeWidget(`id(`progress), `LastLine, progresstext);
+    }
+    while (!ProfileManager::end_of_progress);
+
+    // what has to be done after finishing background process:
     eval ( function );
-
-    string progresstext = ProfileManager::GetProgressText();
-    UI::ChangeWidget(`id(`progress), `LastLine, progresstext);
-
 
     /* disabled for now
     integer steps = 0;
@@ -475,6 +526,7 @@ global define boolean ProgressPopup( block function) ``{
     }
     */
 
+    UI::NormalCursor();
     if (!close_popups)
     {
         UI::ChangeWidget(`id(`close), `Enabled, true);
@@ -485,6 +537,8 @@ global define boolean ProgressPopup( block function) ``{
 }
 
 /**
+ * Introduction popup
+ * @return boolean true on success
  */
 global define boolean IntroductionPopup() ``{
 
@@ -529,6 +583,8 @@ To enable it use the Options button<br></p>") +
 }
 
 /**
+ * Popup which shows changes of selected resource
+ * @return boolean true on success
  */
 global define boolean ShowChangesPopup() ``{
 
@@ -556,9 +612,12 @@ global define boolean ShowChangesPopup() ``{
     return true;
 }
 
+/* not impl.yet
 global define string CopyResourcePopup() ``{
 
     return "new";
 }
+*/
+
 /* EOF */
 }

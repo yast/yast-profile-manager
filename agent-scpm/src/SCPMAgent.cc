@@ -8,6 +8,7 @@
  */
 
 #include "SCPMAgent.h"
+//#include <pthread.h>
 
 #define PC(n)       (path->component_str(n))
 
@@ -105,7 +106,6 @@ SCPMAgent::SCPMAgent() : SCRAgent()
 {
 	options = 0;
 	scpm = NULL;
-//    global_ret = YCPVoid();
 }
 
 /**
@@ -165,18 +165,11 @@ YCPValue SCPMAgent::Read(const YCPPath &path, const YCPValue& arg)
         }
 
     }
-	
-    if (PC(0) == "progress")
-        ret = YCPString("progress");
-    
-	if (PC(0) == "hash")
-        ret = YCPString("hash");
-
+   	if (PC(0) == "wait")  {
+            
+        ret = YCPInteger(waitpid(0, NULL,WNOHANG));
     }
-    
-    if (path->length() == 2) {
-        
-   	if ((PC(0) == "status") && (PC(1) == "enabled")) {
+   	if (PC(0) == "status") {
         scpm_status_t scpm_status;
             
         if (!scpm->Status(scpm_status)) {
@@ -189,10 +182,32 @@ YCPValue SCPMAgent::Read(const YCPPath &path, const YCPValue& arg)
             ret = l;
         }
     }
+    if (PC(0) == "exit_status" ) {
+        int *retval;
+        ret = YCPBoolean(false);
+        if ( pthread_join( pt, (void**)&retval ) == 0 ) 
+            if ( *retval == 0 )
+                ret = YCPBoolean(true);
+    }
+
+
+    }
+    
+    if (path->length() == 2) {
+        
+    /* not necessary any more:
+   	if ((PC(0) == "status") && (PC(1) == "enabled")) {
+        scpm_status_t scpm_status;
+            
+        if (!scpm->Status(scpm_status)) {
+            y2error ( scpm_error );
+        }
+        else 
+            ret = YCPBoolean(scpm_status.enabled);
+    }*/
 
 	if (PC(0) == "profiles") {
       if (PC(1) == "current") {
-        string profile;
 
         if (!scpm->Active(profile)) {
             y2error ( scpm_error );
@@ -204,7 +219,7 @@ YCPValue SCPMAgent::Read(const YCPPath &path, const YCPValue& arg)
       if ((PC(1) == "description") || (PC(1) == "prestart") ||
           (PC(1) == "poststart") || (PC(1) == "prestop") ||
           (PC(1) == "poststop")) {
-        string profile, result;
+        string result;
         
         if (!arg.isNull ()) profile = arg->asString()->value();
         else {
@@ -234,11 +249,7 @@ YCPValue SCPMAgent::Read(const YCPPath &path, const YCPValue& arg)
         else
             ret = YCPString(set);
     }
-   	if ((PC(0) == "switch") && (PC(1) == "prepare")) {
-            
-        y2error("kontrola");
-        wait(0);
-    }
+    
     
     } 
     
@@ -300,7 +311,6 @@ YCPValue SCPMAgent::Write(const YCPPath &path, const YCPValue& value,
       if ((PC(1) == "description") || (PC(1) == "prestart") ||
           (PC(1) == "poststart") || (PC(1) == "prestop") ||
           (PC(1) == "poststop")) {
-        string profile;
         
         if ((value.isNull ()) || (!value->isString())) {
             y2error ( scpm_error );
@@ -339,7 +349,6 @@ YCPValue SCPMAgent::Write(const YCPPath &path, const YCPValue& value,
 
 }
  
-
 /**
  * Execute(.scpm) must be run first to initialize
  */
@@ -355,10 +364,11 @@ YCPValue SCPMAgent::Execute(const YCPPath &path, const YCPValue& value,
         string outfile = tmpdir + "/scpm.progress";
         string hashfile = tmpdir + "/scpm.hash";
         changesfile = tmpdir + "/scpm.changes";
+        tmpfile = tmpdir + "/scpm.tmp";
 
         const char *outf = outfile.c_str();
         const char *hashf = hashfile.c_str();
-            
+    
         y2debug("----------- agent-scpm initialization");
         y2debug("----------- output to: %s, %s", outf, hashf);
     	output.open (outf);
@@ -371,7 +381,6 @@ YCPValue SCPMAgent::Execute(const YCPPath &path, const YCPValue& value,
     if (path->length() == 1) {
     
    	if (PC(0) == "switch") {
-        switch_info_t switch_info;
         
         if ((value.isNull ()) || (!value->isMap())) {
             y2error ( scpm_error );
@@ -379,22 +388,16 @@ YCPValue SCPMAgent::Execute(const YCPPath &path, const YCPValue& value,
         }
         else {
             switch_info = frommap_sw(value->asMap());
-            if (!scpm->Switch(switch_info)) 
-                y2error ( scpm_error );
-            else {
-                ret = YCPBoolean(1);
-
-            }
+            pthread_create( &pt, NULL, (void*(*)(void*))&call_switch, this );
         }
-
     }
+    
+    
     }
     
     if (path->length() == 2) {
         
    	if ((PC(0) == "switch") && (PC(1) == "prepare")) {
-        string profile;
-        switch_info_t switch_info;
         
         if ((value.isNull ()) || (!value->isString())) {
             y2error ( scpm_error );
@@ -402,25 +405,15 @@ YCPValue SCPMAgent::Execute(const YCPPath &path, const YCPValue& value,
         }
         else {
             profile = value->asString()->value();
-
-/*            int id = fork();
-            if (id == 0) {
-            y2error("syn");*/
-                
-            if (!scpm->PrepareSwitch(profile, switch_info)) {
-                y2error ( scpm_error );
-                ret = YCPVoid();
-            }
-            else
-                ret = YCPMap(tomap_sw(switch_info));
-/*            exit(0);
-            }
-            y2error("otec");*/
-            
-            
+            pthread_create( &pt, NULL, (void*(*)(void*))&call_prepare, this );
         }
     }
-	
+
+   	if ((PC(0) == "enable") && (PC(1) == "first")) {
+        
+        pthread_create( &pt, NULL, (void*(*)(void*))&call_enable, this );
+    }
+		
    	if (PC(0) == "resources") {
       if (PC(1) == "rebuild") {
         
@@ -467,8 +460,6 @@ YCPValue SCPMAgent::Execute(const YCPPath &path, const YCPValue& value,
      
    	if (PC(0) == "profiles") {
       if (PC(1) == "add") {
-        string profile;
-        bool auto_switch;
         
         if ((value.isNull ()) || (arg.isNull ())){
             y2error ( scpm_error );
@@ -476,15 +467,15 @@ YCPValue SCPMAgent::Execute(const YCPPath &path, const YCPValue& value,
         else {
             profile = value->asString()->value();
             auto_switch = arg->asBoolean()->value();
-            if (!scpm->Add(profile, auto_switch))
+            pthread_create( &pt, NULL, (void*(*)(void*))&call_add, this );
+/*            if (!scpm->Add(profile, auto_switch))
                 y2error ( scpm_error );
             else
-                ret = YCPBoolean(1);
+                ret = YCPBoolean(1);*/
         }
       }
       
       if (PC(1) == "delete") {
-        string profile;
         
         if (value.isNull ()) {
             y2error ( scpm_error );
@@ -500,33 +491,28 @@ YCPValue SCPMAgent::Execute(const YCPPath &path, const YCPValue& value,
       }
 
       if (PC(1) == "copy") { 
-        string dest_profile, source_profile;
-        
-        if ((value.isNull ()) || (arg.isNull ())) {
-            y2error ( scpm_error );
-        }
-        else {
-            source_profile = value->asString()->value(); 
-            dest_profile = arg->asString()->value(); 
-        
-            if (!scpm->Copy(source_profile, dest_profile)) 
-                y2error ( scpm_error );
-            else
-                ret = YCPBoolean(1);
-        }
-      }
-
-      if (PC(1) == "rename") { 
-        string profile, new_profile;
         
         if ((value.isNull ()) || (arg.isNull ())) {
             y2error ( scpm_error );
         }
         else {
             profile = value->asString()->value(); 
+            dest_profile = arg->asString()->value(); 
+            pthread_create( &pt, NULL, (void*(*)(void*))&call_copy, this );
+        }
+      }
+
+      if (PC(1) == "rename") { 
+        string old_profile, new_profile;
+        
+        if ((value.isNull ()) || (arg.isNull ())) {
+            y2error ( scpm_error );
+        }
+        else {
+            old_profile = value->asString()->value(); 
             new_profile = arg->asString()->value(); 
         
-            if (!scpm->Rename(profile, new_profile)) 
+            if (!scpm->Rename(old_profile, new_profile)) 
                 y2error ( scpm_error );
             else
                 ret = YCPBoolean(1);
@@ -555,7 +541,6 @@ YCPValue SCPMAgent::Execute(const YCPPath &path, const YCPValue& value,
         }
       }
       
-      
     }
     }
      
@@ -571,12 +556,79 @@ YCPValue SCPMAgent::otherCommand(const YCPTerm& term)
 
     if (sym == "SCPMAgent") {
         
-        /* Your initialization */
-        
         return YCPVoid();
     }
 
     return YCPNull();
 }
 
+void *SCPMAgent::call_prepare( SCPMAgent *ag )
+{
+  static int retval;
+  YCPValue ret = YCPBoolean( true );
+  if ( !ag->scpm->PrepareSwitch( ag->profile, ag->switch_info ) ) {
+    y2error ( scpm_error );
+    ret = YCPVoid();
+  }
+  else
+    ret = YCPMap(tomap_sw(ag->switch_info));
+
+  const char *tmpf = ag->tmpfile.c_str();
+  ofstream tmp;
+  
+  tmp.open (tmpf);
+  tmp.write(ret->toString().c_str(), strlen(ret->toString().c_str()));
+  tmp.close();
+  retval=0;
+  pthread_exit((void*)&retval);
+}  
+
+void *SCPMAgent::call_switch( SCPMAgent *ag )
+{
+  static int retval;
+  if ( !ag->scpm->Switch( ag->switch_info ) ) {
+    y2error( scpm_error );
+    retval=1;
+  }
+  else 
+    retval=0;
+  pthread_exit((void*)&retval);
+}
+
+void *SCPMAgent::call_add( SCPMAgent *ag )
+{
+  static int retval;
+  if (!ag->scpm->Add(ag->profile, ag->auto_switch)) {
+      y2error ( scpm_error );
+      retval = 1;
+  }
+  else
+      retval = 0;
+  pthread_exit((void*)&retval);
+}
+
+void *SCPMAgent::call_copy( SCPMAgent *ag )
+{
+  static int retval;
+  if (!ag->scpm->Copy(ag->profile, ag->dest_profile)) {
+      y2error ( scpm_error );
+      retval = 1;
+  }
+  else
+      retval = 0;
+  pthread_exit((void*)&retval);
+}
+
+void *SCPMAgent::call_enable( SCPMAgent *ag )
+{
+  static int retval;
+  bool force = false;
+  if (!ag->scpm->Enable(force)) {
+      y2error ( scpm_error );
+      retval = 1;
+  }
+  else
+      retval = 0;
+  pthread_exit((void*)&retval);
+}
 

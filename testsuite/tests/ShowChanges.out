@@ -3,7 +3,7 @@ Dump	$["modified_resources":[$["is_deleted":true, "is_new":false, "resource_name
 Dump	---------
 Execute	.scpm.profiles.changes "file" "/etc/X11/XF86Config" true
 Read	.target.string "/tmp/changes.out" nil
-Return	/etc/X11/XF86Config(file)<br> not implemented yet
+Return	
 Dump	---------
 Execute	.scpm.profiles.changes "file" "/etc/X11/XF86Config" true
 Read	.target.string "/tmp/changes.out" "Changes"
