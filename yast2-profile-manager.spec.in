@@ -1,10 +1,10 @@
 @HEADER-COMMENT@
-# neededforbuild gpp libgpp libxcrypt libxcrypt-devel yast2-devel-packages
+# neededforbuild gpp libgpp libxcrypt libxcrypt-devel yast2-devel-packages scpm
 
 @HEADER@
-Requires:	yast2
+Requires:	yast2 
 
-BuildArchitectures:	noarch
+#BuildArchitectures:	noarch
 
 Summary:	Configuration of profile-manager
 
@@ -28,7 +28,7 @@ Summary:	Configuration of profile-manager
 @moduledir@/ProfileManager.ycp
 @configdir@/profile-manager.y2cc
 @scrconfdir@/*.scr
-@plugindir@/libpy2ag_SCPM.so.*
-@plugindir@/libpy2ag_SCPM.so
-@plugindir@/libpy2ag_SCPM.la
+@plugindir@/libpy2ag_scpm.so.*
+@plugindir@/libpy2ag_scpm.so
+@plugindir@/libpy2ag_scpm.la
 %doc @docdir@
