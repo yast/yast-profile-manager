@@ -16,7 +16,7 @@ X-SuSE-YaST-Geometry=
 X-SuSE-YaST-SortKey=
 X-SuSE-YaST-AutoInstResource=
 
-Icon=profile-manager
+Icon=yast-profile-manager
 Exec=/sbin/yast2 profile-manager 
 
 Name=Profile manager
