@@ -16,6 +16,7 @@ module "ProfileManager";
 textdomain "profile-manager";
 
 import "Directory";
+import "FileUtils";
 import "Label";
 import "Package";
 import "Popup";
@@ -37,8 +38,6 @@ global string last_ret = "";
 global integer hash_size = 0;
 
 
-//include "profile-manager/progress.ycp";
-
 /**
  * Is the module runing for the first time?
  */
@@ -48,6 +47,16 @@ global boolean first_time = false;
  * Is SCPM enabled?
  */
 global boolean enabled = false;
+
+/**
+ * Was enabled/disabled status changed?
+ */
+global boolean status_modified	= false;
+
+/**
+ * if resource groups were modified
+ */
+global boolean resource_groups_modified	= false;
 
 /**
  * Is SCPM re-initialization needed? (possibly after update)
@@ -243,12 +252,12 @@ define void SetError () ``{
 /**
  * all resource groups available; filled by ReadResourceGroups()
  */
-map resource_groups = $[];
+global map resource_groups = $[];
 
 /**
  * list of resource groups marked for deletion
  */
-list resource_groups_deleted = [];
+global list resource_groups_deleted = [];
 
 /**
  * this map holds the contents of scpm.conf configuration file
@@ -323,7 +332,7 @@ global define boolean ReadResourceGroups() ``{
 	SetError();
 	return false;
     }
-    foreach (string name, map group, (map<string,map<string,any> >)resource_groups, ``{
+    foreach (string name, map group, (map<string,map>)resource_groups, ``{
 	resource_groups[name,"resources"] = GetResourceGroupResources (name);
     });
 
@@ -370,9 +379,9 @@ global define boolean ResetResourceGroup (string groupname) ``{
  * Returns all available resource groups.
  * @return map of groups
  */
-global define map GetResourceGroups() ``{
+global define map<string,map> GetResourceGroups() ``{
 
-    return resource_groups;
+    return (map<string,map>) resource_groups;
 }
 
 /**
@@ -393,54 +402,6 @@ global define boolean GroupDeletable (string groupname) ``{
 global define boolean GroupnameExists (string groupname) ``{
 
     return haskey (resource_groups, groupname);
-}
-
-/**
- * Returns map resource group
- * @param groupname name of group
- * @return map
- */
-global define map GetGroup (string groupname) ``{
-
-    return (map) eval (resource_groups [groupname]:$[]);
-}
-
-/**
- * Marks selected resource group for deletion (will not be shown in list)
- * @param groupname name of group
- */
-global define void MarkGroupDeleted (string groupname) ``{
-
-    resource_groups = remove (resource_groups, groupname);
-    if (resource_groups[groupname, "what"]:"" != "added")
-    {
-	resource_groups_deleted = add (resource_groups_deleted, groupname);
-    }
-    y2debug ("resource group %1 marked for deletion", groupname);
-}
-
-/**
- * Changes "active" flag of selected resource group to opposite value
- * @param groupname name of group
- * @return new value
- */
-global define boolean MarkGroupActive (string groupname) ``{
-
-    boolean active = !resource_groups[groupname, "active"]:false;
-    resource_groups[groupname,"active"] = active;
-    resource_groups[groupname,"user_modified"] = true;
-    return active;
-}
-
-
-/**
- * Updates global resource_groups map with currently edited group
- */
-global define void ChangeGroup (map group) ``{
-
-    if (group["org_name"]:"" != "")
-	resource_groups = remove (resource_groups, group["org_name"]:"");
-    resource_groups = add (resource_groups, group["name"]:"",group);
 }
 
 /**
@@ -478,6 +439,7 @@ global define boolean SaveResourceGroups () ``{
 	SCR::Write (.scpm.rg.group.activate, name, false);
 	error = AllErrorMessages (error);
     });
+    resource_groups_deleted	= [];
     // renaming must be done in second cycle
     // (because some new group can have the old name of renamed one)
     foreach (string name, map group, (map<string,map<string,any> >) resource_groups, ``{
@@ -525,7 +487,7 @@ global define boolean SaveResourceGroups () ``{
  */
 global define boolean ReadConfigFile () ``{
 
-    if (SCR::Read(.target.size, "/etc/scpm.conf") == -1)
+    if (! FileUtils::Exists ("/etc/scpm.conf"))
 	return false;
 
     scpm_conf = $[
@@ -805,6 +767,7 @@ define boolean ReadSCPMStatus() ``{
     initialized		= status["initialized"]:false;
     needs_reinit	= initialized && status["needs_reinit"]:false;
     needs_recover	= status["needs_recover"]:false;
+    active_profile	= status["active_profile"]:"";
     return true;
 }
 
@@ -875,7 +838,10 @@ global define boolean ReadProfiles() ``{
  */
 global define boolean ReadActiveProfile() ``{
 
-    active_profile = (string) SCR::Read(.scpm.profiles.current);
+    if (active_profile == "") // = was not read during ReadSCPMStatus
+    {
+	active_profile = (string) SCR::Read(.scpm.profiles.current);
+    }
 
     if (active_profile == nil)
     {
@@ -915,13 +881,13 @@ global define boolean ReadProfilesDescriptions() ``{
 define boolean ReadUserSettings() ``{
 
     string file	= Directory::vardir + "/scpm.ycp";
-    if (SCR::Read (.target.size, file) == -1)
+    if (! FileUtils::Exists (file))
     {
-	SCR::Execute (.target.bash, sformat ("/bin/touch %1", file));
+	SCR::Write(.target.ycp, file, $[]);
     }
     else
     {
-	state = (map) SCR::Read (.target.ycp, "/var/lib/YaST2/scpm.ycp");
+	state = (map) SCR::Read (.target.ycp, file);
     }
     if (state == nil || state == $[])
 	first_time = true;
@@ -984,7 +950,7 @@ global define boolean Read() ``{
     // profile-manager Read dialog caption:
     string caption = _("Initializing profile manager configuration");
 
-    integer steps = 7;
+    integer steps = 8;
 
     Progress::New( caption, " ", steps, [
 	    // progress stage
@@ -998,6 +964,8 @@ global define boolean Read() ``{
 	    // progress stage
 	    _("Read the profiles descriptions"),
 	    // progress stage
+	    _("Read resource groups"),
+	    // progress stage
 	    _("Read user settings"),
 	], [
 	    // progress stage
@@ -1010,6 +978,8 @@ global define boolean Read() ``{
 	    _("Reading active profile..."),
 	    // progress stage
 	    _("Reading the profiles descriptions..."),
+	    // progress stage
+	    _("Reading resource groups..."),
 	    // progress stage
 	    _("Reading user settings..."),
 	    // progress stage
@@ -1038,7 +1008,7 @@ global define boolean Read() ``{
 
         return false;
     }
-    if (needs_reinit) // FIXME: data will be lost! -> better solution!
+    if (needs_reinit)
     {
 	// yes/no popup
 	if (Popup::YesNo (_("SCPM is currently locked because your system
@@ -1089,12 +1059,20 @@ Perform the reinitialization now?
 
     // read profile descriptions
     if(Abort()) return false;
-    Progress::NextStep();
+    Progress::NextStage();
 
     if (initialized && !ReadProfilesDescriptions())
 	// Error message: %1 is special error message, should be translated
 	Report::Error(sformat(_("Cannot read profile descriptions:\n%1"),
             scpm_error));
+
+    Progress::NextStage();
+    if (!ReadResourceGroups())
+    {
+	// error message (%1 is additional error message)
+	Report::Error (sformat(_("Cannot read resource groups:\n%1"),
+	    scpm_error));
+    }
 
     // read user settings
     if(Abort()) return false;
@@ -1116,6 +1094,104 @@ Perform the reinitialization now?
 }
 
 /**
+ * Enables or disables SCPM
+ * (depends on value of enabled variable).
+ * @return true on success
+ */
+global define boolean WriteSCPMStatus() ``{
+
+    boolean ret = SCR::Write(.scpm.status.enabled, enabled);
+    if (!ret)
+        SetError();
+    return ret;
+
+}
+
+/**
+ * Enables SCPM for the first time
+ */
+global define void WriteStatusFirst() ``{
+    SCR::Execute(.scpm.enable.first);
+}
+
+/**
+ * general function for writing status (enable/disable)
+ */
+global define boolean WriteStatus () {
+
+    boolean ret	= true;
+    if (status_modified)
+    {
+	if (!initialized)
+	{
+	    initialized	= true;
+	    WriteStatusFirst ();
+	    ProgressPopup("",0,100);
+	    if (!Wait())
+	    {
+		enabled = false;
+		ret	= false;
+	    }
+	}
+	else
+	{
+	    ret	= WriteSCPMStatus ();
+	    if (!ret)
+		enabled	= !enabled;
+	}
+    }
+    if (!ret)
+    {
+	// Error message:
+	Report::Error(sformat(_("Writing SCPM status was not successful:
+%1"), scpm_error));
+    }
+    else
+	status_modified	= false;
+    return ret;
+}
+
+/**
+ * Rebuilds SCPM database after changing resources.
+ * @return true on success
+ */
+global define boolean RebuildDB() ``{
+
+    if (!initialized)
+	return true; // no need for rebuild
+
+    boolean ret = (boolean) SCR::Execute(.scpm.resources.rebuild);
+    if (!ret)
+        ShowError();
+    return ret;
+}
+
+/**
+ * function for writing modifications in resource groups
+ */
+global define boolean WriteResourceGroups () {
+
+    boolean ret	= true;
+    if (resource_groups_modified)
+    {
+	ret	= SaveResourceGroups ();
+	if (ret)
+	{
+	    RebuildDB();
+	    resource_groups_modified	= false;
+	}
+	else
+	{
+	    // Error popup text, %1 is additional error text
+	    Report::Error(sformat(_("Saving resource groups failed:
+%1"),
+		scpm_error));
+	}
+    }
+    return ret;
+}
+
+/**
  * Writes the user settings (currently close_popups check).
  * @return true on success
  */
@@ -1124,9 +1200,7 @@ global define boolean WriteUserSettings() ``{
     state = $[];
     state = add (state, "first_time", false);
     state = add (state, "close_popups", close_popups);
-    boolean ret = SCR::Write(.target.ycp, "/var/lib/YaST2/scpm.ycp", state);
-
-	return ret;
+    return SCR::Write(.target.ycp, "/var/lib/YaST2/scpm.ycp", state);
 }
 
 /**
@@ -1151,11 +1225,19 @@ global define boolean Write() ``{
     {
 	stagelist = (list<string>) merge (stagelist, [
 	    // progress stage:
+	    _("Write SCPM status"),
+	    // progress stage:
+	    _("Write resource groups"),
+	    // progress stage:
 	    _("Write SCPM settings"),
 	    // progress stage:
 	    _("Write user settings") ]);
 
 	steplist = merge (steplist, [
+	    // progress step:
+	    _("Writing SCPM status..."),
+	    // progress stage:
+	    _("Writing resource groups..."),
 	    // progress step:
 	    _("Writing SCPM settings..."),
 	    // progress step:
@@ -1168,6 +1250,15 @@ global define boolean Write() ``{
 
     Progress::New (caption, " ", steps, stagelist, steplist, "");
 
+    if (!canceled)
+    {
+	Progress::NextStage();
+	WriteStatus ();
+
+	Progress::NextStage();
+	WriteResourceGroups ();
+    }
+
     Progress::NextStage();
     if(!SCR::Write(.scpm, nil))
     {
@@ -1178,15 +1269,15 @@ global define boolean Write() ``{
 
     if (!canceled) // only for proper finish
     {
-    Progress::NextStage();
-    if(!WriteConfigFile())
-	// Error message:
-        Report::Error (_("Cannot write SCPM settings."));
+	Progress::NextStage();
+        if(!WriteConfigFile())
+	    // Error message:
+	    Report::Error (_("Cannot write SCPM settings."));
 
-    Progress::NextStage();
-    if(!WriteUserSettings())
-	// Error message:
-        Report::Error (_("Cannot write user settings!"));
+	Progress::NextStage();
+	if(!WriteUserSettings())
+	    // Error message:
+	    Report::Error (_("Cannot write user settings!"));
     }
 
     Progress::NextStage();
@@ -1348,43 +1439,6 @@ global define void Switch () ``{
 }
 
 /**
- * Enables or disables SCPM
- * (depends on value of enabled variable).
- * @return true on success
- */
-global define boolean WriteSCPMStatus() ``{
-
-    boolean ret = SCR::Write(.scpm.status.enabled, enabled);
-    if (!ret)
-        SetError();
-    return ret;
-
-}
-
-/**
- * Enables SCPM for the first time
- */
-global define void WriteStatusFirst() ``{
-    SCR::Execute(.scpm.enable.first);
-}
-
-/**
- * Rebuilds SCPM database after changing resources.
- * @return true on success
- */
-global define boolean RebuildDB() ``{
-
-    if (!initialized)
-	return true; // no need for rebuild
-
-    boolean ret = (boolean) SCR::Execute(.scpm.resources.rebuild);
-    if (!ret)
-        ShowError();
-    return ret;
-
-}
-
-/**
  * Checks, what changes will be done to the selected resource after switch.
  * Uses global variable active_resource.
  * @return string The changes.
@@ -1490,7 +1544,7 @@ global define list CheckFilesValidity(map settings) ``{
  * @param settings The map with paths to scripts
  * @return true on success
  */
-global define boolean SetFilePermitions (map settings) ``{
+global define boolean SetFilePermissions (map settings) ``{
 
     boolean ret = true;
     foreach (string type, [ "prestart", "poststart", "prestop", "poststop" ],``{

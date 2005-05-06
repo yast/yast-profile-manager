@@ -428,6 +428,8 @@ YCPValue SCPMAgent::Read(const YCPPath &path, const YCPValue& arg, const YCPValu
 			     YCPBoolean (scpm_status.needs_reinit));
 		retmap->add (YCPString ("needs_recover"),
 			     YCPBoolean (scpm_status.needs_recover));
+		retmap->add (YCPString ("active_profile"),
+			     YCPString (scpm_status.active_profile));
 		ret = retmap;
 	    }
 	}

@@ -11,12 +11,12 @@
 
 textdomain "profile-manager";
 
+import "FileUtils";
+import "Label";
+import "Popup";
 import "ProfileManager";
 import "Report";
 import "Wizard";
-
-import "Popup";
-import "Label";
 
 include "profile-manager/helps.ycp";
 
@@ -276,7 +276,7 @@ define any ProfileSettingsDialog () ``{
 		    }
 		}
 	    }
-	    if (secure && !ProfileManager::SetFilePermitions (new_settings))
+	    if (secure && !ProfileManager::SetFilePermissions (new_settings))
 		// Error popup text
 		Popup::Error(_("Setting file permissions was not successful."));
 	    break;
@@ -958,7 +958,7 @@ define string GetFile() ``{
 	}
 	else if (ret == `ok)
 	{
-	    if (filename != "" && SCR::Read (.target.size, filename) < 0)
+	    if (filename != "" && !FileUtils::Exists (filename))
 	    {
 		// error popup
 		Popup::Error (_("Such a file does not exist."));
@@ -977,7 +977,7 @@ define string GetFile() ``{
  * @param group map with info of the group
  * @return modified group
  */
-define map ResourceGroupPopup (map group) ``{
+define map ResourceGroupPopup (map group, map resource_groups) ``{
 
     string groupname	= group["name"]:"";
     string descr	= group["description"]:"";
@@ -1101,41 +1101,20 @@ define map ResourceGroupPopup (map group) ``{
 	}
 	if (ret == `reset_b)
 	{
-	    // yes/no popup
-	    if (Popup::YesNo (_("The current resource group will be reset to its initial default values.
-All user modifications will be lost.
-Really do this now?
-")))
-	    {
-		if (!ProfileManager::ResetResourceGroup (groupname))
-		{
-		    // error message
-		    Report::Error( sformat(_("Problem with resetting resource group:
-%1
-"),
-			ProfileManager::scpm_error));
-		    continue;
-		}
-		map orig_group = ProfileManager::ReadResourceGroup (groupname);
-		group["resources"] = eval (orig_group["resources"]:[]);
-		group["description"] = eval (orig_group["description"]:"");
-		items = resource_group_items ();
-		UI::ChangeWidget(`id(`resources), `Items, items);
-		UI::ChangeWidget(`id(`descr), `Value, group["description"]:"");
-	    }
+	    // FIXME 'default' parameter...
+	    map orig_group = ProfileManager::ReadResourceGroup (groupname);
+	    group["resources"] = eval (orig_group["resources"]:[]);
+	    group["description"] = eval (orig_group["description"]:"");
+	    items = resource_group_items ();
+	    UI::ChangeWidget(`id(`resources), `Items, items);
+	    UI::ChangeWidget(`id(`descr), `Value, group["description"]:"");
 	}
 	if (ret == `delete_b)
 	{
-	    if (Popup::YesNo(sformat(
-// Popup text (confirmation), %1 is name of file or service
-_("Really delete resource \'%1\' from this group?"),
-		selected)))
-	    {
-		y2debug ("deleting %1 from group %2", selected, groupname);
-		// delete entry from local items
-		items = filter (term i, items, ``(i[2]:"" != selected));
-		UI::ChangeWidget(`id(`resources), `Items, items);
-	    }
+	    y2debug ("deleting %1 from group %2", selected, groupname);
+	    // delete entry from local items
+	    items = filter (term i, items, ``(i[2]:"" != selected));
+	    UI::ChangeWidget(`id(`resources), `Items, items);
 	}
 	if (ret == `adds_b)
 	{
@@ -1171,11 +1150,12 @@ _("Really delete resource \'%1\' from this group?"),
 	    // check possible name conflicts
 	    if (groupname != group["name"]:"")
 	    {
-		if (ProfileManager::GroupnameExists (groupname))
+		if (haskey (resource_groups, groupname))
 		{
 		    // error message, %1 is group name
 		    Popup::Error(sformat(_("Resource group \"%1\" already exists.
 Choose another name."), groupname));
+		    ret = `notok;
 		    continue;
 		}
 		if (group["name"]:"" != "")
@@ -1231,7 +1211,11 @@ Choose another name."), groupname));
  * Resource configuration dialog
  * @return any Returned value from UserInput() call
  */
-define symbol ConfigureResourcesDialog () ``{
+define symbol ConfigureResourcesDialog () {
+
+    map<string,map> resource_groups	= ProfileManager::GetResourceGroups();
+
+    list resource_groups_deleted = ProfileManager::resource_groups_deleted;
 
     /**
      * helper function for building table items with resource groups
@@ -1239,7 +1223,7 @@ define symbol ConfigureResourcesDialog () ``{
     define list resource_groups_items() ``{
 
 	list items = [];
-	foreach (string name, map group, (map<string,map>) ProfileManager::GetResourceGroups(),``{
+	foreach (string name, map group, resource_groups, {
 	    if (group["what"]:"" == "deleted")
 		return;
 	    string desc = group["description"]:"";
@@ -1251,12 +1235,40 @@ define symbol ConfigureResourcesDialog () ``{
 	return items;
     }
 
-    // read resource groups every time entering the dialog
-    if (!ProfileManager::ReadResourceGroups())
-    {
-	// error message (%1 is additional error message)
-	Report::Error( sformat(_("Cannot read resource groups:\n%1"),
-	    ProfileManager::scpm_error));
+    /**
+     * Marks selected resource group for deletion (will not be shown in list)
+     * @param groupname name of group
+     */
+    define void mark_group_deleted (string groupname) {
+
+	resource_groups = remove (resource_groups, groupname);
+	if (resource_groups[groupname, "what"]:"" != "added")
+	{
+	    resource_groups_deleted = add (resource_groups_deleted, groupname);
+	}
+	y2debug ("resource group %1 marked for deletion", groupname);
+    }
+
+    /**
+     * Changes "active" flag of selected resource group to opposite value
+     * @param groupname name of group
+     * @return new value
+     */
+    define boolean mark_group_active (string groupname) {
+
+	boolean active = !resource_groups[groupname, "active"]:false;
+	resource_groups[groupname,"active"] = active;
+	resource_groups[groupname,"user_modified"] = true;
+	return active;
+    }
+    /**
+     * Updates resource_groups map with currently edited group
+     */
+    define void change_group (map group) {
+
+	if (group["org_name"]:"" != "")
+	    resource_groups = remove (resource_groups, group["org_name"]:"");
+	resource_groups = add (resource_groups, group["name"]:"",group);
     }
 
     // Caption of the dialog:
@@ -1321,9 +1333,10 @@ define symbol ConfigureResourcesDialog () ``{
 	selected	= (string) UI::QueryWidget(`id(`rgroups), `CurrentItem);
 	if (ret == `delete_button)
 	{
+	    // %1 is resource group name
 	    if (Popup::YesNo(sformat(_("Delete group %1?"), selected)))
 	    {
-		ProfileManager::MarkGroupDeleted (selected);
+		mark_group_deleted (selected);
 		UI::ChangeWidget(`id(`rgroups),`Items, resource_groups_items());
 		modified = true;
 	    }
@@ -1333,12 +1346,13 @@ define symbol ConfigureResourcesDialog () ``{
 	{
 	    map group = $[];
 	    if (ret == `add_button)
-		group = ResourceGroupPopup($[]);
+		group = ResourceGroupPopup($[], resource_groups);
 	    else
-		group = ResourceGroupPopup (ProfileManager::GetGroup(selected));
+		group = ResourceGroupPopup (resource_groups[selected]:$[],
+		    resource_groups);
 	    if (group != $[])
 	    {
-		ProfileManager::ChangeGroup (group);
+		change_group (group);
 		UI::ChangeWidget(`id(`rgroups),`Items, resource_groups_items());
 		UI::ChangeWidget(`id(`rgroups), `CurrentItem, group["name"]:"");
 		modified = true;
@@ -1347,36 +1361,15 @@ define symbol ConfigureResourcesDialog () ``{
 	}
 	else if (ret == `reset_button)
 	{
-	    // yes/no popup
-	    if (Popup::YesNo (_("All resource groups will be reset to their initial default values.
-All user modifications (including new groups) will be lost.
-Really do this now?
-")))
-	    {
-		if (!ProfileManager::ResetResourceGroups ())
-		{
-		    // error message
-		    Report::Error( sformat(_("Problem with resetting resource groups:
-%1
-"),
-			ProfileManager::scpm_error));
-		    continue;
-		}
-		// read resource groups again
-		if (!ProfileManager::ReadResourceGroups())
-		{
-		    // error message
-		    Report::Error(sformat(_("Cannot read resource groups:\n%1"),
-			ProfileManager::scpm_error));
-		    continue;
-		}
-		// reload the list of groups
-		UI::ChangeWidget(`id(`rgroups),`Items, resource_groups_items());
-	    }
+	    // FIXME get default values
+	    resource_groups		= ProfileManager::GetResourceGroups();
+	    resource_groups_deleted	= [];
+	    // reload the list of groups
+	    UI::ChangeWidget(`id(`rgroups),`Items, resource_groups_items());
 	}
 	else if (ret == `rgroups)
 	{
-	    boolean active = ProfileManager::MarkGroupActive (selected);
+	    boolean active = mark_group_active (selected);
 	    UI::ChangeWidget (`id(`rgroups),`Item (selected, 0), active?"X":"");
 	    modified = true;
 	}
@@ -1387,29 +1380,15 @@ Really do this now?
 	}
 	else if (ret == `next)
 	{
-	    if (!modified)
-		break;
-	    // yes/no popup
-	    if (Popup::YesNo (_("Apply changes to resource groups now?
-(Resource database will be rebuilt.)
-")))
+	    if (modified)
 	    {
-		// really delete/add/modify
-		if (!ProfileManager::SaveResourceGroups ())
-		{
-		    // Error popup text, %1 is additional error text
-		    Popup::Error(sformat(_("Saving resource groups failed:
-%1"),
-			ProfileManager::scpm_error));
-	}
-		// TODO ask for rebuild?
-		else
-		{
-		    ProfileManager::RebuildDB();
-		}
+		ProfileManager::resource_groups_modified	= true;
+
+		// save the local maps...
+		ProfileManager::resource_groups	= eval (resource_groups);
+		ProfileManager::resource_groups_deleted	=
+		    eval (resource_groups_deleted);
 	    }
-	    else
-		continue;
 	    break;
 	}
     };

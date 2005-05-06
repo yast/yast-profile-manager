@@ -137,14 +137,11 @@ define any MainDialog () ``{
 	`HSpacing(1.5)
     );
 
-    Wizard::SetContentsButtons ( caption,
-				contents,
-                HELPS["main"]:"",
-                Label::BackButton (),
-				Label::CloseButton () );
+    Wizard::SetContentsButtons (caption, contents, HELPS["main"]:"",
+        Label::CancelButton (), Label::CloseButton ());
 
     // pushbutton
-    Wizard::SetBackButton(`intro, _("&Introduction to SCPM") );
+//    Wizard::SetBackButton(`intro, _("&Introduction to SCPM") );
     Wizard::HideAbortButton();
 
     UI::ChangeWidget(`id(`profiles), `Items,
@@ -170,6 +167,52 @@ define any MainDialog () ``{
     while (true)
     {
 	ret = UI::UserInput ();
+	if (ret == `back)
+	{
+	    ret = `cancel;
+	    break;
+	}
+	boolean profiles_button = is (ret, symbol) && contains (
+	    [`add_button,`edit_button,`delete_button, `switch_button],
+	    (symbol)ret);
+
+	if (profiles_button && (ProfileManager::status_modified ||
+	    ProfileManager::resource_groups_modified))
+	{
+	    string details	= "";
+	    if (ProfileManager::status_modified)
+	    {
+		// action which needs to be performed
+		details	= _("SCPM will be enabled.");
+	    }
+	    if (ProfileManager::resource_groups_modified)
+	    {
+		if (details != "")
+		    details	= details + "\n";
+		// action which needs to be performed
+		details     = details + _("Resource groups modifications will be saved.");
+	    }
+	    // continue/cancel question, %1 are another sentences (actions)
+	    if (!Popup::ContinueCancel (sformat (_("Before configuring the profiles,
+following actions must be performed:
+
+%1
+
+"), details)))
+	    {
+		continue;
+	    }
+	    if (ProfileManager::status_modified &&
+		!ProfileManager::WriteStatus ())
+	    {
+		continue;
+	    }
+	    if (ProfileManager::resource_groups_modified &&
+		!ProfileManager::WriteResourceGroups ())
+	    {
+		continue;
+	    }
+	}
 	if (ret == `delete_button)
 	{
 	    selected = (string) UI::QueryWidget(`id(`profiles), `CurrentItem);
@@ -380,74 +423,28 @@ define any OptionsDialog () ``{
     {
         close_popups = (boolean) UI::QueryWidget(`id(`close_popups_ch), `Value);
 
-	// SCPM will be enabled
         if (UI::QueryWidget(`id(`rb), `CurrentButton) == `ena)
 	{
             if (!ProfileManager::enabled)
             {
-                ProfileManager::enabled = true;
-
-		if (!ProfileManager::initialized)
-                {
-                    ProfileManager::initialized = true;
-                    ProfileManager::WriteStatusFirst();
-                    ProfileManager::ProgressPopup("",0,100);
-                    if (!ProfileManager::Wait())
-                    {
-                        // Error popup text, %1 is additional error message
-                        Popup::Error(sformat (_("Enabling SCPM was not successful:
-%1
-"), ProfileManager::scpm_error));
-                        ProfileManager::enabled = false;
-                    }
-                    else
-                    {
-                        ProfileManager::ReadProfiles();
-                        ProfileManager::ReadActiveProfile();
-			ProfileManager::ReadProfilesDescriptions();
-                    }
-                }
-                else
-                {
-                    if (!ProfileManager::WriteSCPMStatus())
-                    {
-                        Popup::Error(sformat(
-                            // Error popup text, %1 is additional error text
-                            _("Enabling SCPM was not successful:
-%1
-"),
-                            ProfileManager::scpm_error));
-                        ProfileManager::enabled = false;
-                        break;
-                    }
-                    ProfileManager::ReadProfiles(); // on some other place?
-	            ProfileManager::ReadActiveProfile();
-		    ProfileManager::ReadProfilesDescriptions();
-                }
+                ProfileManager::enabled		= true;
+		ProfileManager::status_modified	=
+		    !ProfileManager::status_modified;
             }
         }
-	// SCPM will be disabled
         else
         {
             if (ProfileManager::enabled)
             {
-                ProfileManager::enabled = false;
-                if (!ProfileManager::WriteSCPMStatus())
-                {
-                    Popup::Error(sformat(
-                        // Error popup text, %1 is additional error text
-                        _("Disabling SCPM was not successful:
-%1
-"),
-                        ProfileManager::scpm_error));
-                    ProfileManager::enabled = true;
-                    break;
-                }
+                ProfileManager::enabled		= false;
+		ProfileManager::status_modified	=
+		    !ProfileManager::status_modified;
 	    }
         }
 	ProfileManager::close_popups = close_popups;
 
-        y2debug("enabled=%1",ProfileManager::enabled);
+        y2milestone ("enabled: %1, status modified: %2",
+	    ProfileManager::enabled, ProfileManager::status_modified);
         y2debug("close_popups=%1",ProfileManager::close_popups);
 
         break;
@@ -459,7 +456,7 @@ define any OptionsDialog () ``{
 
     if (ret == `next)
     {
-	// moving to other dialog (OK or resources) -> save config values
+	// save config values
 	ProfileManager::scpm_conf["verbose"] = UI::QueryWidget (`id("verbose"),
 	    `Value);
 	map sw_mode =	$[ `swn: "normal", `swd: "skip", `sws: "force" ];
