@@ -818,7 +818,7 @@ To enable it, use the Options button.<br></p>
     UI::OpenDialog(`opt(`decorated), `HBox(`HSpacing(1.5),
         `VSpacing(15),
         `VBox(
-            `HSpacing(40),
+            `HSpacing(50),
             `VSpacing(1),
             `RichText(intro_text),
             `VSpacing(1),
@@ -1101,13 +1101,15 @@ define map ResourceGroupPopup (map group, map resource_groups) ``{
 	}
 	if (ret == `reset_b)
 	{
-	    // FIXME 'default' parameter...
-	    map orig_group = ProfileManager::ReadResourceGroup (groupname);
-	    group["resources"] = eval (orig_group["resources"]:[]);
-	    group["description"] = eval (orig_group["description"]:"");
-	    items = resource_group_items ();
-	    UI::ChangeWidget(`id(`resources), `Items, items);
-	    UI::ChangeWidget(`id(`descr), `Value, group["description"]:"");
+	    map orig_group = ProfileManager::GetDefaultResourceGroup(groupname);
+	    if (size (orig_group) > 0)
+	    {
+		group["resources"] = eval (orig_group["resources"]:[]);
+		group["description"] = eval (orig_group["description"]:"");
+		items = resource_group_items ();
+		UI::ChangeWidget(`id(`resources), `Items, items);
+		UI::ChangeWidget(`id(`descr), `Value, group["description"]:"");
+	    }
 	}
 	if (ret == `delete_b)
 	{
@@ -1361,11 +1363,13 @@ define symbol ConfigureResourcesDialog () {
 	}
 	else if (ret == `reset_button)
 	{
-	    // FIXME get default values
-	    resource_groups		= ProfileManager::GetResourceGroups();
-	    resource_groups_deleted	= [];
-	    // reload the list of groups
-	    UI::ChangeWidget(`id(`rgroups),`Items, resource_groups_items());
+	    map<string,map> rgs = ProfileManager::GetDefaultResourceGroups();
+	    if (size (rgs) > 0)
+	    {
+		resource_groups	= eval (rgs);
+		resource_groups_deleted	= [];
+		UI::ChangeWidget(`id(`rgroups),`Items, resource_groups_items());
+	    }
 	}
 	else if (ret == `rgroups)
 	{

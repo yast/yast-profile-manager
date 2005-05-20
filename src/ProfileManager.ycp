@@ -350,6 +350,36 @@ global define map ReadResourceGroup(string groupname) ``{
     return resource_group;
 }
 
+// get the default values for given resource group
+global define map GetDefaultResourceGroup (string groupname) {
+
+    map resource_group = (map) SCR::Read (.scpm.rg.group_default, groupname);
+    if (resource_group == nil)
+    {
+	ShowError();
+	return $[];
+    }
+    return resource_group;
+}
+
+/**
+ * get the map of default resource groups
+ */
+global define map<string,map> GetDefaultResourceGroups () {
+
+    map<string,map> default_groups = (map<string,map>) SCR::Read(.scpm.rg);
+    if (default_groups == nil)
+    {
+	ShowError();
+	return $[];
+    }
+    foreach (string name, map group, default_groups, {
+	default_groups[name] = union (group, GetDefaultResourceGroup (name));
+    });
+
+    return default_groups;
+}
+
 /**
  * Resets RG's to default values
  * @return success

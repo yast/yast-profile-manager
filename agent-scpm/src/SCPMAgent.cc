@@ -332,7 +332,8 @@ YCPValue SCPMAgent::Read(const YCPPath &path, const YCPValue& arg, const YCPValu
 		    string desc;
 		    vector<resource_entry_t> group;
 				
-		    if (!scpm->GetResourceGroup (groupname, group, desc)) {
+		    if (!scpm->GetResourceGroup (groupname, group, desc,false))
+		    {
            		y2error ( scpm_error );
 		    }
 		    else {
@@ -346,7 +347,7 @@ YCPValue SCPMAgent::Read(const YCPPath &path, const YCPValue& arg, const YCPValu
 	    }
 	    // (.scpm.rg.group_map, name): get more info about one rg
 	    // map of group
-	    else if (PC(1) == "group_map") {
+	    else if (PC(1) == "group_map" || PC(1) == "group_default") {
 
 		if (arg.isNull()) {		
 		    scpm_error = "Wrong parameter.";
@@ -356,8 +357,11 @@ YCPValue SCPMAgent::Read(const YCPPath &path, const YCPValue& arg, const YCPValu
 		    string groupname = arg->asString()->value();
 		    string desc;
 		    vector<resource_entry_t> group;
+		    bool def	= false;
+		    if (PC(1) == "group_default")
+			def	= true;
 				
-		    if (!scpm->GetResourceGroup (groupname, group, desc)) {
+		    if (!scpm->GetResourceGroup (groupname, group, desc, def)) {
            		y2error ( scpm_error );
 		    }
 		    else {
