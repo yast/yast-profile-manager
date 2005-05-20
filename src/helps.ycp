@@ -151,8 +151,11 @@ Safely abort the configuration utility by pressing <b>Abort</b> now.</p>
     /* Main dialog help 5/6 */
     _("<p><b>Add</b> a new profile or <b>Edit</b> or <b>Delete</b> the selected one. Editing a profile does not mean changing the system configuration for this profile, but setting some special actions when entering or leaving this profile. To change the system configuration in a profile, switch to it. Then change your system configuration as usual.</p>") +
 
-    /* Main dialog help 6/6 */
-    _("<p>To configure SCPM itself, use <b>Options</b>.</p>"),
+    /* Main dialog help 6/7 */
+    _("<p>To configure SCPM itself, use <b>Options</b>.</p>") +
+
+    /* Main dialog help 7/7 */
+    _("<p>Find more information about SCPM in its info page.</p>"),
 
     // Options dialog help 1/6
     "options" : _("<p>First, <b>enable</b> SCPM. If disabled later, none of your configuration data in the profiles will be lost. It just keeps the current configuration of your system and you cannot switch to any other profile until you enable it again.</p>") +
