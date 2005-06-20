@@ -998,21 +998,21 @@ global define boolean Read() ``{
 	    // progress stage
 	    _("Read user settings"),
 	], [
-	    // progress stage
+	    // progress step
 	    _("Initializing SCPM..."),
-	    // progress stage
+	    // progress step
 	    _("Reading the SCPM state..."),
-	    // progress stage
+	    // progress step
 	    _("Reading the profiles..."),
-	    // progress stage
+	    // progress step
 	    _("Reading active profile..."),
-	    // progress stage
+	    // progress step
 	    _("Reading the profiles descriptions..."),
-	    // progress stage
+	    // progress step
 	    _("Reading resource groups..."),
-	    // progress stage
+	    // progress step
 	    _("Reading user settings..."),
-	    // progress stage
+	    // progress step
 	    _("Finished")
 	],
 	""
@@ -1266,7 +1266,7 @@ global define boolean Write() ``{
 	steplist = merge (steplist, [
 	    // progress step:
 	    _("Writing SCPM status..."),
-	    // progress stage:
+	    // progress step:
 	    _("Writing resource groups..."),
 	    // progress step:
 	    _("Writing SCPM settings..."),
