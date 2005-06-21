@@ -401,57 +401,62 @@ define any OptionsDialog () ``{
     while (true)
     {
 
-    ret = UI::UserInput ();
-    if (ret == `dis)
-    {
-	ProfileManager::tmp_enabled = false;
-        UI::ChangeWidget(`id(`resources), `Enabled, false);
-        continue;
-    }
-    else if (ret == `ena)
-    {
-	ProfileManager::tmp_enabled = true;
-        UI::ChangeWidget(`id(`resources), `Enabled, true);
-        continue;
-    }
-    else if (ret == `resources)
-    {
-	// for resource groups there is another dialog defined
-	break;
-    }
-    else if (ret == `next)
-    {
-        close_popups = (boolean) UI::QueryWidget(`id(`close_popups_ch), `Value);
-
-        if (UI::QueryWidget(`id(`rb), `CurrentButton) == `ena)
+	ret = UI::UserInput ();
+	if (ret == `dis)
 	{
-            if (!ProfileManager::enabled)
-            {
-                ProfileManager::enabled		= true;
-		ProfileManager::status_modified	=
-		    !ProfileManager::status_modified;
-            }
-        }
-        else
-        {
-            if (ProfileManager::enabled)
-            {
-                ProfileManager::enabled		= false;
-		ProfileManager::status_modified	=
-		    !ProfileManager::status_modified;
+	    ProfileManager::tmp_enabled = false;
+	    UI::ChangeWidget(`id(`resources), `Enabled, false);
+	    continue;
+	}
+	else if (ret == `ena)
+	{
+	    ProfileManager::tmp_enabled = true;
+	    UI::ChangeWidget(`id(`resources), `Enabled, true);
+	    continue;
+	}
+	else if (ret == `resources)
+	{
+	    // for resource groups there is another dialog defined
+	    break;
+	}
+	else if (ret == `next)
+	{
+	    close_popups =
+		(boolean) UI::QueryWidget(`id(`close_popups_ch), `Value);
+
+	    if (UI::QueryWidget(`id(`rb), `CurrentButton) == `ena)
+	    {
+		if (!ProfileManager::enabled)
+		{
+		    ProfileManager::enabled		= true;
+		    ProfileManager::status_modified	=
+			!ProfileManager::status_modified;
+		}
 	    }
-        }
-	ProfileManager::close_popups = close_popups;
+	    else
+	    {
+		if (ProfileManager::enabled)
+		{
+		    ProfileManager::enabled		= false;
+		    ProfileManager::status_modified	=
+			!ProfileManager::status_modified;
+		}
+	    }
+	    ProfileManager::close_popups = close_popups;
 
-        y2milestone ("enabled: %1, status modified: %2",
-	    ProfileManager::enabled, ProfileManager::status_modified);
-        y2debug("close_popups=%1",ProfileManager::close_popups);
+	    y2milestone ("enabled: %1, status modified: %2",
+		ProfileManager::enabled, ProfileManager::status_modified);
+	    y2debug("close_popups=%1",ProfileManager::close_popups);
 
-        break;
-    }
-    else if (ret == `back || ret == `cancel) break;
+	    break;
+	}
+	else if (ret == `back || ret == `cancel)
+	{
+	    ProfileManager::tmp_enabled	= ProfileManager::enabled;
+	    break;
+	}
 
-    else continue;
+	else continue;
     };
 
     if (ret == `next)
