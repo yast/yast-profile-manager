@@ -206,7 +206,7 @@ define any MainDialog () {
 	    }
 	    // continue/cancel question, %1 are another sentences (actions)
 	    if (!Popup::ContinueCancel (sformat (_("Before configuring the profiles,
-following actions must be performed:
+the following actions must be performed:
 
 %1
 
