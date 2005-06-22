@@ -1,0 +1,500 @@
+/**
+ * File:	include/profile-manager/complex.ycp
+ * Package:	Configuration of profile-manager
+ * Summary:	Dialogs definitions
+ * Authors:	Jiri Suchomel <jsuchome@suse.cz>
+ *
+ * $Id$
+ */
+
+{
+
+textdomain "profile-manager";
+
+import "Wizard";
+
+import "ProfileManager";
+
+import "Popup";
+import "Label";
+
+include "profile-manager/helps.ycp";
+include "profile-manager/dialogs.ycp";
+
+
+/**
+ * Read settings dialog
+ * @return `abort if aborted and `next otherwise
+ */
+define symbol ReadDialog() ``{
+    Wizard::RestoreHelp(HELPS["read"]:"");
+    ProfileManager::AbortFunction = ``{ return UI::PollInput() == `abort;};
+    boolean ret = ProfileManager::Read();
+    return ret ? `next : `abort;
+}
+
+/**
+ * Write settings dialog
+ * @return `abort if aborted and `next otherwise
+ */
+define symbol WriteDialog() ``{
+    Wizard::RestoreHelp(HELPS["write"]:"");
+    boolean ret = ProfileManager::Write();
+    return ret ? `next : `abort;
+}
+
+/**
+ * Open progress window and do the actions for preparing the switch
+ * @param selected profile to switch to
+ */
+define boolean PreparePopup (string selected) {
+
+    ProfileManager::selected_profile = selected;
+    ProfileManager::PrepareSwitch (selected);
+    ProfileManager::ProgressPopup("",0,100);
+
+    if (!ProfileManager::Wait())
+    {
+	// Error popup text, %1 is additional translated error message
+	Popup::Error(sformat(_("Switching to another profile is not possible:\n%1"), ProfileManager::scpm_error));
+	return false;
+    }
+    if (!ProfileManager::ReadSwitchInfo())
+    {
+	// Error popup text
+	Popup::Error(_("Switching to another profile is not possible."));
+	return false;
+    }
+    return true;
+}
+
+/**
+ * Main dialog
+ * @return any Returned value from UserInput() call
+ */
+define any MainDialog () {
+
+    // Caption of the dialog:
+    string caption	= _("System Configuration Profile Management");
+
+    string active	= ProfileManager::active_profile;
+    boolean enabled	= ProfileManager::enabled;
+    string selected	= "";
+
+    // State label text
+    string state_label	= enabled ? _("SCPM is enabled"):_("SCPM is disabled");
+
+    term contents = `HBox(
+	`HSpacing(1.5),
+	`VBox(
+        `VSpacing(1),
+	// frame label:
+        `Frame(_("Profile Management"), `HBox(`HSpacing(1),
+            `VBox(
+                `VSpacing(0.2),
+		    `Table(`id(`profiles), `opt (`notify),
+                    `header(
+                        // Header of the table with the available profiles 1/3
+                        _("Active"),
+                        // Header of the table with the available profiles 2/3
+                        _("Name"),
+                        // Header of the table with the available profiles 3/3
+                        _("Description")),
+                    []
+                    ),
+                `VSpacing(0.2),
+		`HBox(
+                    `Left(
+                    `PushButton(`id(`switch_button), `opt(`key_F6),
+                        // Push button label
+                        _("&Switch To..."))),
+                    // Push button label
+		    `PushButton(`id(`add_button), `opt(`key_F3), _("&Add")),
+                    // Push button label
+		    `PushButton(`id(`edit_button), `opt(`key_F4),_("&Edit")),
+                    // Push button label
+		    `PushButton(`id(`delete_button), `opt(`key_F5),_("&Delete"))
+		    ),
+		`VSpacing(0.2)
+                ),
+            `HSpacing(1)
+        )),
+        `VSpacing(1),
+	// frame label:
+	`Frame(_("General Setup"), `VBox(`VSpacing(0.2),
+        `HBox(
+	    `HSpacing(1),
+	    `Label (state_label),
+	    `Right (
+		`PushButton(`id(`options_button),`opt(`key_F7),Label::Options())
+	    ),
+            `HSpacing(1)
+	),
+        `VSpacing(0.2))),
+        `VSpacing(1)
+	),
+	`HSpacing(1.5)
+    );
+
+    Wizard::SetContentsButtons (caption, contents, HELPS["main"]:"",
+        Label::CancelButton (), Label::CloseButton ());
+
+    // pushbutton
+    Wizard::HideAbortButton();
+
+    // update the dialog contents with actual data
+    define void update_dialog_contents () {
+
+	active		= ProfileManager::active_profile;
+	enabled		= ProfileManager::enabled;
+
+	UI::ChangeWidget (`id(`profiles), `Items,
+	    ProfileManager::GetProfilesAsItems());
+
+	if (!enabled) {
+	    UI::SetFocus(`id(`options_button));
+	}
+	else if (active != "" && active != "(none)")
+	{
+	    UI::ChangeWidget(`id(`profiles), `CurrentItem, active);
+	    UI::SetFocus(`id(`profiles));
+	}
+
+	UI::ChangeWidget(`id(`add_button), `Enabled, enabled);
+
+	boolean any_profiles	= size (ProfileManager::profiles) > 0;
+	UI::ChangeWidget(`id(`profiles), `Enabled, enabled && any_profiles);
+	UI::ChangeWidget(`id(`edit_button), `Enabled, enabled && any_profiles);
+        UI::ChangeWidget(`id(`delete_button), `Enabled,enabled && any_profiles);
+	UI::ChangeWidget(`id(`switch_button), `Enabled,enabled && any_profiles);
+
+    }
+
+    update_dialog_contents ();
+
+    if (ProfileManager::first_time && !enabled && !ProfileManager::status_modified)
+        IntroductionPopup();
+
+    any ret = nil;
+    while (true)
+    {
+	ret = UI::UserInput ();
+	if (ret == `back)
+	{
+	    ret = `cancel;
+	    break;
+	}
+	boolean profiles_button = is (ret, symbol) && contains (
+	    [`add_button,`edit_button,`delete_button, `switch_button],
+	    (symbol)ret);
+
+	if (profiles_button && (ProfileManager::status_modified ||
+	    ProfileManager::resource_groups_modified))
+	{
+	    string details	= "";
+	    if (ProfileManager::status_modified)
+	    {
+		// action which needs to be performed
+		details	= _("Enable SCPM");
+	    }
+	    if (ProfileManager::resource_groups_modified)
+	    {
+		if (details != "")
+		    details	= details + "\n";
+		// action which needs to be performed
+		details     = details + _("Save resource group modifications");
+	    }
+	    // continue/cancel question, %1 are another sentences (actions)
+	    if (!Popup::ContinueCancel (sformat (_("Before configuring the profiles,
+following actions must be performed:
+
+%1
+
+"), details)))
+	    {
+		continue;
+	    }
+	    if (ProfileManager::status_modified)
+	    {
+		if (!ProfileManager::WriteStatus ())
+		{
+		    continue;
+		}
+		else
+		{
+		    ProfileManager::ReadProfiles();
+		    ProfileManager::ReadActiveProfile (true);
+		    ProfileManager::ReadProfilesDescriptions();
+		    update_dialog_contents ();
+		}
+	    }
+	    if (ProfileManager::resource_groups_modified &&
+		!ProfileManager::WriteResourceGroups ())
+	    {
+		continue;
+	    }
+	}
+	if (ret == `delete_button)
+	{
+	    selected = (string) UI::QueryWidget(`id(`profiles), `CurrentItem);
+	    if (selected == active)
+		// Popup text (user wants to delete active profile):
+		Popup::Message(_("You cannot delete the active profile."));
+	    else
+	    {
+		// Popup text (confirmation)
+		if (Popup::YesNo(sformat(_("Really delete profile %1?"), selected)))
+		{
+		    if (!ProfileManager::DeleteProfile(selected))
+		    {
+			// Error popup text: %1 is additional error message
+			Popup::Error(sformat(
+			    _("Deleting the profile was not successful:
+%1
+"),
+			    ProfileManager::scpm_error));
+		    }
+		    UI::ChangeWidget(`id(`profiles), `Items,
+			ProfileManager::GetProfilesAsItems());
+		    UI::ChangeWidget(`id(`profiles), `CurrentItem,
+                        ProfileManager::active_profile);
+		}
+	    }
+	    continue;
+	}
+	else if (ret == `add_button)
+	{
+	    if (AddProfilePopup())
+		return `edit_button;
+	    else continue;
+	}
+	else if (ret == `edit_button || ret == `profiles)
+	{
+	    ret = `edit_button;
+	    ProfileManager::selected_profile = (string)
+		UI::QueryWidget(`id(`profiles), `CurrentItem);
+	    ProfileManager::profile_action = "edit";
+	    break;
+	}
+	else if (ret == `switch_button)
+	{
+	    selected = (string) UI::QueryWidget(`id(`profiles), `CurrentItem);
+	    if (PreparePopup (selected))
+		break;
+	    else
+		continue;
+	}
+	else if (ret == `intro) // help button
+	{
+	    IntroductionTextPopup();
+	    continue;
+	}
+	else if (ret == `next || ret == `options_button || ret == `cancel)
+	    break;
+    };
+    return ret;
+}
+
+
+/**
+ * Options dialog
+ * @return any Returned value from UserInput() call
+ */
+define any OptionsDialog () ``{
+
+    string separator = "-----";
+    string selected = "";
+
+    ProfileManager::ReadResourceSets();
+
+    list resource_sets = union( union (ProfileManager::resource_sets_predefined, [ separator ]), ProfileManager::resource_sets_individual);
+    boolean close_popups = ProfileManager::close_popups;
+
+    // Dialog caption label:
+    string caption = _("SCPM Options");
+
+    term contents = `HBox (`HSpacing(1.5), `VBox (
+        `VSpacing(1),
+	// frame label:
+        `Frame(_("SCPM Status"), `VBox(
+	    `VSpacing(0.5),
+            `RadioButtonGroup(`id(`rb),
+	    `HBox(
+		`HCenter(`RadioButton(`id(`ena), `opt(`notify),
+		    // Push button label (state of SCPM)
+                    _("&Enabled") )),
+                `HCenter(`RadioButton(`id(`dis), `opt(`notify),
+		    // Push button label (state of SCPM)
+                    _("&Disabled") ))
+            )),
+	    `VSpacing(0.5)
+        )),
+	`VSpacing(1),
+	// frame label:
+	`Frame(_("Settings"), `HBox(
+	    `HSpacing(1),
+	    `VBox(
+		`VSpacing(0.5),
+		`Left(`CheckBox(`id(`close_popups_ch),
+		    // checkbox label
+                    _("Close Progress Pop-Ups &Automatically"), close_popups)),
+		`VSpacing(0.5),
+		`Left(`CheckBox(`id("verbose"),
+		    // checkbox label
+                    _("&Verbose Messages"), false)),
+		`VSpacing(2),
+		`HBox(
+		    `HSpacing(0.5),
+		    // frame label
+		    `Frame (_("Switch Mode"), `VBox(
+			`VSpacing (0.5),
+			`RadioButtonGroup (`id(`rb_sw), `HBox(`VBox (
+			    // radiobutton label
+			    `Left(`RadioButton (`id(`swn), _("&Normal"))),
+			    // radiobutton label
+			    `Left(`RadioButton (`id(`sws), _("&Save Changes"))),
+			    // radiobutton label
+			    `Left(`RadioButton (`id(`swd), _("Dro&p Changes")))
+			))),
+			`VSpacing (0.5)
+		    )),
+		    `HSpacing (),
+		    // frame label
+		    `Frame (_("Boot Mode"), `VBox(
+			`VSpacing (0.5),
+			`RadioButtonGroup (`id(`rb_bo), `VBox (
+			    // radiobutton label
+			    `Left(`RadioButton (`id(`bs), _("Save Chan&ges"))),
+			    // radiobutton label
+			    `Left(`RadioButton (`id(`bd), _("Drop C&hanges")))
+			)),
+			`Label (""),
+			`VSpacing (0.5)
+		    )),
+		    `HSpacing()
+		),
+		`VSpacing()
+	    )
+        )),
+        `VSpacing(1),
+	// button label
+	`Right (`PushButton(`id(`resources), _("Configure &Resources..."))),
+	`VSpacing(1)
+	),
+    `HSpacing(1.5));
+
+
+    Wizard::RestoreBackButton ();
+
+    Wizard::SetContentsButtons ( caption, contents, HELPS["options"]:"",
+				Label::CancelButton (), Label::OKButton () );
+
+    if (ProfileManager::enabled || ProfileManager::tmp_enabled)
+    {
+        UI::ChangeWidget(`id(`rb), `CurrentButton, `ena);
+    }
+    else
+    {
+        UI::ChangeWidget(`id(`rb), `CurrentButton, `dis);
+	UI::ChangeWidget(`id(`resources), `Enabled, false);
+    }
+
+    // set the initial values of config (scpm.conf) values
+
+
+    map sw_mode = $[
+	"normal": `swn,
+	"skip"	: `swd,
+	"force"	: `sws
+    ];
+    map b_mode = $[
+	"skip"	: `bd,
+	"force"	: `bs
+    ];
+    UI::ChangeWidget (`id("verbose"), `Value,
+	ProfileManager::scpm_conf["verbose"]:true);
+    UI::ChangeWidget(`id(`rb_sw), `CurrentButton,
+	sw_mode[ProfileManager::scpm_conf["switch_mode"]:"normal"]:`swn);
+    UI::ChangeWidget(`id(`rb_bo), `CurrentButton,
+	b_mode[ProfileManager::scpm_conf["boot_mode"]:"force"]:`bs);
+
+    any ret = nil;
+    while (true)
+    {
+
+	ret = UI::UserInput ();
+	if (ret == `dis)
+	{
+	    ProfileManager::tmp_enabled = false;
+	    UI::ChangeWidget(`id(`resources), `Enabled, false);
+	    continue;
+	}
+	else if (ret == `ena)
+	{
+	    ProfileManager::tmp_enabled = true;
+	    UI::ChangeWidget(`id(`resources), `Enabled, true);
+	    continue;
+	}
+	else if (ret == `resources)
+	{
+	    // for resource groups there is another dialog defined
+	    break;
+	}
+	else if (ret == `next)
+	{
+	    close_popups =
+		(boolean) UI::QueryWidget(`id(`close_popups_ch), `Value);
+
+	    if (UI::QueryWidget(`id(`rb), `CurrentButton) == `ena)
+	    {
+		if (!ProfileManager::enabled)
+		{
+		    ProfileManager::enabled		= true;
+		    ProfileManager::status_modified	=
+			!ProfileManager::status_modified;
+		}
+	    }
+	    else
+	    {
+		if (ProfileManager::enabled)
+		{
+		    ProfileManager::enabled		= false;
+		    ProfileManager::status_modified	=
+			!ProfileManager::status_modified;
+		}
+	    }
+	    ProfileManager::close_popups = close_popups;
+
+	    y2milestone ("enabled: %1, status modified: %2",
+		ProfileManager::enabled, ProfileManager::status_modified);
+	    y2debug("close_popups=%1",ProfileManager::close_popups);
+
+	    break;
+	}
+	else if (ret == `back || ret == `cancel)
+	{
+	    ProfileManager::tmp_enabled	= ProfileManager::enabled;
+	    break;
+	}
+
+	else continue;
+    };
+
+    if (ret == `next)
+    {
+	// save config values
+	ProfileManager::scpm_conf["verbose"] = UI::QueryWidget (`id("verbose"),
+	    `Value);
+	map sw_mode =	$[ `swn: "normal", `swd: "skip", `sws: "force" ];
+	map b_mode =	$[ `bd:	"skip", `bs: "force" ];
+	ProfileManager::scpm_conf["switch_mode"] =
+	    sw_mode [UI::QueryWidget (`id(`rb_sw), `CurrentButton)]:"normal";
+	ProfileManager::scpm_conf["boot_mode"] =
+	    b_mode [UI::QueryWidget (`id(`rb_bo), `CurrentButton)]:"force";
+    }
+    return ret;
+}
+
+
+/* EOF */
+}

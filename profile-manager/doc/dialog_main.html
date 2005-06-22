@@ -1,0 +1,107 @@
+<html>
+<head>
+<title>SCPM YaST specification</title>
+</head>
+<body>
+<h2 align=center>Main Dialog</h2>
+<p>
+The SCPM Y2 module has one main dialog that pops up whenever the user
+enters the module:
+</p>
+<table border frame=box><tr>
+<td valign=top>
+<h4>approved Helptext</h4>
+
+<p>SCPM allows you to store different profiles of your system configuration and
+to switch between them.  If you are not familiar with SCPM, read the
+introduction to SCPM in <b>info scpm</b>.</p>
+
+<p>If SCPM is not enabled, use <b>Options</b>.</p>
+
+<p>In the table, see the list of available profiles. The currently active
+profile is marked in the column <b>active</b>. </p>
+
+<p>After selecting a profile, you can <b>Switch</b> your system configuration to this
+profile. You will be asked what to do with changes in the active profile before
+switching.  To save changes made to the current system configuration or to undo
+them, switch to the currently active profile.</p>
+
+<p><b>Add</b> a new profile or <b>Edit</b> or <b>Delete</b> the selected one. Editing a profile
+does not mean changing the system configuration for this profile, but setting
+some special actions when entering or leaving this profile. To change the system
+configuration in a profile, switch to it. Then change your system configuration
+as usual.</p>
+
+<p>To configure SCPM itself, use <b>Options</b>.</p>
+
+</td>
+<td valign=top>
+<img src="images/dialog_main.png">
+</td></tr></table>
+<h3 align=left>General information</h3>
+<p>The main dialog is the central point from which all SCPM actions get
+started. It shows the current state of SCPM to the user and offers
+access to all SCPM functions and to the SCPM configuration itself. The
+list box shows the defined profiles, and marks the active one with an
+arrow in the first column. The focus should be initially on this list
+box, the active profile should be the selected line. The buttons
+<b>Reload</b> and <b>Save</b> should only be enabled when the selected
+profile is also the active one, those actions do not operate on non
+active profiles. In case SCPM is disabled, all buttons should be
+disabled except <b>Close</b> and <b>Options</b>, and the user
+gets the <a href="popup_introduction.html">Introduction popup</a>.</p>
+
+<h3 align=left>Getting information</h3>
+<p> You can get all needed information from the
+class <code><a href="/usr/share/doc/packages/scpm/api/html/classSCPM.html">SCPM</a></code>. Even before
+entering this dialog you may have already called <code>
+<a href="/usr/share/doc/packages/scpm/api/html/classSCPM.html#a18">SCPM::Status</a></code>. The <code>
+<a href="/usr/share/doc/packages/scpm/api/html/structscpm__status__t.html#m1">scpm_status_t::enabled</a> 
+</code> flag of the <code><a href="/usr/share/doc/packages/scpm/api/html/struct__scpm__status__t.html">
+scpm_status_t</a></code> struct tells you about wether SCPM is
+enabled. In case it is disabled, then show the <a
+href="popup_introduction.html">Introduction popup</a>. The following
+queries are only useful (and possible) in case SCPM is enabled.
+The struct element <code><a href="/usr/share/doc/packages/scpm/api/html/structscpm__status__t.html#m4">
+scpm_status_t::active_profile</a></code> contains a string naming the active
+profile. This string can - if needed - also be queried using
+<code><a href="/usr/share/doc/packages/scpm/api/html/classSCPM.html#a4">
+SCPM::Active</a></code>. The list of all profiles can be determined with
+<code><a href="/usr/share/doc/packages/scpm/api/html/classSCPM.html#a5">SCPM::List</a></code>.
+The current Resource Set can be queried with <code>
+<a href="/usr/share/doc/packages/scpm/api/html/classSCPM.html#a21">SCPM::GetResourceSet</a></code>.</p>
+
+<h3 align=left>Actions to perform</h3>
+<ul>
+<li><b>Switch</b></li>
+Switch is the main SCPM task. It performs a switch to the profile
+selected in the list box widget. Check the 
+<a href="dialog_switch.html">switch dialog</a> for details.
+<li><b>Reload</b> (dropped!!!) </li>
+Clicking this button performs a switch to the active profile. This is
+useful in case a user want to drop or apply changes. Check the 
+<a href="dialog_switch.html">switch dialog</a> for details.
+<li><b>Save</b> (dropped!!!) </li>
+Clicking this button performs <code><a href="/usr/share/doc/packages/scpm/api/html/classSCPM.html#a17">
+SCPM::Save</a></code>. In case it returns <var>false</var>, popup a
+small window telling the user an error occured, and show the error (
+global variable <code>scpm_error</code>).
+<li><b>Add</b></li>
+A click on this button presents the user the 
+<a href="popup_add_profile.html">Add Profile popup</a>.
+<li><b>Edit</b></li>
+Clicking <b>Edit</b> will take the user to the 
+<a href="dialog_profile_settings.html">profile settings dialog</a> for
+the selected profile.
+<li><b>Delete</b></li>
+Clicking on this button deletes the selected profile. Deletion is
+performed by calling <code><a href="/usr/share/doc/packages/scpm/api/html/classSCPM.html#a9">
+SCPM::Delete</a></code>.
+<li><b>Options</b></li>
+Takes the user to the <a href="dialog_options.html">options dialog</a>.
+<li><b>Close</b></li>
+Well, shuts down the SCPM YaST module.
+</ul>
+
+</body>
+</html>

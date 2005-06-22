@@ -1,0 +1,10 @@
+Read	.target.string "/tmp/changes.out" nil
+Return	
+Read	.target.string "/tmp/changes.out" "Starting...\nWorking..."
+Return	Starting...
+Read	.target.string "/tmp/changes.out" "Starting...\nWorking..."
+Return	Working...
+Read	.target.string "/tmp/changes.out" "Starting...\nWorking... [done]\nFinished"
+Return	 [done]
+Read	.target.string "/tmp/changes.out" "Starting...\nWorking... [done]\nFinished"
+Return	Finished

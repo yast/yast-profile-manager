@@ -1,0 +1,34 @@
+@HEADER-COMMENT@
+# neededforbuild gpp libgpp libxcrypt libxcrypt-devel yast2-devel-packages scpm yast2-country
+
+@HEADER@
+Requires:	yast2 yast2-country
+Requires:	scpm >= 0.9.4
+
+Summary:	Configuration of profile-manager
+
+%description
+-
+
+@PREP@
+
+@BUILD@
+
+@INSTALL@
+
+@CLEAN@
+
+%files
+%defattr(-,root,root)
+%dir @yncludedir@/profile-manager
+@yncludedir@/profile-manager/*
+@clientdir@/profile-manager.ycp
+@clientdir@/profile_manager.ycp
+@moduledir@/ProfileManager.ycp
+@moduledir@/ProfileManager.ybc
+@desktopdir@/profile-manager.desktop
+@scrconfdir@/*.scr
+@plugindir@/libpy2ag_scpm.so.*
+@plugindir@/libpy2ag_scpm.so
+@plugindir@/libpy2ag_scpm.la
+%doc @docdir@

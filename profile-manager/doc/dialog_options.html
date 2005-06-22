@@ -1,0 +1,107 @@
+<html>
+<head>
+<title>SCPM YaST specification</title>
+</head>
+<body>
+<h2 align=center>Options Dialog</h2>
+<p>
+The options dialog is entered from the main dialog by clicking the
+<b>Options</b> button.
+</p>
+<table border frame=box><tr>
+<td valign=top>
+<h4>approved Helptext</h4>
+
+<p>First, <b>enable</b> SCPM. If disabled later, none of your configuration data
+in the profiles will be lost.  It just keeps the current configuration of your
+system and you cannot switch to any other profile until you enable it again.</p>
+
+<p>A configuration profile covers only the files and services to change when
+switching to another profile. In SCPM terminology, these files and services are
+called resources.  Choose a <b>resource set</b> from the list.<br>
+There are some predefined resource sets:<br>
+- <i>Typical</i>: networking, mail, printing, nis, nfs<br>
+- <i>Network only</i>: networking<br>
+- <i>FooBar</i>: services foo and bar<br>
+- <i>Everything</i>: all installed services, all files below /etc and any other
+  important file for any service<br>
+</p>
+
+<p>You may create your own individual resource set, but currently not with
+YaST2.  See <b>info scpm</b> for information. Your manually created resource
+sets will then be available in this list as well.  If you change the used
+resource set, all resources that will be deleted from the profiles are backed up
+below /var/lib/scpm/backup/.</p>
+
+<p>For progress windows to close automatically, check <b>Close progress pop-ups
+automatically</b>. This box is also available in the progress pop-ups
+themselves.</p>
+
+</td>
+<td valign=top>
+<img src="images/dialog_options.png">
+</td></tr></table>
+<h3 align=left>General information</h3>
+<p>This dialog lets the user alter the global SCPM configuration. Up
+to now there is only the possibility to enable or disable SCPM, and to
+choose a Resource Set. Other options may follow.</p>
+
+<h3 align=left>Getting information</h3>
+<p>You need to determine wether SCPM is already enabled and
+initialized. This information is located in the <code>
+<a href="/usr/share/doc/packages/scpm/api/html/structscpm__status__t.html">scpm_status_t</a></code>
+struct, namly in <code><a href="/usr/share/doc/packages/scpm/api/html/structscpm__status__t.html#m0">
+scpm_status_t::initialized</a></code> and <code>
+<a href="/usr/share/doc/packages/scpm/api/html/structscpm__switch__t.html#m1">scpm_status_t::enabled</a>
+</code>. This information will also be needed when the user clicks ok.
+The defined Resource Sets can be determined by calling <code>
+<a href="/usr/share/doc/packages/scpm/api/html/classSCPM.html#a22">SCPM::ListResourceSets</a></code>.
+You get two different list, one for predefined Resource Sets, and one
+for individual Resource Sets. These two lists get written to the list
+box, and should be separated by a line containing dashes (see picture).
+You can query the active Resource Set by calling <code>
+<a href="/usr/share/doc/packages/scpm/api/html/classSCPM.html#a21">SCPM::GetResourceSet</a></code>.
+The <b>Close progress popups automatically</b> flag is taken from and
+saved to some YaST2 configuration space as it is front end specific
+anyway.</p>
+
+<h3 align=left>Actions to perform</h3>
+<ul>
+<li><b>enabled</b></li>
+Clicking this radio button does nothing directly. Possible actions get
+performed when the user clicks on <b>Ok</b>.
+<li><b>disabled</b></li>
+Clicking this radio button does nothing directly. Possible actions get
+performed when the user clicks on <b>Ok</b>.
+<li><b>Close progress popups automatically</b></li>
+When the user toggles this check box nothing happens
+directly. Possible actions get performed when the user clicks on
+<b>Ok</b>.
+<li><b>Back</b></li>
+Go back to <a href="dialog_main.html">main dialog</a> without doing
+anything further.
+<li><b>Ok</b></li>
+Clicking this button may perfom some actions based on the users
+selection. In case the user changed the status from <b>disabled</b> to
+<b>enabled</b>, you should call <code>
+<a href="/usr/share/doc/packages/scpm/api/html/classSCPM.html#a2">SCPM::Enable</a></code>. In case SCPM
+has already been initialized, that means, <code>
+<a href="/usr/share/doc/packages/scpm/api/html/structscpm__status__t.html#m0">scpm_status_t::initialized</a>
+</code> is <var>true</var>, this will be non thrilling. In case it
+wasn't, SCPM will create its database and stuff, therefor we need the
+<a href="popup_progress.html">progress popup</a> here. In case the
+user switched from <b>enabled</b> to <b>disabled</b>, just call
+<code><a href="/usr/share/doc/packages/scpm/api/html/classSCPM.html#a3">SCPM::Disable</a></code>.
+In case the user switched to another Resource Set, just set it calling
+<code><a href="/usr/share/doc/packages/scpm/api/html/classSCPM.html#a20">SCPM::SetResourceSet</a></code>.
+Changing the Resource Set usually entails major database modifications.
+SCPM can perform these changes, the function for this is <code>
+<a href="/usr/share/doc/packages/scpm/api/html/classSCPM.html#a25">SCPM::RebuildDB</a></code>. Calling
+this may heavily change the database and may even remove data, so it would
+be a good idea to let the user confirm that.
+After everything is done, back to the <a href="dialog_main.html">main
+dialog</a>.
+</ul>
+
+</body>
+</html>

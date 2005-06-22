@@ -1,0 +1,4 @@
+Dump	$["description":"Default description", "name":"default", "poststop":"/var/scpm/default/ps", "posttart":"", "prestart":"/tmp/default/p1", "prestop":""]
+Return	false
+Dump	$["description":"Default description", "name":"default", "poststop":"/var/scpm/default/ps", "posttart":"", "prestart":"/tmp/default/p1", "prestop":"/tmp/prest"]
+Return	true

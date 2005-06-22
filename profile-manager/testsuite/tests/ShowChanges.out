@@ -1,0 +1,13 @@
+Dump	$["modified_resources":[$["is_deleted":true, "is_new":false, "resource_name":"/etc/X11/XF86Config", "resource_type":"file", "save":true], $["is_deleted":true, "is_new":false, "resource_name":"sendmail", "resource_type":"service", "save":false]], "profile_modified":true, "profile_name":"home"]
+Dump	---------
+Execute	.scpm.profiles.changes "file" "/etc/X11/XF86Config" true
+Read	.target.string "/tmp/changes.out" nil
+Return	
+Dump	---------
+Execute	.scpm.profiles.changes "file" "/etc/X11/XF86Config" true
+Read	.target.string "/tmp/changes.out" "Changes"
+Return	Changes
+Dump	---------
+Execute	.scpm.profiles.changes "service" "sendmail" true
+Read	.target.string "/tmp/changes.out" "Changes"
+Return	Changes

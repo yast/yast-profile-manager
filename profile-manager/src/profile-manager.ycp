@@ -1,0 +1,69 @@
+/**
+ * File:	clients/profile-manager.ycp
+ * Package:	Configuration of profile-manager
+ * Summary:	Main file
+ * Authors:	Jiri Suchomel <jsuchome@suse.cz>
+ *
+ * $Id$
+ *
+ * Main file for profile-manager configuration. Uses all other files.
+ */
+
+{
+
+/***
+ * <h3>Configuration of the profile-manager</h3>
+ */
+
+textdomain "profile-manager";
+
+/* The main () */
+y2milestone ("----------------------------------------");
+y2milestone ("Profile-manager module started");
+
+import "Popup";
+include "profile-manager/wizards.ycp";
+
+list args		= WFM::Args();
+string switch_to	= "";
+if (size(args) > 0) {
+    if(is(WFM::Args(0), string) && WFM::Args(0) == "switch") {
+	if (size (args) > 1 && is (WFM::Args(1), string)) {
+	    switch_to	= (string) WFM::Args(1);
+	    y2milestone ("Using direct switch to profile %1", switch_to);
+	}
+    }
+    if (is(WFM::Args(0), string) && WFM::Args(0) == "help") {
+	string error = _("A command line interface for the profile manager is not available. Use the 'scpm' tool instead.");
+
+	//note that error is translated but the rest is not
+	y2warning (error + " To switch to a profile and see the list of modified resources, run Profile Manager with the parameters 'switch <profile_name>'. This opens the 'Confirm Switch' dialog.");
+	return `abort;
+    }
+}
+
+/*
+ * exit when running for non-root
+ */
+map out = (map) SCR::Execute (.target.bash_output, "/usr/bin/id --user");
+boolean root = out["stdout"]:"" == "0\n";
+
+if (!root)
+{
+    // Popup label (user is not root)
+    Popup::Message(_("Log in as root to run the profile manager."));
+    return `abort;
+}
+
+
+symbol ret = ProfileManagerSequence (switch_to);
+
+y2debug("ret == %1", ret);
+
+/* Finish */
+y2milestone("Profile-manager module finished");
+y2milestone("----------------------------------------");
+return ret;
+
+/* EOF */
+}

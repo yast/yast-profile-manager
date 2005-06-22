@@ -1,0 +1,97 @@
+<html>
+<head>
+<title>SCPM YaST specification</title>
+</head>
+<body>
+<h2 align=center>Profile Settings Dialog</h2>
+<p>
+This dialog is entered from the main dialog by clicking the
+<b>Edit</b> or <b>Add</b> button.
+</p>
+<table border frame=box><tr>
+<td valign=top>
+<h4>approved helptext</h4>
+
+<p>You may change the <b>Profile Name</b> at any time. Names may contain
+letters, digits, underscore, dash, and dot. The first character must be a letter
+or digit. The <b>Description</b> is optional.</p>
+
+<p>Additionally, you may set dedicated scripts to execute at a given time during
+profile switching.  First, the switch process collects data. It compares
+resources and determines what to change. This data is listed for confirmation in
+the Confirm Switch pop-up.  Then the switch will be executed:<br>
+- execute <b>Prestop script</b> from old profile<br>
+- stop some services<br>
+- execute <b>Poststop script</b> from old profile<br>
+- change configuration files<br>
+- execute <b>Prestart script</b> from new profile<br>
+- start some services<br>
+- execute <b>Poststart script</b> from new profile<br>
+</p>
+
+<p><b>Security Warning:</b><br>
+These scripts are executed as the user root. Make sure no users can change or
+even read them without authorization.  For YaST to set the appropriate file
+permissions, check the box at the bottom of the dialog.</p>
+
+</td>
+<td valign=top>
+<img src="images/dialog_profile_settings.png">
+</td></tr></table>
+<h3 align=left>General information</h3>
+In this dialog the user can alter some profile specific data.
+
+<h3 align=left>Getting information</h3>
+The name of the profile is already known if we came here via Edit. If we came
+here via Add then leave the name field empty or suggest a new name. It may only
+contain the characters [a-zA-Z0-9_-.] and must start with [a-zA-Z0-9].<br>
+The description and script paths can be queried calling <code><a
+href="/usr/share/doc/packages/scpm/api/html/classSCPM.html#a16">SCPM::Get</a> </code> comand.<br>
+The <b>Set file permissions...</b> check box is a global option and not a
+property of the profile. YaST2 has to store this value somewhere like the 'close
+progress popup automatically' information.
+
+<h3 align=left>Actions to perform</h3>
+<ul>
+<li><b>Name</b></li>
+In this line edit widget the profile name is shown. This field is
+changeable. The profile name may not contain all
+characters. Please check the name and complain somehow if it<br>
+- does contain anythings else then [a-zA-Z0-9_-.]<br>
+- starts with anything else then [a-zA-Z0-9]<br>
+- is empty</li>
+<li><b>Description</b></li>
+This text box holds the description of the profile, if existent. This
+text is changeable. The description is optional.
+<li><b>Pre|Post Start|Stop Script</b></li>
+Those line edit fields hold the queried script paths (if any). They
+are changeable. If YaST2 can provide a 'choose file' popup, then feel free to
+add buttons behind the text fields which raise such a popup. All scripts are
+optional.
+<li><b>Set file permissions of all scripts secure</b></li>
+This is a global option and not a property of the profile. Please store that
+value somewhere appropriate.</li>
+<li><b>Back</b></li>
+Just go back to the <a href="dialog_main.html">main dialog</a>,
+dropping all changes.
+<li><b>Ok</b></li>
+In case the user changed the profile's name, call <code> <a
+href="/usr/share/doc/packages/scpm/api/html/callSCPM.html#a10">SCPM::Rename</a></code> to rename the profile
+accordingly. If we came here via Add then use <code><a
+href="/usr/share/doc/packages/scpm/api/html/classSCPM.html#a6">SCPM::Add</a> </code> resp. <code><a
+href="/usr/share/doc/packages/scpm/api/html/classSCPM.html#a7">SCPM::Copy</a></code> with the information
+collected in <a href="popup_add_profile.html">Add new Profile</a>. When the
+suboption <b>Make the added profile...</b> was checked the use
+the optional <var>auto_switch</var> parameter of <code>SCPM:Add</code>
+to make the new profile also the active one.<br>
+In case the user changed the description and/or at
+least one of the script paths, write the changes to the profile using
+the corresponding <code><a href="/usr/share/doc/packages/scpm/api/html/classSCPM.html#a15">SCPM::Set</a>
+</code> command.<br>
+If <b>Set file permissions of all scripts secure</b> is checked then chmod 700
+these scripts.<br>
+Afterwards, go back to the <a href="dialog_main.html">main dialog</a>.
+</ul>
+
+</body>
+</html>

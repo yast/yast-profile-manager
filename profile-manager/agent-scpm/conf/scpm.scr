@@ -1,0 +1,26 @@
+/**
+ * File:	scpm.scr
+ * Summary:	SCPM agent
+ * Author:	Jiri Suchomel <jsuchome@suse.cz>
+ * Access:	read / write / execute
+ * See:		MANPAGE(1) http://www.blah.com
+ *
+ * Example:
+ *   Dir(.scpm)
+ *   (["WHAT", "EVER", "YOU", "GET"])
+ **
+ *   Read(.scpm)
+ *   ("WHAT_EVER_YOU_GET")
+ **
+ *   Write(.scpm, value)
+ *   (true)
+ *
+ * $Id$
+ *
+ * SOME USEFUL INFORMATION ON THE AGENT
+ */
+.scpm
+
+`ag_scpm(
+  `SCPMAgent()
+)

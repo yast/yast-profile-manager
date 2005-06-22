@@ -1,0 +1,33 @@
+/**
+ * Author:	Jiri Suchomel <jsuchome@suse.cz>
+ * $Id$
+ */
+{
+    // testedfiles: ProfileManager.ycp
+    import "Testsuite";
+
+    import "ProfileManager";
+
+    ProfileManager::profiles = $[];
+
+    Testsuite::Dump("profiles:");
+    Testsuite::Dump(ProfileManager::profiles);
+
+    Testsuite::Dump("table items list:");
+	Testsuite::Test (``(ProfileManager::GetProfilesAsItems()), [ $[], $[], $[] ], nil);
+
+    ProfileManager::profiles = $[
+	"default" : "default profile description",
+	"home"	: "My private configuration",
+	"train" : "Maximum power savings"
+    ];
+
+    Testsuite::Dump("profiles:");
+    Testsuite::Dump(ProfileManager::profiles);
+    ProfileManager::active_profile = "default";
+    Testsuite::Dump("active profile:");
+    Testsuite::Dump(ProfileManager::active_profile);
+
+    Testsuite::Dump("table items list:");
+    Testsuite::Test (``(ProfileManager::GetProfilesAsItems()), [ $[], $[], $[] ], nil);
+}

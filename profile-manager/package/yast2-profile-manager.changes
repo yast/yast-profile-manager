@@ -1,0 +1,396 @@
+-------------------------------------------------------------------
+Wed Jun 22 13:53:18 CEST 2005 - jsuchome@suse.cz
+
+- fixed texts from proofreader (rwalter)
+- 2.12.0 
+
+-------------------------------------------------------------------
+Thu May  5 14:51:21 CEST 2005 - jsuchome@suse.cz
+
+- postpone some actions until they are really needed (#39995)
+
+-------------------------------------------------------------------
+Mon Feb  7 16:42:16 CET 2005 - jsuchome@suse.cz
+
+- merged texts from proofreading
+- 2.11.2 
+
+-------------------------------------------------------------------
+Tue Jan 18 14:20:43 CET 2005 - jsuchome@suse.cz
+
+- fixed OK/Cancel button positions in popup
+- removed unused code (only resource groups are supported)
+- 2.11.1
+
+-------------------------------------------------------------------
+Tue Jan  4 14:24:49 CET 2005 - jsuchome@suse.cz
+
+- added dialog for choosing Recover or Rollback
+- scpm-agent: added support for rollback (SCPM::Recover (true))
+- 2.11.0
+
+-------------------------------------------------------------------
+Fri Dec 10 15:11:29 CET 2004 - jsuchome@suse.cz
+
+- removed select's
+- enable using some special characters (@,#) for profile names (#49109)
+
+-------------------------------------------------------------------
+Wed Sep  8 14:56:06 CEST 2004 - jsuchome@suse.cz
+
+- call Recovery from profile-manager when necessary
+- ProgressPopup moved to ProfileManager.ycp
+- 2.10.5
+
+-------------------------------------------------------------------
+Fri Sep  3 12:15:59 CEST 2004 - jsuchome@suse.cz
+
+- scpm-agent: added support for SCPM::Recovery () function
+- documentation slightly updated
+- 2.10.4
+
+-------------------------------------------------------------------
+Fri Aug 27 14:05:54 CEST 2004 - jsuchome@suse.cz
+
+- merged in proofread text
+- 2.10.3
+
+-------------------------------------------------------------------
+Fri Aug 13 13:17:39 CEST 2004 - jsuchome@suse.cz
+
+- use Service instead of Runlevel
+- fixed build
+- 2.10.2
+
+-------------------------------------------------------------------
+Fri Jul 30 14:21:26 CEST 2004 - jsuchome@suse.cz
+
+- use Package module instead of Require
+
+-------------------------------------------------------------------
+Wed Jun 16 16:49:00 CEST 2004 - jsuchome@suse.cz
+
+- updated testsuite (use Testsuite:: module, set testedfiles)
+- 2.10.1
+
+-------------------------------------------------------------------
+Mon Jun 14 14:07:25 CEST 2004 - jsuchome@suse.cz
+
+- added command line option to start switch directly
+- 2.10.0
+
+-------------------------------------------------------------------
+Wed May  5 18:39:26 CEST 2004 - jsuchome@suse.cz
+
+- 2.9.8
+
+-------------------------------------------------------------------
+Tue May  4 09:03:19 CEST 2004 - jsuchome@suse.cz
+
+- merged in proofread text
+
+-------------------------------------------------------------------
+Fri Apr  2 15:51:52 CEST 2004 - jsuchome@suse.cz
+
+- changed license to GPL
+- 2.9.7
+
+-------------------------------------------------------------------
+Mon Mar 22 15:24:38 CET 2004 - jsuchome@suse.cz
+
+- 2.9.6
+
+-------------------------------------------------------------------
+Fri Mar 19 14:58:09 CET 2004 - mvidner@suse.cz
+
+- added AGENT_LIBADD so that agents work from standalone Perl
+
+-------------------------------------------------------------------
+Fri Mar 12 14:52:10 CET 2004 - jsuchome@suse.cz
+
+- fixed label
+- check if file with customs exist before reading from it
+
+-------------------------------------------------------------------
+Wed Mar 10 02:06:24 CET 2004 - nashif@suse.de
+
+- adapted for new wizard
+
+-------------------------------------------------------------------
+Mon Mar  8 18:31:21 CET 2004 - jsuchome@suse.cz
+
+- more type fixes
+- desktop icons
+- 2.9.4
+
+-------------------------------------------------------------------
+Mon Mar  1 19:45:58 CET 2004 - jsuchome@suse.cz
+
+- fixed types
+- 2.9.3
+
+-------------------------------------------------------------------
+Mon Mar  1 14:46:23 CET 2004 - jsuchome@suse.cz
+
+- merged texts from proofread
+
+-------------------------------------------------------------------
+Fri Feb 27 15:27:12 CET 2004 - jsuchome@suse.cz
+
+- use WFM::GetEnvironmentEncoding instead of Encoding::console
+
+-------------------------------------------------------------------
+Mon Feb  9 17:27:22 CET 2004 - jsuchome@suse.cz
+
+- removed y2cc file
+
+-------------------------------------------------------------------
+Wed Feb  4 09:38:07 CET 2004 - jsuchome@suse.cz
+
+- syntax fixes for NI
+- 2.9.2
+
+-------------------------------------------------------------------
+Tue Nov 18 13:31:41 CET 2003 - jsuchome@suse.cz
+
+- migrated to doxygen
+- used UI:: builtins for file selection widgets
+- 2.9.1
+
+-------------------------------------------------------------------
+Mon Oct  6 18:15:33 CEST 2003 - jsuchome@suse.cz
+
+- list profiles even if SCPM is disabled (bug #30503)
+- 2.9.0
+
+-------------------------------------------------------------------
+Tue Sep 16 14:19:54 CEST 2003 - jsuchome@suse.cz
+
+- recode messages again... (#30498)
+- 2.8.7
+
+-------------------------------------------------------------------
+Sun Sep 14 21:05:31 CEST 2003 - adrian@suse.de
+
+- make it working in kcontrol
+
+-------------------------------------------------------------------
+Fri Sep 12 14:14:13 CEST 2003 - jsuchome@suse.cz
+
+- do not recode mesages from scpm (#30498)
+- 2.8.6
+
+-------------------------------------------------------------------
+Fri Sep  5 10:00:08 CEST 2003 - jsuchome@suse.cz
+
+- merged in proofread texts
+- 2.8.5
+
+-------------------------------------------------------------------
+Wed Aug 20 14:05:21 CEST 2003 - jsuchome@suse.de
+
+- removed redundant "initialization dialog" (#28779)
+- do not rebuild SCDB before initialization
+- 2.8.4
+
+-------------------------------------------------------------------
+Mon Aug 11 11:06:18 CEST 2003 - jsuchome@suse.de
+
+- proofread texts, 1st round
+- fixed reseting groups
+- 2.8.3
+
+-------------------------------------------------------------------
+Thu Aug  7 14:54:59 CEST 2003 - jsuchome@suse.de
+
+- new function: Reset resource group(s)
+- reinitialize SCPM after update
+
+-------------------------------------------------------------------
+Wed Aug  6 14:55:53 CEST 2003 - jsuchome@suse.de
+
+- added .desktop file
+- updated help texts
+
+-------------------------------------------------------------------
+Mon Jul 14 19:44:49 CEST 2003 - jsuchome@suse.de
+
+- agent-scpm: used RenameResourceGroup for renaming; comments
+- enabled creating resource group with the name of deleted one
+- adapting resource groups when its resources are modified (SwitchDialog)
+- browse buttons for profile scripts
+- Label/Popup interface
+- adapted testsuite
+- 2.8.2
+
+-------------------------------------------------------------------
+Fri May 30 17:56:12 CEST 2003 - jsuchome@suse.de
+
+- saving modified resource groups to SCPM database
+
+-------------------------------------------------------------------
+Wed May 21 14:24:17 CEST 2003 - jsuchome@suse.de
+
+- initial resource groups support
+- extended workflow: dilaogs for editing resource groups and
+  switch details
+- 2.8.1
+
+-------------------------------------------------------------------
+Mon Apr 28 12:41:07 CEST 2003 - jsuchome@suse.de
+
+- adapted to Require interface
+- closing module after pressing "close window" button
+- 2.8.0
+
+-------------------------------------------------------------------
+Fri Feb 14 11:15:17 CET 2003 - jsuchome@suse.de
+
+- implemented progress bar
+- 2.7.4
+
+-------------------------------------------------------------------
+Mon Feb 10 12:39:11 CET 2003 - jsuchome@suse.de
+
+- proofreaded text from 3rd round
+
+-------------------------------------------------------------------
+Tue Feb  4 12:23:37 CET 2003 - jsuchome@suse.cz
+
+- only one progress popup for Save & Switch
+
+-------------------------------------------------------------------
+Mon Feb  3 14:09:35 CET 2003 - jsuchome@suse.cz
+
+- implemented call of SCPM::Save
+- 2.7.3
+
+-------------------------------------------------------------------
+Wed Jan 29 12:59:58 CET 2003 - jsuchome@suse.cz
+
+- merged proofreaded texts
+
+-------------------------------------------------------------------
+Mon Jan 20 15:30:17 CET 2003 - jsuchome@suse.de
+
+- fixed shortcuts
+- 2.7.2
+
+-------------------------------------------------------------------
+Fri Jan 17 16:10:52 CET 2003 - jsuchome@suse.de
+
+- added ncurses f-keys shortcuts
+
+-------------------------------------------------------------------
+Tue Jan 14 10:28:30 CET 2003 - jsuchome@suse.de
+
+- checking and displaying scpm errors
+- adapted testsuite
+- 2.7.1
+
+-------------------------------------------------------------------
+Fri Sep 20 14:28:35 CEST 2002 - jsuchome@suse.cz
+
+- added new text for translation
+- 2.6.6
+
+-------------------------------------------------------------------
+Wed Sep 18 09:28:11 CEST 2002 - jsuchome@suse.cz
+
+- translated text showed in ShowChanges Popup
+
+-------------------------------------------------------------------
+Sat Sep  7 15:56:07 CEST 2002 - mvidner@suse.cz
+
+- Make "yast2 profile_manager" invoke "yast2 profile-manager"
+  (#17570, #19053 workaround).
+- 2.6.5
+
+-------------------------------------------------------------------
+Thu Sep  5 10:04:15 CEST 2002 - jsuchome@suse.cz
+
+- changed size of ShowChanges popup
+- reduced documentation 
+
+-------------------------------------------------------------------
+Mon Sep  2 17:14:44 CEST 2002 - jsuchome@suse.cz
+
+- added introduction text 
+
+-------------------------------------------------------------------
+Mon Aug 26 17:12:07 CEST 2002 - jsuchome@suse.cz
+
+- adding new profile doesn't copy the active profile's properties
+- enabling/disabling parts of AddProfile popup
+
+-------------------------------------------------------------------
+Fri Aug 23 14:00:44 CEST 2002 - jsuchome@suse.cz
+
+- added/changed buttons to Switch dialog
+- updated helptexts
+- introduction can be run from the main dialog; also in ncurses
+
+-------------------------------------------------------------------
+Mon Aug 19 10:50:21 CEST 2002 - jsuchome@suse.cz
+
+- Correctly writing all progress information.
+- Fixed bug in ProgressPopup checkbox.
+
+-------------------------------------------------------------------
+Thu Aug 15 17:49:08 CEST 2002 - jsuchome@suse.cz
+
+- recoding texts from different encoding
+- temporary solution for finishing progress (ProgressPopup)
+- enabled checkbox in ProgressPopup
+
+-------------------------------------------------------------------
+Wed Aug 14 10:14:49 CEST 2002 - jsuchome@suse.cz
+
+- updated translation texts
+- 2.6.3
+
+-------------------------------------------------------------------
+Mon Aug 12 10:38:04 CEST 2002 - jsuchome@suse.de
+
+- simplified map operations
+- more checks to use info application 
+
+-------------------------------------------------------------------
+Tue Aug  6 19:01:53 CEST 2002 - jsuchome@suse.de
+
+- updated testsuite
+
+-------------------------------------------------------------------
+Fri Aug 02 15:47:30 2002 - jsuchome@suse.cz
+
+- enabled switch to active profile
+- used background agent
+
+-------------------------------------------------------------------
+Wed Jul 31 17:21:35 2002 - jsuchome@suse.cz
+
+- imlemented threads to agent
+- 2.6.2
+
+-------------------------------------------------------------------
+Tue Jul 30 09:27:23 2002 - jsuchome@suse.cz
+
+- fixed testsuite failing
+
+-------------------------------------------------------------------
+Mon Jul 29 17:18:13 2002 - jsuchome@suse.cz
+
+- fixed bugs
+- agent works now
+
+-------------------------------------------------------------------
+Mon Jul 22 19:05:04 2002 - jsuchome@suse.cz
+
+- implemented workflow
+- help texts
+- initial version of agent-scpm
+
+-------------------------------------------------------------------
+Thu Jul 11 19:00:04 2002 - jsuchome@suse.cz
+
+- initial version

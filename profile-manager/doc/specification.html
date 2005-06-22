@@ -1,0 +1,75 @@
+<html><head><title>YaST2 Specification for SCPM: General Information</title></head>
+<body>
+<h2 align="center"> General Information </h2>
+
+<h4> Terminology </h4>
+<ul>
+<li> A <b>resource</b> is a file, a service or what else has to be changed when
+we switch between different profiles. Files are changed, created or deleted.
+Services are started or stopped and inserted to or removed from a runlevel.
+There are <b>resourec sets</b> from which the user may choose one when
+configuring SCPM.
+</li>
+<li> <b>Configuration</b> always means the configuration of the computer. If we
+speak of the configuration of SCPM itself, we always write "SCPM configuration".
+</li>
+<li> A <b>profile</b> is a set of resources. It may be the whole configuration
+or just a part of it, e.g. networking, mail and printing. From the sight of
+YaST2 every profile contains the same resources. Anything enhanced has to be
+done manually for now. </li>
+<li> A profile is called <b>active</b> after you switched to it.
+</li></ul>
+
+<h4>Levels</h4>
+There are 3 different levels when working with SCPM:
+<ul>
+<li> The topmost and mostly used level is to switch between already configured
+profiles. We call this level <b>switch level</b>. </li>
+<li> The level below is to create, delete or rename a profile and of course to
+do all the changes to the configuration in a profile. But the change of the
+configuration is job of other YaST2 modules. We call this level <b>profile
+management level</b>. </li>
+<li> The base level is to choose which resources are treated by SCPM. The user
+may choose of a predefined resource set or create a individual one. This level
+we call <b>resource management level</b>. </li>
+</ul>
+
+<h4><a name="workflow">Workflow</a></h4>
+
+<p>The SCPM module differs from most other YaST2 modules. It is not just an
+configuration workflow, where you configure a service which is used at another
+place. In this module the user works with SCPM. Therefore it makes no sense jst
+to collect data, which will be written at the very end. All actions will be
+performed nearly immediately. There is just a <b>Close</b> button at the main
+dialog which triggers no additionally action.</p>
+
+<p>When the module starts it will always show the dialog <a href="dialog_main.html">System Configuration Profile Management</a>. This the
+main dialog to deal with SCPM. All other dialogs are 'expert' dialogs from which
+we return to the main dialog. These are:
+</p><ul>
+<li> The dialog <a href="dialog_options.html">SCPM Options</a> configures SCPM
+itself. The user must go there when he uses SCPM the first time. But we don't go
+there automatically. Insted we show the user a popup <a href="popup_introduction.html">Introduction</a> to tell him what to to.
+</li><li> The dialog <a href="dialog_profile_settings.html">Special Profile
+Settings</a> will be used to <b>Add</b> or <b>Edit</b> profiles. To <b>Add</b> a
+profile the popup <a href="popup_add_profile.html">Add new Profile</a> has to be
+shown first.
+</li><li> When switching to another profile we will show the dialog <a href="dialog_switch.html">Confirm Switch</a>. This should really be a dialog
+and not just a popup, because there sometimes may be a lot of changes to be
+confirmed. Before and after this dialog we show the popup <a href="popup_progress.html">Progess</a>.
+</li></ul>
+
+<h4>Index of dialogs and popups</h4>
+<a href="dialog_main.html">System Configuration Profile Management</a><br>
+<a href="dialog_options.html">SCPM Options</a><br>
+<a href="dialog_profile_settings.html">Special Profile Settings</a><br>
+<a href="dialog_switch.html">Confirm Switch</a><br>
+<a href="popup_introduction.html">Introduction</a><br>
+<a href="popup_progress.html">Progess</a><br>
+<a href="popup_add_profile.html">Add new Profile</a><br>
+<br>
+<a href="/usr/share/doc/packages/scpm/api/html/index.html">SCPM api documentation</a>
+<p>
+To find original version of this document, try
+<a href="http://w3.suse.de/~jg/scpm/yast2_module_specification/">Joachim's page</a>
+</body></html>

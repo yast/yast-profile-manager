@@ -1,0 +1,308 @@
+<html><head><title>SuSE Configuration Profile Management (SCPM)</title></head>
+<body>
+<h2 align="center"> Implementation of Profile-manager </h2>
+
+SCPM enables users to have multiple configuration (different network setings etc.) of their system.
+
+<p>
+For terminology, see the <a href="specification.html">specification document</a>.
+<p>
+For workflow, see the <a href="images/profile-manager.png">workflow diagram</a>.
+<p>
+<h3>Dialogs </h3>
+
+After starting module, the first dialog is <b>Main dialog</b>, labeled <i>System Configuration Profile Management</i>.
+<br>
+Here user can see 
+<ul>
+<li>list with aviable profiles
+<li>SCPM state (enabled/disabled)
+<li>current resource set
+</ul>
+
+And what he/she can do:
+<ul>
+<li>press the Options button to configure SPCM behaviour -> that invokes <b>Options Dialog</b>
+<li>add, edit or delete profiles -> with appropriate buttons this invokes <b>Add Profile Popup</b>, <b>Profile Setting Dialog</b> or <b>Confirm delete Popup</b>
+ 
+<li>switch to profile seleceted in the list box widget -> the <b>Switch Dialog</b>
+</ul>
+ 
+When the user uses SCPM for first time and SCPM is disabled, the <b>Introduction Popup</b> is showed. From here he/she can choose to see an info page in Konqueror (or another aviable application) started by clicking "Show introduction" button or just continue.
+
+<p>
+<b>The Options Dialog</b>
+<br>
+Options Dialog is for changing SCPM configuration. User can enable or disable SCPM (at fist time it is disabled) and chooses the Resource Set. (List of aviable Resource Sets is shown in the list box.)
+
+<p>
+<b>The Switch Dialog</b>
+<br>
+This dialog shows changes, which will be done after switching to selected profile (the files and resources that will be created or deleted). After confirming the switch, the Progress Popup is shown. Here are shown the messages of what is currently doing - starting or stoping services, changing config files etc.
+
+<p>
+<b>Add Profile Popup</b><br>
+User is asked, what will the new profile look like (based on the current configuration or on an existing profile). After that, he can edit it in the Profile Setting Dialog.
+
+<p>
+<b>Profile Setting Dialog</b><br>
+Here could be changed the name and descrtiption of selected profile and choosed scripts to be executed before/after profile switching.
+
+<p>
+To know more about dialogs, see the <a href="specification.html">specification document</a>.
+
+<h3>Implementation</h3>
+
+The implementation of SCPM will has two parts: a YaST2 module (written in YCP language) and a SCR agent (in C++). The agent performs the actions with the SCPM library (which is written in C++, see the <a href="/usr/share/doc/packages/scpm/api/html/index.html">API documentation</a>) after the Read/Write/Execute calls from the module. 
+
+<p>
+Example: User checks an "Enabled" checkbox in the Options Dialog. After pushing the OK button, YCP module calls SCR::Write(.scpm.enabled, "true") and ".scpm" agent calls function <a href="/usr/share/doc/packages/scpm/api/html/classSCPM.html#a2">SCPM::Enable</a> from the SCPM library.
+
+<h4>YCP module</h4>
+
+For more information, see <a href="autodocs/index.html">autodocs</a>.
+<p>
+File <i>profile-manager.ycp</i> (the client): starting the function ScpmSequence
+
+<p>
+File <i>wizard.ycp</i> - the sequences definitions.
+<ul>
+ProfileManagerSequence() 	
+<ul>
+<li>ReadDialog() is called 
+<li>MainSequence() after success
+<li>WiteDialog() finishs the module
+</ul>
+
+<p>
+MainSequence() 	
+<ul>
+<li>main workflow
+<li>MainDialog() is started
+<li>OptionsDiaalog(), SwitchDialog() or ProfileSettingsDialog() can be run
+</ul>
+
+</ul>
+
+<p>
+Files <i>complex.ycp</i> and <i>dialogs.ycp</i>: the user interface.
+Functions from this file use the module functions (e.g. Profile-manager::Read).
+<ul>
+<p>
+ReadDialog()	
+<ul><li>
+ProfileManager::Read() reads the current configuration
+</li></ul>
+	
+<p>
+IntroductionPopup() 
+<ul>
+<li>is run from MainDialog() automatically, when ProfileManager::first_time is true (this is checked in Read())
+<li>can be run IntroductionTextPopup when user wants to
+</ul>
+
+<p>
+IntroductionTextPopup() 
+<ul><li>
+this calls the application, which shows the info text; this is done by ProfileManager::RunIntroApplication()
+</ul>
+
+<p>
+MainDialog()	
+<ul>
+<li>can be run intro via IntroductionTextPopup()
+<li>Add button invokes the AddProfilePopup()
+<li>Edit button invokes the ProfileSettingsDialog()
+<li>Delete button invokes the confirmation popup
+<li>Pressing Switch button invokes ProgressPopup() (showing the information got from ProfileManager::PrepareSwitch()) and SwitchDialog() after that.
+</ul>
+
+<p>
+OptionsDialog() 
+<ul>
+<li>ProfileManager::ReadResourceSets() is run first to ... read the resource sets ;-)
+<li>after OK the sequence can be run ProfileManager::WriteStatus() - if user wants to enable/disable) -
+<li>or ProfileManager::WriteResources() and ProfileManager::RebuildDB(), if another resource set was choosed. For this action the confirmation popup is showed.
+<li>When SCPM is enabled for first time (ProfileManager::initialized, which is read in Read(), is false), the ProgressPopup() is showed.
+</ul>
+
+<p>
+SwitchDialog() 	
+<ul>
+<li>ProfileManager::SaveSwitchInfo() is run after pushing "Select all" button 
+<li>ProfileManager::DropSwitchInfo() is run after pushing "Deselect all" button 
+<li>ProfileManager::SetSaveFlag() is run after pushing "Select or deselect" button or after double clicking at the table item
+<li>ShowChangesPopup() is called after push the appropriate button
+<li>Switch() and ProgressPopup() are called after OK 
+</ul>
+						
+<p>
+    ProgressPopup() 
+<ul>
+<li>shows the information about what the SCPM si doing - this information gets from ProfileManager::GetProgressText() function line by line (in the while-cycle)
+<li>the cycle is finished after 100 hash marks are written to the hash file - this is checked by calling the ProfileManager::GetHashMarks() function
+</ul>
+                
+<p>
+AddProfilePopup()
+<ul>
+<li>user chooses the type of new profile (adding or copying)
+<li>after success we continue to the ProfileSettingsDialog()
+<li>global variable ProfileManager::profile_action is set to "copy" or "new"
+</ul>
+
+<p>
+ProfileSettingsDialog() 
+<ul>
+<li>profile description of the selected profile will be retrived by GetProfile()
+<li>ProfileManager::RenameProfile() or ProfileManager::SetProfile() will be called if ProfileManager::profile_action is "edit"
+<li>with other action, ProfileManager::AddProfile or ProfileManager::CopyProfile and also ProfileManager::SetProfile() to save the new parameters
+</ul>
+</ul>
+
+<p>
+File <i>Profile-manager.ycp</i>: the module - handles SCR calls, global variables etc. 
+Its functions are called from dialogs; they do appropriate SCR-calls. Most of functions return boolean (the success) an some of them changes the value of global variables.
+
+<ul>
+<p>
+Read() 
+<ul>
+<li>changes global booleans enabled and initialized, the global list profiles, global strings current_resources and active_profile
+<li>initializes SCPM by calling SCR::Execute(.scpm)
+<li>SCR::Read(.scpm.status.enabled)
+<li>SCR::Read(.scpm.profiles) 
+<li>SCR::Read(.scpm.profiles.current) 
+<li>SCR::Read(.scpm.profiles.description) 
+<li>SCR::Read(.scpm.resources.current)
+<li>also reads the settings from /var/lib/YaST2/scpm.ycp (currently - if it is a first time run of profile-manager and the state of close_popups variable)
+<li>the path to files progressfile, hashfile, changesfile and tmpfile are defined
+</ul>
+
+<p>
+Write() 
+<ul>
+<li>writes the SCPM database by calling SCR::Write(.scpm)
+<li>writes the user settings (currently the state of close_popups variable)
+</ul>
+
+<p>
+ReadResourceSets() 
+<ul>
+<li>changes global lists resource_sets_predefined and resource_sets_individua
+<li>SCR::Read(.scpm.resources)
+</ul>
+        
+<p>
+WriteSCPMStatus() 
+<ul>
+<li>SCR::Write(.scpm.status.enabled, &lt;enabled&gt;) 
+</ul>
+
+<p>
+WriteStatusFirst() 
+<ul>
+<li>SCR::Write(.scpm.enable.first, &lt;enabled&gt;) 
+</ul>
+        
+<p>
+WriteResources(string resource_set_name)
+<ul>
+<li>SCR::Write(.scpm.resources.current, &lt;resource_set_name&gt;)
+</ul>
+
+<p>
+RebuildDB()
+<ul>
+<li>SCR::Execute(.scpm.resources.rebuild)
+</ul>
+
+<p>
+RunIntroApplication()
+<ul>
+<li>Currently runs either konqueror, info or man (searches the system for what is present). On console it gets the output from "info scpm > output".
+</ul>
+         
+<p>
+PrepareSwitch(string profile_name) 
+<ul>
+<li>SCR::Execute(.scpm.switch.prepare, &lt;profile_name&gt;)
+</ul>
+
+<p>
+ReadSwitchInfo() 
+<ul>
+<li>reads the contens of switch_info map from the tmpfile, where it was written after PrepareSwitch() call
+</ul>
+         
+<p>
+Switch() 
+<ul>
+<li>uses the switch_info map
+<li>SCR::Execute(.scpm.switch, &lt;switch_info&gt;)
+</ul>
+            
+<p>
+CopyProfile(string source_name, string new_name) 
+<ul>
+<li>SCR::Execute(.scpm.profiles.copy, &lt;source_name&gt;, &lt;new_name&gt;) 
+</ul>
+            
+<p>
+AddProfile(string profile_name) 
+<ul>
+<li>SCR::Execute(.scpm.profiles.add, &lt;profile_name&gt;)
+</ul>
+        
+<p>
+DeleteProfile(string profile_name) 
+<ul>
+<li>SCR::Execute(.scpm.profiles.delete, &lt;profile_name&gt;)
+</ul>
+             
+<p>
+GetProfile(string profile name) 
+<ul>
+<li>changes global map profile_settings
+<li>SCR::Read(.scpm.profiles.&lt;command&gt;, &lt;profile_name&gt;) 
+<li>this Read has to be run for multiple commands, where commands are [pre|post][start|stop]
+</ul>
+
+<p>
+RenameProfile(string actual_name, string new_name) 
+<ul>
+<li>SCR::Execute(.scpm.profiles.rename, &lt;actual_name&gt;, &lt;new_name&gt;)
+</ul>
+
+<p>
+SetProfile(string profile_name) 
+<ul>
+<li>uses map profile_settings
+<li>SCR::Write(.scpm.profiles.&lt;command&gt;, &lt;argument&gt;, &lt;profile_name&gt;)
+<li>this Write is run for each &lt;command&gt; in profile_settings map
+</ul>
+
+<p>
+GetProgressText(boolean everything)
+<ul>
+<li>the contens of the progressfile is read
+<li>as a standard only one new line is returned
+<li>when parameter is true, the file is read to the end
+</ul>
+
+<p>
+GetHashMarks()
+<ul>
+<li>the contens of the hashfile is read
+</ul>
+</ul>		
+
+<h4>The agent</h4>
+
+For info about agent implementation, see its <a href="../agent-scpm/agent-scpm.html">own documentation</a> (or <a href="/usr/share/doc/packages/yast2-profile-manager/agent-scpm/agent-scpm.html">here</a>).
+
+<P>
+<ADDRESS>
+Jiri Suchomel &lt;jsuchome@suse.cz&gt;<BR>
+</ADDRESS>
+</body></html>
