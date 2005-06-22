@@ -36,7 +36,8 @@ if (size(args) > 0) {
     if (is(WFM::Args(0), string) && WFM::Args(0) == "help") {
 	string error = _("A command line interface for the profile manager is not available. Use the 'scpm' tool instead.");
 
-	y2warning (error + " If you want to switch to some profile and see the list of modified resources, it is possible to call Profile Manager with parameters 'switch <profile_name>'. This will invoke 'Confirm Switch' dialog.");
+	//note that error is translated but the rest is not
+	y2warning (error + " To switch to a profile and see the list of modified resources, run Profile Manager with the parameters 'switch <profile_name>'. This opens the 'Confirm Switch' dialog.");
 	return `abort;
     }
 }
@@ -50,7 +51,7 @@ boolean root = out["stdout"]:"" == "0\n";
 if (!root)
 {
     // Popup label (user is not root)
-    Popup::Message(_("Log in as root to run profile manager."));
+    Popup::Message(_("Log in as root to run the profile manager."));
     return `abort;
 }
 

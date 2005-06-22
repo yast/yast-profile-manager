@@ -43,13 +43,10 @@ define any ProfileSettingsDialog () ``{
     ];
 
     // Dialog caption label
-    string caption = _("Special profile settings");
-    term contents = `HBox(`HSpacing(1.5),
-        `VBox(
-        `VSpacing(1),
-	// frame label
-        `Frame(_("Special profile settings"), `HBox(`HSpacing(1),
-            `VBox(
+    string caption = _("Special Profile Settings");
+    term contents = `HBox(`HSpacing(2.5),
+        `VBox (
+	    `VSpacing(1),
                 `VSpacing(0.2),
                 // Text entry label
                 `TextEntry(`id(`name),_("Pro&file Name")),
@@ -64,7 +61,7 @@ define any ProfileSettingsDialog () ``{
                 `VSpacing(0.2),
 		`HBox(
 		    // text entry
-		    `TextEntry(`id(`prestart),_("Pr&e Start Script"),
+		    `TextEntry(`id(`prestart),_("Pr&estart Script"),
 			settings ["prestart"]:""),
 		    `VBox(
 			`Label (""),
@@ -74,7 +71,7 @@ define any ProfileSettingsDialog () ``{
                 `VSpacing(0.2),
 		`HBox(
 		    // text entry
-                    `TextEntry(`id(`poststart),_("Po&st Start Script"),
+                    `TextEntry(`id(`poststart),_("Po&ststart Script"),
 			settings ["poststart"]:""),
 		    `VBox(
 			`Label (""),
@@ -83,7 +80,7 @@ define any ProfileSettingsDialog () ``{
                 `VSpacing(0.2),
 		`HBox(
 		    // text entry
-		    `TextEntry(`id(`prestop),_("P&re Stop Script"),
+		    `TextEntry(`id(`prestop),_("P&restop Script"),
 			settings ["prestop"]:""),
 		    `VBox(
 			`Label (""),
@@ -92,7 +89,7 @@ define any ProfileSettingsDialog () ``{
                 `VSpacing(0.2),
 		`HBox(
 		    // text entry
-		    `TextEntry(`id(`poststop), _("Pos&t Stop Script"),
+		    `TextEntry(`id(`poststop), _("Pos&tstop Script"),
 			settings ["poststop"]:""),
 		    `VBox(
 			`Label (""),
@@ -101,12 +98,11 @@ define any ProfileSettingsDialog () ``{
                 `VSpacing(0.2),
                 `Left(`CheckBox(`id(`secure_ch),
 		    // checkbox label
-                    _("Set file &permissions of all scripts secure (0700)."), true)),
-                `VSpacing(0.2)
-            ),
-            `HSpacing(1))),
+                    _("Set Secure File &Permissions (0700) for All Scripts"), true)),
+                `VSpacing(0.2),
 	    `VSpacing(1)),
-        `HSpacing(1.5));
+        `HSpacing(2.5)
+    );
 
     Wizard::RestoreBackButton ();
 
@@ -145,7 +141,7 @@ define any ProfileSettingsDialog () ``{
 	    if (!ProfileManager::CheckNameValidity(selected))
 	    {
 		// Popup text (wrong data):
-		Popup::Message(_("Choose valid name."));
+		Popup::Message(_("Choose a valid name."));
 		continue;
 	    }
 
@@ -181,7 +177,7 @@ define any ProfileSettingsDialog () ``{
 		if (!ProfileManager::Wait())
 		{
 		    // Error popup text, %1 is additional error message
-		    Popup::Error(sformat(_("Adding new profile was not successful:
+		    Popup::Error(sformat(_("Adding the new profile was not successful:
 %1
 "), ProfileManager::scpm_error));
 		    continue;
@@ -220,7 +216,7 @@ define any ProfileSettingsDialog () ``{
 		{
 		    // Error popup text, %1 is additional error message
 		    Popup::Error(sformat(_("Copying profile was not successful:
-:%1
+ %1
 "), ProfileManager::scpm_error));
 		    continue;
 		}
@@ -302,7 +298,7 @@ define boolean ShowChangesPopup() ``{
             `HSpacing(70),
             `VSpacing(1),
 			// Popup text
-            `Label(_("Changes to the resource")),
+            `Label(_("Changes to the Resource")),
             `Label(ProfileManager::active_resource_name),
             `VSpacing(1),
             `RichText(recoded),
@@ -485,27 +481,27 @@ define symbol DetailsSwitchDialog () ``{
 	    if (is (res,map))
 		resource	= (map) res;
 	    // flag for resource action
-	    string save = _("save");
+	    string save = _("Save");
 	    if (resource["save_mode"]:"normal" == "normal")
 	    {
 		if (!resource["save"]:true)
 		    // flag for resource action
-		    save = _("ignore");
+		    save = _("Ignore");
 	    }
 	    else if (resource["save_mode"]:"normal" == "save_all")
 		// flag for resource action
-		save = _("all");
+		save = _("All");
 	    else if (resource["save_mode"]:"normal" == "patch_all")
 		// flag for resource action
-		save = _("patch");
+		save = _("Patch");
 
 	    string flag = "";
 	    if (resource["is_new"]:false)
 		// flag
-		flag = _("NEW");
+		flag = _("New");
 	    else if (resource["is_deleted"]:false)
 		// flag
-		flag = _("DELETED");
+		flag = _("Deleted");
 
 	    items = add (items, `item(
 		`id(i), save, resource["resource_name"]:"",
@@ -616,7 +612,7 @@ define symbol DetailsSwitchDialog () ``{
 	    {
 		resources[selected,"save"] = !resources[selected, "save"]:false;
 		UI::ChangeWidget (`id(`resources), `Item (selected,0),
-		    resources[selected,"save"]:false ? _("save"):_("ignore"));
+		    resources[selected,"save"]:false ? _("Save"):_("Ignore"));
 	    }
 	    continue;
 	}
@@ -624,25 +620,25 @@ define symbol DetailsSwitchDialog () ``{
 	{
 	    resources[selected,"save"] = true;
 	    resources[selected,"save_mode"] = "normal";
-	    UI::ChangeWidget (`id(`resources), `Item (selected,0),_("save"));
+	    UI::ChangeWidget (`id(`resources), `Item (selected,0),_("Save"));
 	}
 	else if (ret ==`ignore)
 	{
 	    resources[selected,"save"] = false;
 	    resources[selected,"save_mode"] = "normal";
-	    UI::ChangeWidget (`id(`resources), `Item (selected,0),_("ignore"));
+	    UI::ChangeWidget (`id(`resources), `Item (selected,0),_("Ignore"));
 	}
 	else if (ret ==`save_p)
 	{
 	    resources[selected,"save"] = true;
 	    resources[selected,"save_mode"] = "save_all";
-	    UI::ChangeWidget (`id(`resources), `Item (selected,0),_("all"));
+	    UI::ChangeWidget (`id(`resources), `Item (selected,0),_("All"));
 	}
 	else if (ret ==`patch)
 	{
 	    resources[selected,"save"] = true;
 	    resources[selected,"save_mode"] = "patch_all";
-	    UI::ChangeWidget (`id(`resources), `Item (selected,0),_("patch"));
+	    UI::ChangeWidget (`id(`resources), `Item (selected,0),_("Patch"));
 	}
 	else if (ret == `all_action_b)
 	{
@@ -654,7 +650,7 @@ define symbol DetailsSwitchDialog () ``{
 		r_map["save_mode"] = "normal";
 		UI::ChangeWidget (`id(`resources), `Item (i,0),
 		    // action to do with resource
-		    r_map["save"]:true ? _("save") : _("ignore"));
+		    r_map["save"]:true ? _("Save") : _("Ignore"));
 	    });
 	}
 	else if (ret == `show_ch)
@@ -688,29 +684,36 @@ define boolean AddProfilePopup() ``{
     UI::OpenDialog(`opt(`decorated), `HBox(`HSpacing(1.5),
         `VBox(
             `VSpacing(1),
-			// Popup text, part 1/3
-	        `Left(`Label(_("Add a new profile based"))),
+	    // Popup text, part 1/3
+	    `Left(`Label(_("Base New Profile On"))),
             `VSpacing(1),
             `RadioButtonGroup(`id(`rb),
-	            `VBox(
-			`Left(`RadioButton(`id(`new), `opt(`notify),
+	        `VBox(
+		    `Left (
+			`RadioButton(`id(`new), `opt(`notify),
 			    // Popup text, part 2/3
-			    _("on the c&urrent system configuration"))),
+			    _("The C&urrent System Configuration"))
+		    ),
                     `VSpacing(0.2),
                     `HBox(
-			`HSpacing(2),
+			`HSpacing(4),
 			// Checkbox label, part 1/2
-			`CheckBox(`id(`auto), _("&Make the added profile the new active profile."))),
+			`Left (`CheckBox(`id(`auto), _("&Make the Added Profile Active")))
+		    ),
                     `HBox(
 			`HSpacing(4.5),
-			// Checkbox label, part 2/2
+			// supplementary explanation for "Make the Added Profile Active"
 			`Label(`id(`autol),_("This does not save anything to the old active
-profile nor does it start or stop services."))),
+profile or start or stop services."))
+		    ),
 		    `VSpacing(1),
-		    `Left(`RadioButton(`id(`copy), `opt(`notify),
-			// Popup text, part 3/3
-                        _("on an &existing profile:")))
-                    )),
+		    `Left(
+			`RadioButton(`id(`copy), `opt(`notify),
+			    // Popup text, part 3/3
+			    _("An &Existing Profile"))
+		    )
+                )
+	    ),
             `SelectionBox (`id(`profiles), "", maplist (
 		string name, any desc, (map<string,any>) profiles, ``(name))),
             `VSpacing(1),
@@ -751,7 +754,7 @@ profile nor does it start or stop services."))),
                 if (selected == nil)
                 {
 					// Popup text
-                    Popup::Message(_("Select a profile to copy."));
+                    Popup::Message(_("Select the profile to copy."));
                     continue;
                 }
                 ProfileManager::profile_action = "copy";
@@ -808,12 +811,12 @@ define boolean IntroductionTextPopup() ``{
 define boolean IntroductionPopup() ``{
 
 	// Inroduction text, part 1/2
-    string intro_text = _("<p>SCPM is currently disabled.<br>
-To enable it, use the Options button.<br></p>
+    string intro_text = _("<p>SCPM is currently disabled.
+To enable it, use <b>Options</b>.</p>
 ") +
 
 	// Inroduction text, part 2/2
- _("<p>If you are new to SCPM, read at least the help texts. It is better to read the introduction in the info pages. You should know what 'active profile' and 'current configuration' mean before using SCPM.</p>");
+ _("<p>If you are new to SCPM, read the help texts (<b>Show Introduction</b>). It is better to read the information in the info pages. You should know what 'active profile' and 'current configuration' mean before using SCPM.</p>");
 
     UI::OpenDialog(`opt(`decorated), `HBox(`HSpacing(1.5),
         `VSpacing(15),
@@ -825,9 +828,9 @@ To enable it, use the Options button.<br></p>
 	      `HBox(
 		`HSpacing(1),
 		// Push button label (read the intrduction before starting)
-		`PushButton(`id(`intro),`opt(`default),_("&Show introduction")),
+		`PushButton(`id(`intro),`opt(`default),_("Show &Introduction")),
                 // Push button label (start without reading the intrduction)
-	        `PushButton(`id(`cont), _("&Go")),
+	        `PushButton(`id(`cont), _("&Start")),
 	        `HSpacing(1)
 	      ),
             `VSpacing(1)),
@@ -898,7 +901,7 @@ define string GetService() ``{
 	    {
 		// yes/no popup
 		if (!Popup::YesNo (sformat(_("Service %1 does not exist.
-Are you sure?"), service)))
+Really add it?"), service)))
 		    continue;
 	    }
 	}
@@ -925,7 +928,7 @@ define string GetFile() ``{
 		`VBox (
 		    `Label(""),
 		    // button label
-		    `PushButton (`id (`browse), `opt (`key_F6), _("&Browse"))
+		    `PushButton (`id (`browse), `opt (`key_F6), _("&Browse..."))
 		)
 	    ),
 	    `VSpacing(0.2),
@@ -961,7 +964,7 @@ define string GetFile() ``{
 	    if (filename != "" && !FileUtils::Exists (filename))
 	    {
 		// error popup
-		Popup::Error (_("Such a file does not exist."));
+		Popup::Error (_("File does not exist."));
 		continue;
 	    }
 	}
@@ -1146,7 +1149,7 @@ define map ResourceGroupPopup (map group, map resource_groups) ``{
 	    if (!ProfileManager::CheckNameValidity (groupname))
 	    {
 		// Popup text (wrong data):
-		Popup::Message(_("Choose valid name."));
+		Popup::Message(_("The name is invalid."));
 		continue;
 	    }
 	    // check possible name conflicts
@@ -1155,8 +1158,8 @@ define map ResourceGroupPopup (map group, map resource_groups) ``{
 		if (haskey (resource_groups, groupname))
 		{
 		    // error message, %1 is group name
-		    Popup::Error(sformat(_("Resource group \"%1\" already exists.
-Choose another name."), groupname));
+		    Popup::Error(sformat(_("Resource group %1 already exists.
+Use another name."), groupname));
 		    ret = `notok;
 		    continue;
 		}
@@ -1281,7 +1284,7 @@ define symbol ConfigureResourcesDialog () {
 	`VBox(
         `VSpacing(1),
 	// frame label:
-        `Frame(_("Select Resource Group"), `HBox(`HSpacing(1),
+        `Frame(_("Resource Group"), `HBox(`HSpacing(1),
             `VBox(
                 `VSpacing(0.2),
 		    `Table(`id(`rgroups), `opt (`notify),

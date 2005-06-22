@@ -110,8 +110,8 @@ define any MainSequence (string switch_to) ``{
 	}
 	else
 	{
-	    // error popup
-	    Report::Error (sformat (_("There is no profile '%1'"), switch_to));
+	    // error popup, %1 is profile name.
+	    Report::Error (sformat (_("Profile '%1' does not exist."), switch_to));
 	    return Cancel ();
 	}
     }
@@ -166,7 +166,7 @@ define symbol ProfileManagerAutoSequence() ``{
     // Caption of the initialize process
     string caption = _("Profile Manager Configuration");
     // Lable of the initialize process
-    term contents = `Label(_("Initializing ..."));
+    term contents = `Label(_("Initializing..."));
 
     Wizard::CreateDialog();
     Wizard::SetDesktopIcon("profile-manager");

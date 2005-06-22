@@ -72,34 +72,33 @@ define boolean PreparePopup (string selected) {
  * Main dialog
  * @return any Returned value from UserInput() call
  */
-define any MainDialog () ``{
-	// Caption of the dialog:
-    string caption = _("System configuration profile management");
+define any MainDialog () {
 
-    map profiles = ProfileManager::profiles;
-    string active = ProfileManager::active_profile;
-    boolean enabled = ProfileManager::enabled;
+    // Caption of the dialog:
+    string caption	= _("System Configuration Profile Management");
+
+    string active	= ProfileManager::active_profile;
+    boolean enabled	= ProfileManager::enabled;
+    string selected	= "";
 
     // State label text
-    string state_label = enabled ? _("SCPM is enabled."):_("SCPM is disabled.");
-
-    string selected = "";
+    string state_label	= enabled ? _("SCPM is enabled"):_("SCPM is disabled");
 
     term contents = `HBox(
 	`HSpacing(1.5),
 	`VBox(
         `VSpacing(1),
 	// frame label:
-        `Frame(_("Profile management"), `HBox(`HSpacing(1),
+        `Frame(_("Profile Management"), `HBox(`HSpacing(1),
             `VBox(
                 `VSpacing(0.2),
 		    `Table(`id(`profiles), `opt (`notify),
                     `header(
-                        // Header of the table with the aviable profiles 1/3
-                        _("active"),
-                        // Header of the table with the aviable profiles 2/3
+                        // Header of the table with the available profiles 1/3
+                        _("Active"),
+                        // Header of the table with the available profiles 2/3
                         _("Name"),
-                        // Header of the table with the aviable profiles 3/3
+                        // Header of the table with the available profiles 3/3
                         _("Description")),
                     []
                     ),
@@ -108,7 +107,7 @@ define any MainDialog () ``{
                     `Left(
                     `PushButton(`id(`switch_button), `opt(`key_F6),
                         // Push button label
-                        _("&Switch to..."))),
+                        _("&Switch To..."))),
                     // Push button label
 		    `PushButton(`id(`add_button), `opt(`key_F3), _("&Add")),
                     // Push button label
@@ -141,26 +140,39 @@ define any MainDialog () ``{
         Label::CancelButton (), Label::CloseButton ());
 
     // pushbutton
-//    Wizard::SetBackButton(`intro, _("&Introduction to SCPM") );
     Wizard::HideAbortButton();
 
-    UI::ChangeWidget(`id(`profiles), `Items,
-	ProfileManager::GetProfilesAsItems());
+    // update the dialog contents with actual data
+    define void update_dialog_contents () {
 
-    if (enabled) {
-        UI::ChangeWidget(`id(`profiles), `CurrentItem, ProfileManager::active_profile);
-        UI::SetFocus(`id(`profiles));
+	active		= ProfileManager::active_profile;
+	enabled		= ProfileManager::enabled;
+
+	UI::ChangeWidget (`id(`profiles), `Items,
+	    ProfileManager::GetProfilesAsItems());
+
+	if (!enabled) {
+	    UI::SetFocus(`id(`options_button));
+	}
+	else if (active != "" && active != "(none)")
+	{
+	    UI::ChangeWidget(`id(`profiles), `CurrentItem, active);
+	    UI::SetFocus(`id(`profiles));
+	}
+
+	UI::ChangeWidget(`id(`add_button), `Enabled, enabled);
+
+	boolean any_profiles	= size (ProfileManager::profiles) > 0;
+	UI::ChangeWidget(`id(`profiles), `Enabled, enabled && any_profiles);
+	UI::ChangeWidget(`id(`edit_button), `Enabled, enabled && any_profiles);
+        UI::ChangeWidget(`id(`delete_button), `Enabled,enabled && any_profiles);
+	UI::ChangeWidget(`id(`switch_button), `Enabled,enabled && any_profiles);
+
     }
-    else
-        UI::SetFocus(`id(`options_button));
 
-    UI::ChangeWidget(`id(`profiles), `Enabled, enabled);
-    UI::ChangeWidget(`id(`add_button), `Enabled, enabled);
-    UI::ChangeWidget(`id(`edit_button), `Enabled, enabled);
-    UI::ChangeWidget(`id(`delete_button), `Enabled, enabled);
-    UI::ChangeWidget(`id(`switch_button), `Enabled, enabled);
+    update_dialog_contents ();
 
-    if (ProfileManager::first_time && !enabled)
+    if (ProfileManager::first_time && !enabled && !ProfileManager::status_modified)
         IntroductionPopup();
 
     any ret = nil;
@@ -183,14 +195,14 @@ define any MainDialog () ``{
 	    if (ProfileManager::status_modified)
 	    {
 		// action which needs to be performed
-		details	= _("SCPM will be enabled.");
+		details	= _("Enable SCPM");
 	    }
 	    if (ProfileManager::resource_groups_modified)
 	    {
 		if (details != "")
 		    details	= details + "\n";
 		// action which needs to be performed
-		details     = details + _("Resource groups modifications will be saved.");
+		details     = details + _("Save resource group modifications");
 	    }
 	    // continue/cancel question, %1 are another sentences (actions)
 	    if (!Popup::ContinueCancel (sformat (_("Before configuring the profiles,
@@ -202,10 +214,19 @@ following actions must be performed:
 	    {
 		continue;
 	    }
-	    if (ProfileManager::status_modified &&
-		!ProfileManager::WriteStatus ())
+	    if (ProfileManager::status_modified)
 	    {
-		continue;
+		if (!ProfileManager::WriteStatus ())
+		{
+		    continue;
+		}
+		else
+		{
+		    ProfileManager::ReadProfiles();
+		    ProfileManager::ReadActiveProfile (true);
+		    ProfileManager::ReadProfilesDescriptions();
+		    update_dialog_contents ();
+		}
 	    }
 	    if (ProfileManager::resource_groups_modified &&
 		!ProfileManager::WriteResourceGroups ())
@@ -295,7 +316,7 @@ define any OptionsDialog () ``{
     term contents = `HBox (`HSpacing(1.5), `VBox (
         `VSpacing(1),
 	// frame label:
-        `Frame(_("Enable SCPM"), `VBox(
+        `Frame(_("SCPM Status"), `VBox(
 	    `VSpacing(0.5),
             `RadioButtonGroup(`id(`rb),
 	    `HBox(
@@ -316,7 +337,7 @@ define any OptionsDialog () ``{
 		`VSpacing(0.5),
 		`Left(`CheckBox(`id(`close_popups_ch),
 		    // checkbox label
-                    _("Close Progress Pop-ups &Automatically"), close_popups)),
+                    _("Close Progress Pop-Ups &Automatically"), close_popups)),
 		`VSpacing(0.5),
 		`Left(`CheckBox(`id("verbose"),
 		    // checkbox label
@@ -357,7 +378,7 @@ define any OptionsDialog () ``{
         )),
         `VSpacing(1),
 	// button label
-	`Right (`PushButton(`id(`resources), _("Configure &Resources"))),
+	`Right (`PushButton(`id(`resources), _("Configure &Resources..."))),
 	`VSpacing(1)
 	),
     `HSpacing(1.5));

@@ -19,8 +19,8 @@ X-SuSE-YaST-AutoInstResource=
 Icon=yast-profile-manager
 Exec=/sbin/yast2 profile-manager 
 
-Name=Profile manager
-GenericName=Configure profiles
+Name=Profile Manager
+GenericName=Configure SCPM profiles
 Name[cs]=Správce profilů
 GenericName[cs]=Konfigurovat profily
 Name[de]=Profil-Manager

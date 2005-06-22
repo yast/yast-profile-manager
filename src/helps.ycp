@@ -18,32 +18,32 @@ map HELPS = $[
 
     /* SCPM introduction text 1/10 */
     "intro": _("<h1>Introduction</h1>
-This is the description of what SCPM (<strong>System Configuration Profile Management</strong>) is good for, what it can do for you, and what it cannot do.
+This is the description of what SCPM (System Configuration Profile Management) is good for, what it can do for you, and what it cannot do.
 ") +
 
     /* SCPM introduction text 2/10 */
     _("<p>There are situations that make it necessary to modify your system
-configuration. If you are running your computer often in
+configuration. If you regularly use your computer in multiple
 environments where you need different configuration settings, it may be
 desirable to store your settings once made and restore them when
-needed again. This typically happens to notebook users who work with
+needed again. This typically happens to laptop users who work with
 their computers at different locations. It may also be imaginable that
-you have a desktop computer you want to run temporary with another
+you have a desktop computer you want to run temporarily with another
 configuration, for example, to test something. You usually like to
 have an easy undo mechanism in such a case, so it can be a good idea
-to snapshot current system configuration data and store it in a
+to snapshot the current system configuration data and store it in a
 profile. That way, you can restore your configuration any time.
 </p>") +
 
     /* SCPM introduction text 3/10 */
     _("<p>SCPM is a system to manage such system configuration profiles on
-your Linux box.  The following example is intended to give a short
+your Linux system.  The following example is intended to give a short
 overview of how SCPM can be used.    
 </p>") +
 
     /* SCPM introduction text 4/10 */
-    _("<p>Assume you have a notebook you want to connect to your home LAN and 
-your company network and to use independently when traveling.
+    _("<p>Assume you have a laptop that you want to connect to your home LAN and 
+your company network and use independently when traveling.
 Usually, that requires configuring your system to fit into the
 different networks. Maybe you need to use a DHCP client in your office,
 but a fixed IP at home. Additionally, you may need to run a system time
@@ -56,7 +56,7 @@ configurations and makes it easy to switch between them.
 
     /* SCPM introduction text 5/10 */
     _("<p>SCPM can do more. It is quite configurable, so you can handle almost
-all possible scenarios where data in different versions is needed to
+all possible scenarios where data in different versions needs to
 be stored and restored. Even use it to run various scripts depending
 on the profile from which it switched and the one to which it is
 switched.  More information is available in the info pages.
@@ -65,30 +65,32 @@ switched.  More information is available in the info pages.
 
     /* SCPM introduction text 6/10 */
     _("<h2>SCPM Limitations</h2>
-SCPM is intented to manage <em>system</em> configuration profiles. It is not
-meant to manage user profiles, such as different KDE desktop settings.
-<h2>Quick Start</h2>") +
+<p>SCPM is intented to manage system configuration profiles. It is not
+meant to manage user profiles, such as different KDE desktop settings.</p>
+") +
 
     /* SCPM introduction text 7/10 */
-    _("<p>There are some terms you need to know to
+    //italics used to mark terms. use something appropriate for your language
+    _("<h2>Quick Start</h2>
+<p>There are some terms you need to know to
 successfully use this program. SCPM itself means
-<strong>System Configuration Profile Management</strong>. The
-<strong>system configuration</strong> represents the current status of
+System Configuration Profile Management. The
+system configuration represents the current status of
 your system settings, such as your network settings, mail
 configuration, and time zone specification. System configurations can
-be captured and saved in <strong>profiles</strong>. Profiles act as
+be captured and saved in <i>profiles</i>. Profiles act as
 containers for a specific state of your system configuration. Because
 it may be undesirable or unreasonable to save every bit of
 configuration data of the system in these profiles, the system
-configuration is organized in <strong>resources</strong>. Resources
+configuration is organized in <i>resources</i>. Resources
 stand for single pieces of configuration data. A bundle of these form
 a profile, so it clearly defines which parts of your system
 configuration are in the profile. Resources may have different
-<strong>resource types</strong> to handle different types of
+<i>resource types</i> to handle different types of
 configuration data. Configuration data may be a simple file, a whole
 directory, or even a system service (such as the sendmail daemon). You
 are not restricted to a specific predefined bundle of
-resources. Multiple groups, called <strong>resource sets</strong>,
+resources. Multiple groups, called <i>resource sets</i>,
 exist. Even create your own resource sets if desired.
 </p>
 ") +
@@ -103,8 +105,7 @@ profile from your current system configuration. Afterwards, use SCPM
 to create new profiles as snapshots of your actual configuration or to
 copy existing profiles as the base for configuration
 modifications. To modify a configuration saved in a profile, switch to
-that profile. Then modify your settings as usual with YaST2 or your
-favorite editor.
+that profile. Then modify your settings.
 </p>
 ") +
 
@@ -121,8 +122,7 @@ restored.
     /* SCPM introduction text 10/10 */
     _("<p>More information is available in the info pages that
 come with SCPM. View them by running <code>info scpm</code> or using
-KDE's Konqueror: just open the address \"info:/scpm\" or enter that in the
-<em>execute command</em> box.
+KDE's Konqueror: just open the address <tt>info:/scpm</tt>.
 </p>"),
 
     /* Read dialog help 1/2 */
@@ -131,21 +131,22 @@ Please wait...<br></p>
 ") +
 
     /* Read dialog help 2/2 */
-    _("<p><b><big>Aborting initialization:</big></b><br>
+    _("<p><b><big>Aborting Initialization</big></b><br>
 Safely abort the configuration utility by pressing <b>Abort</b> now.</p>
 "),
 
     /* Main dialog help 1/6*/
-    "main" : _("<p>SCPM allows you to store different profiles of your system configuration and to switch between them. If you are not familiar with SCPM, read the <b>Introduction to SCPM</b> in the Administration Guide or in info scpm.</p>") +
+    "main" : _("<p><big><b>Profile Manager</b></big></p>
+<p>SCPM allows you to store different profiles of your system configuration and switch between them. If you are not familiar with SCPM, read <tt>info scpm</tt>.</p>") +
 
     /* Main dialog help 2/6 */
     _("<p>If SCPM is not enabled, use <b>Options</b></p>") +
 
     /* Main dialog help 3/6 */
-    _("<p>In the table, see the list of available profiles. The currently active profile is marked in the column <b>active</b>.</p>") +
+    _("<p>In the table, see the list of available profiles. The currently active profile is marked in the column <b>Active</b>.</p>") +
 
     /* Main dialog help 4/6*/
-    _("<p>After selecting a profile in the list, you can <b>Switch</b> your system configuration to this profile. You will be asked what to do with changes in the active profile before switching. If you only want to save changes of the current system configuration to the active profile or undo them, perform a <b>Switch</b> to the active profile. Just like a normal switch, you will be asked what to do with the changes.</p>
+    _("<p>After selecting a profile in the list, you can change your system configuration to this profile using <b>Switch To</b>. You will be asked what to do with changes in the active profile before switching. If you only want to save changes of the current system configuration to the active profile or undo them, switch to the active profile. As with other switches, you are asked what to do with the changes.</p>
 ") +
 
     /* Main dialog help 5/6 */
@@ -158,13 +159,14 @@ Safely abort the configuration utility by pressing <b>Abort</b> now.</p>
     _("<p>Find more information about SCPM in its info page.</p>"),
 
     // Options dialog help 1/6
-    "options" : _("<p>First, <b>enable</b> SCPM. If disabled later, none of your configuration data in the profiles will be lost. It just keeps the current configuration of your system and you cannot switch to any other profile until you enable it again.</p>") +
+    "options" : _("<p><big><b>SCPM Options</b></big></p>
+<p>First, set the SCPM status to <b>Enabled</b>. If disabled later, none of your configuration data in the profiles will be lost. It just keeps the current configuration of your system and you cannot switch to any other profile until you enable it again.</p>") +
 
-    // Options dialog help 2/6
+    // Options dialog help 2/6, i marks special term, use something appropriate for your language
     _("<p>A configuration profile covers only the files and services to change
 when switching to another profile. In SCPM terminology, these files and
 services are called resources. Those resources are grouped into logical units,
-called <b>resource groups</b>. SCPM comes with a predefined set of
+called <i>resource groups</i>. SCPM comes with a predefined set of
 groups handled by default. This is sufficient for most systems. 
 For a more detailed resource setup, click 
 <b>Configure Resources</b>.</p>
@@ -173,8 +175,8 @@ For a more detailed resource setup, click
     // Options dialog help 3/6
     _("<p><b>Switch Mode</b> defines the behavior of SCPM when switching
 profiles. If set to <b>Normal</b> or <b>Save Changes</b>,
-modified resources in the switch dialog are preset to <b>save</b>.
-Setting it to <b>Drop Changes</b> results in presets to <b>ignore</b>. This option
+modified resources in the switch dialog are preset for saving.
+Setting it to <b>Drop Changes</b> results in presets for ignoring. This option
 has more effect on the command line SCPM, so check the info page if also using that.</p>
 ") +
 
@@ -191,56 +193,59 @@ in the progress pop-up.</p>
 
     // Options dialog help 6/6
     _("<p>For progress windows to close automatically, check <b>Close Progress
-Pop-ups Automatically</b>. This box is also available in the progress pop-ups
+Pop-Ups Automatically</b>. This box is also available in the progress pop-ups
 themselves.</p>
 "),
 
 
     /* ProfileSettings dialog help 1/4 */
-    "profilesettings" : _("<p>You may change the <b>Profile Name</b> at any time. Names may contain letters, digits, underscore, dash, and dot. The first character must be a letter or digit. The <b>Description</b> is optional.</p>") +
+    "profilesettings" : _("<p><big><b>Profile Settings</b></big</p>
+<p>You can change the <b>Profile Name</b> at any time. Names may contain letters, digits, underscore, dash, and dot. The first character must be a letter or digit. The <b>Description</b> is optional.</p>") +
 
     /* ProfileSettings dialog help 2/4 */
-    _("<p>Additionally, you may set dedicated scripts to execute at a given time during profile switching. First, the switch process collects data. It compares resources and determines what to change. This data is listed for confirmation in the Confirm Switch pop-up. Then the switch will be executed: </p>") +
+    _("<p>Additionally, you may set dedicated scripts to execute at a given time during profile switching. First, the switch process collects data. It compares resources and determines what to change. This data is listed for confirmation in the Confirm Switch pop-up. Then the switch is made following these steps: </p>") +
 
     /* ProfileSettings dialog help 3/4 */
-    _("<p>- execute <b>Prestop script</b> from old profile
-<br>- stop some services
-<br>- execute <b>Poststop script</b> from old profile
+    //- used to create list environment
+    _("<p>- execute prestop scripts from the old profile
+<br>- stop unneeded services
+<br>- execute poststop scripts from the old profile
 <br>- change configuration files
-<br>- execute <b>Prestart script</b> from new profile
-<br>- start some services
-<br>- execute <b>Poststart script</b> from new profile</p>") +
+<br>- execute prestart scripts from the new profile
+<br>- start needed services
+<br>- execute poststart scripts from the new profile</p>") +
 
     /* ProfileSettings dialog help 4/4 */
-    _("<p><b>Security Warning:</b><br>
-These scripts are executed as the user root. Make sure no users can change or even read them without authorization. For YaST to set the appropriate file permissions, check the box at the bottom of the dialog.</p>"),
+    _("<p><b>Scripts</b>:
+These scripts are executed as the user root. Make sure that no users can change or even read them without authorization. To set the appropriate file permissions automatically, select <b>Set Secure File Permissions</b>.</p>"),
 
     // Switch dialog help 1/4
-    "switch" : _("<p>When you leave a profile, there might be changes in resources covered by SCPM. You must decide what to do with these changes.</p>") +
+    "switch" : _("<p><big><b>Switching Profiles</b></big></p>
+<p>When you leave a profile, there might be changes in resources managed by SCPM. You must decide what to do with these changes.</p>") +
 
     // Switch dialog help 2/4
     _("<p>This dialog shows the resource groups containing modified
-resources. Decide to <b>save</b> the modifications to the profile you
-are leaving or to <b>ignore</b> them. Groups to save are
+resources. Decide whether to <b>Save</b> the modifications to the profile you
+are leaving or <b>Ignore</b> them. Groups to save are
 marked with an <b>X</b> in the first column.</p>
 ") +
 
     // Switch dialog help 3/4
     _("<p>To access more detailed information about the resources of
-a resource group, first click that group then <b>Details</b>.
+a resource group, click that group then <b>Details</b>.
 </p>
 ") +
 
     // Switch dialog help 4/4
-    _("<p>A flag <b>m</b> in front of a group name means that the resources of
+    _("<p>An <b>m</b> flag in front of a group name means that the resources of
 the group have mixed save and ignore settings.</p>
 "),
 
     // Switch Details Popup help 1/2
     "switchdetails":  _("<p>Here, see the modified resources of the
 selected resource group. For each resource, select whether to
-<b>save</b>, <b>ignore</b>, <b>save to all profiles</b>
-(resource will be same in all profiles after that), or <b>patch to all profiles
+<b>Save</b>, <b>Ignore</b>, <b>Save to All Profiles</b>
+(resource will be same in all profiles after that), or <b>Patch to All Profiles
 </b> (only the latest change will be applied to all profiles).</p>
 ") +
 
@@ -252,7 +257,8 @@ leaving.</p>
 
 
     // Configure Resources Dialog help 1/4
-    "resources": _("<p>This list contains all installed resource groups.
+    "resources": _("<p><big><b>Configuring Resources</b></big></p>
+<p>This list contains all installed resource groups.
 A resource group usually represents a system service with all needed
 configuration files. Here, easily choose which services should be
 handled by the profile management. Activate or deactive the groups by
@@ -269,15 +275,15 @@ resources and add them to your groups.</p>
 
     // Configure Resources Dialog help 3/4
     _("<p>Changes to the resource configuration are applied when leaving
-the dialog using the <b>OK</b> button. If you deactivated
-or removed resources, those will be removed from your saved profiles, too.
+the dialog using <b>OK</b>. If you deactivated
+or removed resources, they are removed from your saved profiles, too.
 This data cannot be recovered later.
 </p>
 ") +
 
     // Configure Resources Dialog help 4/4
     _("<p>Return all resource groups to their initial states by pressing
-<b>Reset All</b>. The changes will be applied immediately.</p>"),
+<b>Reset All</b>. The changes are applied immediately.</p>"),
 
     /* Write dialog help 1/1 */
     "write" : _("<p><b><big>Writing Profile Manager Configuration</big></b><br>
