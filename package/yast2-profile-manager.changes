@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Mon Jul 25 08:32:38 CEST 2005 - jsuchome@suse.cz
+
+- added scpm-devel to neededforbuild 
+- 2.12.1
+
+-------------------------------------------------------------------
 Wed Jun 22 13:53:18 CEST 2005 - jsuchome@suse.cz
 
 - fixed texts from proofreader (rwalter)
