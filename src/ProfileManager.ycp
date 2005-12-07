@@ -18,35 +18,31 @@ textdomain "profile-manager";
 import "Directory";
 import "FileUtils";
 import "Label";
+import "Mode";
 import "Package";
 import "Popup";
 import "Progress";
 import "Report";
 import "String";
+import "Users";
+import "UsersCache";
 
-
-// function prototypes:
-global define boolean ProgressPopup (string position,integer start,integer end);
-global define boolean Wait ();
-
-
-global string last_ret = "";
-
-/**
- * how many times was progress bar used
- */
-global integer hash_size = 0;
-
-
-/**
- * Is the module runing for the first time?
- */
-global boolean first_time = false;
 
 /**
  * Is SCPM enabled?
  */
 global boolean enabled = false;
+
+/**
+ * Is SCPM re-initialization needed? (possibly after update)
+ */
+global boolean needs_reinit = false;
+
+/**
+ * Is SCPM recovery? (after something failed)
+ */
+global boolean needs_recover = false;
+
 
 /**
  * Was enabled/disabled status changed?
@@ -59,18 +55,14 @@ global boolean status_modified	= false;
 global boolean resource_groups_modified	= false;
 
 /**
- * Is SCPM re-initialization needed? (possibly after update)
+ * if SCPM configuration (stored in scpm_conf map) was modified
  */
-global boolean needs_reinit = false;
+global boolean conf_modified	= false;
 
 /**
- * Is SCPM recovery? (after something failed)
+ * if list of users was modified
  */
-global boolean needs_recover = false;
-
-// for saving status of enabled/disabled radiobuttons in OptionsDialog
-// when going to ConfigureResources
-global boolean tmp_enabled = false;
+global boolean users_modified	= false;
 
 /**
  * Is SCPM initialized?
@@ -79,98 +71,53 @@ global boolean tmp_enabled = false;
 global boolean initialized = false;
 
 /**
- * Is set "close popups automaticaly" check?
- */
-global boolean close_popups = false;
-
-/**
- * This shows if the "autoswitch" was set while adding a new profile.
- */
-global boolean auto = false;
-
-/**
- * Map of actual profiles and its descriptions.
- * It is read in ReadProfiles() and ReadProfilesDescription().
- * @example
- *  $[ "default" : "This is the default",
- *     "home" : "My home profile",
- *   ...
- *  ]
- */
-global map profiles = $[];
-
-/**
- * Map of selected profile's settings.
- * It is read in GetProfile() and written in SetProfile().
- * @example
- *  $[ "name" : "home",
- *     "description" : "My home profile",
- *     "prestart" : "",
- *     "postart" : "/tmp/poststart_script",
- *     "prestop" : "",
- *     "poststop" : ""
- *  ]
- */
-global map profile_settings = $[];
-
-/**
- * This is the name of the active profile.
- * It is read in ReadActiveProfile().
- */
-global string active_profile = "";
-
-/**
- * This is the name of the profile selected in some widget.
- */
-global string selected_profile = "";
-
-/**
- * The list of predefined resource sets.
- * @example
- *  [ "typical",
- *    "network_only"
- *  ]
- */
-global list resource_sets_predefined = [];
-
-/**
- * The list of user defined resource sets.
- */
-global list resource_sets_individual = [];
-
-/**
- * This variable defines the action whis will be done
- * with the profile in the ProfileSettingsDialog.
- * Can be "new", "copy" or "edit".
- */
-global string profile_action = "";
-
-global integer active_resource = 0;
-global string active_resource_name = "";
-
-/**
  *  When scpm action fails, the error message is stored here by SetError()
  */
 global string scpm_error = "";
 
 /**
- * Abort function
- * return boolean return true if abort
+ * this map holds the contents of scpm.conf configuration file
  */
-global block<boolean> AbortFunction = nil;
+global map scpm_conf = $[];
+
 
 /**
- * In this map are written the variables close_popups and first_time.
- * It is read from the file in ReadUserSettings()
- * and written to the file in WriteUserSettings().
+ * all resource groups available; filled by ReadResourceGroups()
  */
-map state = $[];
+global map resource_groups = $[];
 
 /**
- * how many lines of progress has been pruducted
+ * list of resource groups marked for deletion
  */
-integer progress_size = 0;
+global list resource_groups_deleted = [];
 
+/**
+ * Map of users with permissions to run SCPM
+ */
+map<string,string> users = $[];
+
+/**
+ * If users are available to switch profiles
+ */
+global boolean users_allowed	= false;
+
+/**
+ * List of user names, read from system via Users module
+ */
+list<string> usernames	= [];
+
+/**
+ * path to scpm qt front-end
+ */
+string sumfpath	= "/usr/bin/sumf";
+
+// path to scpm bin
+string scpmpath	= "/usr/sbin/scpm";
+
+/**
+ * path to config file with users
+ */
+string userspath = "/etc/scpm.users";
 
 /**
  * The name of the file, where the progress state is beeing written.
@@ -178,47 +125,27 @@ integer progress_size = 0;
  */
 string progressfile = "/scpm.progress";
 string hashfile = "/scpm.hash";
-
-/**
- * The name of the file, where are written the resource changes.
- * This file is checked after pushing "Show changes" button.
- * (The same name must use the scpm agent!)
- */
-string changesfile = "/scpm.changes";
-string tmpfile = "/scpm.tmp";
 string progresspath = "";
 string hashpath = "";
-string changespath = "";
-string tmppath = "";
-string tmpdir = "";
+string last_ret = "";
 
 /**
- * This map represents the switch_info struct.
- * It is read in PrepareSwitch() and used by Switch().
- * @example
- *  $[ "profile_name": "home",
- *     "profile_modified": true,
- *     "modified_resources":
- *      [ $[ "resource_name": "/etc/X11/XF86Config",
- *           "resource_type": "file",
- *           "is_new": false,
- *           "is_deleted": true,
- *           "save": true
- *        ]
- *      ]
- *  ]
+ * how many lines of progress has been pruducted
  */
-map switch_info = $[];
+integer progress_size = 0;
+
+/**
+ * how many times was progress bar used
+ */
+global integer hash_size = 0;
 
 
 /**
- * Abort function
- * @return blah blah lahjk
+ * Was anything modified?
  */
-global define boolean Abort() ``{
-    if (AbortFunction != nil)
-	return eval (AbortFunction) == true;
-    return false;
+global define boolean Modified () {
+    return conf_modified || resource_groups_modified || status_modified ||
+    users_modified;
 }
 
 /**
@@ -245,46 +172,6 @@ define void SetError () ``{
         scpm_error = "";
 }
 
-// --------------------------------------------------------------------------
-// ------- functions and variables for work with resource groups ------------
-// --------------------------------------------------------------------------
-
-/**
- * all resource groups available; filled by ReadResourceGroups()
- */
-global map resource_groups = $[];
-
-/**
- * list of resource groups marked for deletion
- */
-global list resource_groups_deleted = [];
-
-/**
- * this map holds the contents of scpm.conf configuration file
- */
-global map scpm_conf = $[];
-
-/**
- * helper structure for faster querying modified resource groups (prepared
- * for Switch) - is filled in GetModifiedGroups() function
- */
-global map modified_groups = $[];
-
-/**
- * default value of "save" flags of modified resources (groups)
- * TODO: when is changed?
- */
-boolean default_save = true;
-
-/**
- * if module was canceled (aborted)
- */
-global boolean canceled = false;
-
-/**
- * name of resource group currently beeing edited (selected in SwitchDialog)
- */
-global string current_resource_group = "";
 
 /**
  * Writes modified resource group.
@@ -415,24 +302,125 @@ global define map<string,map> GetResourceGroups() ``{
 }
 
 /**
- * Can be resource group deleted by user?
- * @param groupname name of group
- * @return boolean
+ * Read the set of users allowed to run SCPM
  */
-global define boolean GroupDeletable (string groupname) ``{
+global define boolean ReadUsers () {
 
-    return resource_groups [groupname, "user_defined"]:false;
+    if (! FileUtils::Exists (userspath))
+	return false;
+
+    users	= $[];
+
+    string wholefile	= (string)SCR::Read (.target.string, userspath);
+    list<string> lines	= splitstring (wholefile, "\n");
+    foreach (string line, lines, {
+	if (line == "" || substring (line, 0, 1) == "#")
+	    return;
+	list ll	= splitstring (line, " \t");
+	if (size (ll) > 1)
+	    users[ll[0]:""]	= ll[1]:"";
+    });
+    return true;
 }
 
 /**
- * Does given resource group exist? (Checked when user enters name of new group)
- * @param groupname name of group
- * @return boolean
+ * Write new set of users allowed to run scpm
  */
-global define boolean GroupnameExists (string groupname) ``{
+global define boolean WriteUsers () {
 
-    return haskey (resource_groups, groupname);
+    string wholefile	= (string)SCR::Read (.target.string, userspath);
+    list<string> lines	= splitstring (wholefile, "\n");
+    list<string> new_lines	= filter (string line, lines, {
+	return substring (line, 0, 1) == "#";
+    });
+    foreach (string name, string perm, users, {
+	new_lines	= add (new_lines, sformat ("%1\t%2", name, perm));
+    });
+    return SCR::Write (.target.string, userspath, mergestring (new_lines,"\n"));
 }
+
+/**
+ * Return the map of users able to run scpm
+ */
+global define map<string,string> GetUsers () {
+
+    return users;
+}
+
+/**
+ * Check if users are able to switch profiles
+ * @return the result
+ */
+global define boolean GetUsersAllowed () {
+
+    string cmd	= "test -u " + scpmpath;
+    if (FileUtils::Exists (sumfpath))
+	cmd = cmd + " -a -u " + sumfpath;
+    return (SCR::Execute (.target.bash, cmd) == 0);
+}
+
+/**
+ * Write the new status if the users are allowed to run SCPM or not
+ * @return success of the action
+ */
+global define boolean WriteUsersAllowed () {
+
+    if (GetUsersAllowed () == users_allowed) // no change
+	return true;
+
+    boolean ret	= true;
+    foreach (string apppath, [ scpmpath, sumfpath ], {
+
+	if (!ret || !FileUtils::Exists (apppath))
+	    return;
+
+	string cmd	=
+	    sformat ("/bin/chmod %1s %2", users_allowed ? "+" : "-", apppath);
+	map out	= (map) SCR::Execute (.target.bash_output, cmd);
+	if (out["stderr"]:"" != "")
+	{
+	    y2warning ("error calling %1: %2", cmd, out["stderr"]:"");
+	    ret = false;
+	}
+    });
+    return ret;
+}
+
+/**
+ * Upodate the global map of users
+ * @param map current map of users
+ */
+global define boolean SetUsers (map<string,string> current_users) {
+
+    if (!users_modified && users != current_users)
+	users_modified	= true;
+    users	= eval (current_users);
+    return users_modified;
+}
+
+/**
+ * Return list of user names available in system
+ * First time, read it using yast2-users, use cache for later calls.
+ * @return list of user names (for local users)
+ */
+global define list<string> GetUsernames () {
+
+    if (usernames == [])
+    {
+	// busy popup text
+	Popup::ShowFeedback ("", _("Reading list of users..."));
+	boolean gui = Users::GetGUI ();
+	Users::SetGUI (false);
+	Users::Read ();
+	usernames	= UsersCache::GetUsernames("local");
+	Users::SetGUI (gui);
+	Popup::ClearFeedback ();
+    }
+    return usernames;
+}
+
+
+
 
 /**
  * Store error messages generated by multiple commands to one string
@@ -521,6 +509,7 @@ global define boolean ReadConfigFile () ``{
 	return false;
 
     scpm_conf = $[
+	"debug"	:	((string) SCR::Read(.sysconfig.scpm.DEBUG) == "yes"),
 	"verbose":	((string) SCR::Read(.sysconfig.scpm.VERBOSE) == "yes"),
 	"switch_mode":	(string) SCR::Read(.sysconfig.scpm.SWITCH_MODE),
 	"boot_mode":	(string) SCR::Read(.sysconfig.scpm.BOOT_MODE)
@@ -545,212 +534,6 @@ global define boolean WriteConfigFile () ``{
     return true;
 }
 
-/**
- * gets the modified resources belonging to one group
- * @return map of format resources_of_modified_group (see GetModifiedGroups())
- */
-global define map GetModifiedGroupResources(string groupname) ``{
-
-    // we want to work with a local copy -> eval
-    return (map) eval (modified_groups[groupname]:$[]);
-}
-
-/**
- * Uses "switch_info" map to generate helper structure "modified_groups"
- * @example
- * <b>modified_groups</b> structure
- * $[ modified_group: resources_of_modified_group ]
- *
- * <b>modified_group</b> is name of resource group
- *
- * <b>resources_of_modified_group</b> is a map of format:
- * $[
- *	0: $[
- *		"resource_name":	"/etc/inetd.conf",
- *		"resource_type":	"file",
- *		"save":			true,
- *		"save_mode":		"normal",
- *		"groups": [
- *			$[ "name":	"inetd",
- *			   "description": "Inetd services"
- *			]]
- *	],
- *	1: $[
- *		"resource_name":	"xinetd",
- *		"resource_type":	"service",
- *		"save":			true,
- *		"save_mode":		"normal",
- *		"groups": [
- *			$[ "name":	"inetd",
- *			   "description": "Inetd services"
- *			]]
- *	],
- *	"save"	:	true,
- *	"modified":	false,
- *	"description"	"Inetd services"
- * ]
- * numbers are indexes in the switch_info["modified_resources"]:[] list,
- * "save" and "modified" are flags of this group (<b>modified_group</b>)
- */
-global define void GetModifiedGroups() ``{
-
-    integer i = 0;
-    modified_groups = $[];
-    foreach (map resource, (list<map<string,any> >) switch_info["modified_resources"]:[], ``{
-	// go through all groups owning this resource:
-	foreach (map group, resource["groups"]:[], ``{
-	    string groupname = group["name"]:"";
-	    if (!haskey (modified_groups, groupname))
-		modified_groups [groupname] = $[
-		    "description":	group["description"]:"",
-		    "save":		default_save,
-		    "modified":		false
-		];
-	    // add a map of this resource to the group,
-	    // key is resource's index in modified_resources list
-	    modified_groups [groupname,i] = eval (resource);
-	});
-	i = i + 1;
-    });
-}
-
-/**
- * Update global flags (save/m) of groups according to the state
- * of their resources
- * @param groups list of groups to check and possibly update
- */
-global define boolean UpdateOtherGroups (list groups) ``{
-
-    boolean group_save = false;
-    foreach (string gname, (list<string>) groups, ``{
-	group_save = false;
-	// - check all the resources (some are possibly changed) of group
-	// - switch_info is updated, modified_groups not yet
-	foreach (any i, map resource, modified_groups[gname]:$[], ``{
-	    if (!is(i, integer))
-		return;
-	    integer pos = (integer) i;
-	    group_save = resource["save"]:default_save || group_save;
-	    foreach (string key, ["save", "save_mode"], ``{
-		// some resource flag was changed
-		if (switch_info["modified_resources", pos, key]:nil !=
-		    resource[key]:nil)
-		{
-		    // update modified_group and switch_info
-		    modified_groups [gname, pos, key] =
-			switch_info["modified_resources", pos,key]:nil;
-		    // set modified flag of the group
-		    modified_groups [gname, "modified"] = true;
-		}
-	    });
-	});
-	modified_groups[gname, "save"] = group_save;
-    });
-    return true;
-}
-
-
-/**
- * Check the modified resources belonging to specified group
- * If user changed anything (in DetailsSwitchDialog), global maps
- * modified_groups and switch_info are updated.
- *
- * Some of modified resource could be also contained in some other group
- * and all such groups have to be checked also (to update modified_groups).
- *
- * It could be the situation when resource should not be saved and it is
- * set in first group. But it is also the only resource of some other group
- * and so such group should be also marked not to save.
- * @param name group name
- * @param resources map of that group's modified resources (altered by user)
- */
-global define boolean CheckAndUpdateResources (string name, map resources) ``{
-
-    list groups_to_check = [];
-    boolean group_save = false;
-    // go through all resources of current group
-    foreach (any i, any res, resources, ``{
-	if (!is (i,integer))
-	    return;
-	map resource = $[];
-	if (is (res,map))
-	    resource        = (map) res;
-	integer pos = (integer) i;
-	group_save = resource["save"]:default_save || group_save;
-	foreach (string key, ["save", "save_mode"], ``{
-	    // some resource flag was changed
-	    if (modified_groups [name, pos, key]:nil != resource[key]:nil)
-	    {
-		// update modified_group and switch_info
-		modified_groups [name, pos, key] = resource[key]:nil;
-		switch_info["modified_resources",pos,key] = resource[key]:nil;
-		// set modified flag of the group
-		modified_groups [name, "modified"] = true;
-		// set other groups (this resource belongs to) for later check
-		foreach (map g, (list<map<string,any> >) resource["groups"]:[], ``{
-		    if (g["name"]:"" != name)
-		    groups_to_check = union (groups_to_check, [ g["name"]:"" ]);
-		});
-	    }
-	});
-    });
-    modified_groups[name, "save"] = group_save;
-    UpdateOtherGroups (groups_to_check);
-    return true;
-}
-
-/**
- * Sets the "save" flag of all resources belonging to selected resource group
- * to the opposite value. Also sets "save_mode" of each resource to "normal"
- * @param groupname resource group name
- * @return the new value
- */
-global define boolean SetGroupSaveFlag (string groupname) ``{
-
-    list groups_to_check = [];
-    boolean ret = !modified_groups[groupname, "save"]:false;
-    foreach (any index, map resource, modified_groups[groupname]:$[], ``{
-	if (is (index, integer))
-	{
-	    integer pos = (integer) index;
-	    resource["save"] = ret;
-	    resource["save_mode"] = "normal";
-	    switch_info["modified_resources", pos, "save"] = ret;
-	    switch_info["modified_resources", pos, "save_mode"] = "normal";
-	    // set other groups (this resource belongs to) for later check
-	    foreach (map g, resource["groups"]:[], ``{
-		if (g["name"]:"" != groupname)
-		    groups_to_check = union (groups_to_check, [ g["name"]:"" ]);
-	    });
-	}
-    });
-    modified_groups [groupname, "save"] = ret;
-    // unset "m" flag now
-    modified_groups [groupname, "modified"] = false;
-    UpdateOtherGroups (groups_to_check);
-    return ret;
-}
-
-/**
- * Creates the item list for the Table widget (to use in Switch dialog).
- * @return list of items
- */
-global define list GetGroupsAsItems() ``{
-
-    list items = [];
-    foreach (string name, map group, (map<string,map>) modified_groups, ``{
-	string save = group ["save"]:default_save ? "X":"";
-	if (group["modified"]:false)
-	    save = "m";
-	items = add (items,
-	    `item (`id(name), save, name, group["description"]:""));
-    });
-
-    return items;
-}
-
-// --------------------------------------------------------------------------
-// --------------------------------------------------------------------------
 
 /**
  * Initialize the SCPM agent.
@@ -764,14 +547,11 @@ Install it now?</p>
 ")))
          return false;
 
-    tmpdir		= (string) SCR::Read(.target.tmpdir);
+    string tmpdir	= (string) SCR::Read(.target.tmpdir);
     progresspath	= tmpdir + progressfile;
     hashpath		= tmpdir + hashfile;
-    changespath		= tmpdir + changesfile;
-    tmppath		= tmpdir + tmpfile;
-    y2debug("progresspath=%1, hashpath=%2", progresspath, hashpath);
-
     boolean ret		= (boolean) SCR::Execute(.scpm, tmpdir);
+
     if (ret == nil) ret = false;
     if (ret == false)
         SetError();
@@ -797,7 +577,6 @@ define boolean ReadSCPMStatus() ``{
     initialized		= status["initialized"]:false;
     needs_reinit	= initialized && status["needs_reinit"]:false;
     needs_recover	= status["needs_recover"]:false;
-    active_profile	= status["active_profile"]:"";
     return true;
 }
 
@@ -818,114 +597,7 @@ global define void Rollback () {
     SCR::Execute (.scpm.rollback, $[]);
 }
 
-/**
- * Reads the list of aviable resource sets.
- * @return true on success
- */
-global define boolean ReadResourceSets() ``{
 
-    list sets = (list) SCR::Read(.scpm.resources);
-
-    if (sets == nil)
-    {
-        ShowError();
-        return false;
-    }
-
-    resource_sets_predefined = sets[0]:[];
-    resource_sets_individual = sets[1]:[];
-    return true;
-}
-
-
-
-/**
- * Reads the list of aviable profiles.
- * @return true on success
- */
-global define boolean ReadProfiles() ``{
-
-    list profiles_l = (list) SCR::Read(.scpm.profiles);
-
-    if (profiles_l == nil)
-    {
-        SetError();
-        profiles_l = [];
-    }
-    foreach (string profile, (list<string>) profiles_l, ``{
-        profiles = add (profiles, profile, "");
-    });
-
-    if (profiles_l == [])
-        return false;
-    return true;
-
-}
-
-/**
- * Reads the active profile.
- * @param force reading (even if it was already set)
- * @return true on success
- */
-global define boolean ReadActiveProfile (boolean force) {
-
-    if (force || active_profile == "") //"" = was not read during ReadSCPMStatus
-    {
-	active_profile = (string) SCR::Read(.scpm.profiles.current);
-    }
-
-    if (active_profile == nil)
-    {
-        SetError();
-        active_profile = "";
-        return false;
-    }
-    return true;
-}
-
-/**
- * Reads the descriptions of all aviable profiles.
- * @return true on success
- */
-global define boolean ReadProfilesDescriptions() ``{
-
-    // read the descriptions of each profile
-    map profilesm = profiles;
-
-    foreach (string profile, string d, (map<string,string>) profilesm, ``{
-        string desc = (string) SCR::Read(.scpm.profiles.description, profile);
-        if (desc == nil)
-        {
-            desc = "";
-            SetError();
-        }
-        profiles = add (profiles, profile, desc);
-    });
-    return true;
-}
-
-/**
- * Check if the module is run for first time and
- * reads user settings (currently close_popups check)
- * @return true on success
- */
-define boolean ReadUserSettings() ``{
-
-    string file	= Directory::vardir + "/scpm.ycp";
-    if (! FileUtils::Exists (file))
-    {
-	SCR::Write(.target.ycp, file, $[]);
-    }
-    else
-    {
-	state = (map) SCR::Read (.target.ycp, file);
-    }
-    if (state == nil || state == $[])
-	first_time = true;
-    else
-	close_popups = state["close_popups"]:false;
-    return true;
-}
 
 /**
  * Ask user which action should be taken when scom recovery is necessary
@@ -971,6 +643,154 @@ the old system status will be restored if possible.
     return ret;
 }
 
+/**
+ * Checks the return value of agent's thread
+ * @return boolean true if thread finished succesfully
+ */
+global define boolean Wait() ``{
+    boolean ret = (boolean) SCR::Read(.scpm.exit_status );
+    if (!ret)
+        SetError();
+    return ret;
+}
+
+/**
+ * Gets the hash marks (to show in ProgressPopup) from the hashfile
+ * @return number of characters in hashfile
+ */
+global define integer GetHashMarks() ``{
+
+    string all = (string) SCR::Read(.target.string, hashpath);
+    if (all == nil || all == "") return 0;
+    return (size(all) - (100 * hash_size));
+}
+
+/**
+ * Reads the file with the progress informations.
+ * @param everything if set to true, returns the entire rest of file
+ * @return string the text to show in ProgressPopup (one line in normal case)
+ */
+global define string GetProgressText(boolean everything) ``{
+
+    string ret = "";
+    string all = (string) SCR::Read(.target.string, progresspath);
+
+    // check for non-existent file
+    if (all == nil) return ret;
+
+    list all_l		= splitstring (all, "\n");
+    string current	= all_l[progress_size]:"";
+    string last		= all_l[progress_size - 1]:"";
+
+    if (!everything) // return only one line
+    {
+        // last line has been updated:
+        if (last_ret != "" && last_ret != last)
+        {
+            ret = substring (last, size(last_ret), size(last)-size(last_ret));
+            last_ret = all_l[progress_size - 1]:"";
+        }
+        // continue with the new line
+        else if (progress_size < size(all_l) && current !="" && current !="\n")
+        {
+            ret = current;
+            if (last_ret != "") {
+                last_ret = ret;
+                ret = "\n" + ret;
+            }
+            else last_ret = ret;
+            progress_size = progress_size + 1;
+        }
+    }
+    else // return everything to the end of file
+    {
+        if (last_ret != "" && last_ret != last)
+        {
+            ret = substring (last, size(last_ret), size(last)-size(last_ret));
+        }
+        while (progress_size < size(all_l) &&  current != "" && current != "\n")
+        {
+            ret = "\n" + current;
+            progress_size = progress_size + 1;
+            current = all_l[progress_size]:"";
+        }
+    }
+    return ret;
+}
+
+/**
+ * Popup for showing progress informations
+ * @param position of this progress:
+ *  (if "first", popup is not closed, for "last" popup is not created)
+ * @param start start of progress (mainly 0)
+ * @param end end of progress (mainly 100)
+ * @return boolean true
+ */
+global define boolean ProgressPopup (string position, integer start, integer end) {
+
+    if (position != "last")
+    {
+	UI::OpenDialog(`opt(`decorated), `HBox(`HSpacing(1.5), `VBox(
+            `VSpacing(1),
+			// LogView label:
+            `LogView(`id(`progress),_("Progress Information"), 10, 0),
+            `VSpacing(1),
+            `ProgressBar(`id(`pb), "", 100, 0),
+            `VSpacing(1),
+	        `HBox(
+	            `Right(`PushButton(`id(`close), `opt(`default, `key_F10),
+                    Label::CloseButton())),
+	            `HSpacing(1)
+	            ),
+            `VSpacing(1)),
+	`HSpacing(1.5)));
+
+	UI::ChangeWidget(`id(`close), `Enabled, false);
+    }
+
+    string progresstext = "";
+    integer hashmarks = start;
+    last_ret = "";
+
+    UI::BusyCursor();
+    do
+    {
+        sleep(5);
+        hashmarks = GetHashMarks();
+        UI::ChangeWidget(`id(`pb), `Value, hashmarks);
+
+        progresstext = GetProgressText(false);
+        if (progresstext != "") {
+	    string recoded = (string)
+		UI::Recode(WFM::GetEnvironmentEncoding(),"UTF-8",progresstext);
+            UI::ChangeWidget(`id(`progress), `LastLine, recoded);
+        }
+    }
+    while (hashmarks < end);
+
+    // next hundred of hash marks
+    if (hashmarks >= 100)
+        hash_size = hash_size + 1;
+
+    // read to the end of file
+    progresstext = GetProgressText(true);
+    if (progresstext != "") {
+	string recoded = (string)
+	    UI::Recode (WFM::GetEnvironmentEncoding(),"UTF-8",progresstext);
+        UI::ChangeWidget(`id(`progress), `LastLine, recoded);
+    }
+    if (position == "first") // hack: missing newline
+        UI::ChangeWidget(`id(`progress), `LastLine, "\n");
+
+    UI::NormalCursor();
+    if (position != "first")
+    {
+	UI::UserInput();
+        UI::CloseDialog();
+    }
+    return true;
+}
+
 
 /**
  * Read all profile-manager settings
@@ -981,7 +801,7 @@ global define boolean Read() ``{
     // profile-manager Read dialog caption:
     string caption = _("Initializing Profile Manager Configuration");
 
-    integer steps = 8;
+    integer steps = 5;
 
     Progress::New( caption, " ", steps, [
 	    // progress stage
@@ -989,37 +809,24 @@ global define boolean Read() ``{
 	    // progress stage
 	    _("Read the SCPM state"),
 	    // progress stage
-	    _("Read the list of profiles"),
-	    // progress stage
-	    _("Read the active profile"),
-	    // progress stage
-	    _("Read the profile descriptions"),
-	    // progress stage
 	    _("Read resource groups"),
 	    // progress stage
-	    _("Read user settings"),
+	    _("Read SCPM settings"),
 	], [
 	    // progress step
 	    _("Initializing SCPM..."),
 	    // progress step
 	    _("Reading the SCPM state..."),
 	    // progress step
-	    _("Reading the profiles..."),
-	    // progress step
-	    _("Reading the active profile..."),
-	    // progress step
-	    _("Reading the profile descriptions..."),
-	    // progress step
 	    _("Reading resource groups..."),
 	    // progress step
-	    _("Reading user settings..."),
+	    _("Reading SCPM settings..."),
 	    // progress step
 	    _("Finished")
 	],
 	""
     );
     // initialize
-    if(Abort()) return false;
     Progress::NextStage();
     if(!Initialize())
     {
@@ -1029,7 +836,6 @@ global define boolean Read() ``{
     }
 
     // read status
-    if(Abort()) return false;
     Progress::NextStage();
     if(!ReadSCPMStatus())
     {
@@ -1041,6 +847,12 @@ global define boolean Read() ``{
     }
     if (needs_reinit)
     {
+	if (Mode::commandline ())
+	{
+	    // error popup
+	    Report::Error (_("Reinitialization is needed."));
+	    return false;
+	}
 	// yes/no popup
 	if (Popup::YesNo (_("SCPM is currently locked because your system
 installation has changed.
@@ -1058,6 +870,12 @@ Perform the reinitialization now?
 
     if (needs_recover)
     {
+	if (Mode::commandline ())
+	{
+	    // error popup
+	    Report::Error (_("Recovery or rollback is needed."));
+	    return false;
+	}
 	symbol recover_ret	= AskForRecoveryPopup ();
 	if (recover_ret == `recover)
 	    Recover ();
@@ -1072,31 +890,6 @@ Perform the reinitialization now?
 	}
     }
 
-    // read profiles
-    if(Abort()) return false;
-    Progress::NextStage();
-
-    if (initialized && !ReadProfiles())
-	// Error message: %1 is special error message
-	Report::Error(sformat(_("Cannot read profiles:\n%1"), scpm_error));
-
-    // read active profile
-    if(Abort()) return false;
-    Progress::NextStage();
-
-    if (initialized && !ReadActiveProfile (false))
-	// Error message: %1 is special error message
-	Report::Error(sformat(_("Cannot read active profile:\n%1"),scpm_error));
-
-    // read profile descriptions
-    if(Abort()) return false;
-    Progress::NextStage();
-
-    if (initialized && !ReadProfilesDescriptions())
-	// Error message: %1 is special error message, 
-	Report::Error(sformat(_("Cannot read profile descriptions:\n%1"),
-            scpm_error));
-
     Progress::NextStage();
     if (!ReadResourceGroups())
     {
@@ -1106,21 +899,18 @@ Perform the reinitialization now?
     }
 
     // read user settings
-    if(Abort()) return false;
     Progress::NextStage();
-    if(!ReadUserSettings())
-	// Error message:
-	Report::Error(_("Cannot read user settings."));
 
-    ReadConfigFile();// TODO progress?
+    ReadConfigFile ();
 
-    if(Abort()) return false;
+    users_allowed = GetUsersAllowed ();
+
+    ReadUsers ();
 
     Progress::NextStage();
     // progress stage
     Progress::Title (_("Finished"));
 
-    if(Abort()) return false;
     return true;
 }
 
@@ -1223,18 +1013,6 @@ global define boolean WriteResourceGroups () {
 }
 
 /**
- * Writes the user settings (currently close_popups check).
- * @return true on success
- */
-global define boolean WriteUserSettings() ``{
-
-    state = $[];
-    state = add (state, "first_time", false);
-    state = add (state, "close_popups", close_popups);
-    return SCR::Write(.target.ycp, "/var/lib/YaST2/scpm.ycp", state);
-}
-
-/**
  * Write all profile-manager settings
  * @return true on success
  */
@@ -1245,287 +1023,68 @@ global define boolean Write() ``{
 
     list<string> stagelist = [
 	// progress stage:
-	_("Write the SCPM database")
+	_("Write the SCPM database"),
+	// progress stage:
+	_("Write SCPM status"),
+	// progress stage:
+	_("Write resource groups"),
+	// progress stage:
+	_("Write SCPM settings"),
     ];
+
     list steplist = [
         // progress step:
-	_("Writing the SCPM database...")
+	_("Writing the SCPM database..."),
+	// progress step:
+	_("Writing SCPM status..."),
+	// progress step:
+	_("Writing resource groups..."),
+	// progress step:
+	_("Writing SCPM settings..."),
+	// progress step:
+	_("Finished")
     ];
 
-    if (!canceled)
-    {
-	stagelist = (list<string>) merge (stagelist, [
-	    // progress stage:
-	    _("Write SCPM status"),
-	    // progress stage:
-	    _("Write resource groups"),
-	    // progress stage:
-	    _("Write SCPM settings"),
-	    // progress stage:
-	    _("Write user settings") ]);
-
-	steplist = merge (steplist, [
-	    // progress step:
-	    _("Writing SCPM status..."),
-	    // progress step:
-	    _("Writing resource groups..."),
-	    // progress step:
-	    _("Writing SCPM settings..."),
-	    // progress step:
-	    _("Writing user settings...") ]);
-    }
+    sleep (100);
 
     integer steps = size (steplist);
-    // progress step:
-    steplist = add (steplist, _("Finished"));
 
     Progress::New (caption, " ", steps, stagelist, steplist, "");
 
-    if (!canceled)
-    {
-	Progress::NextStage();
-	WriteStatus ();
-
-	Progress::NextStage();
-	WriteResourceGroups ();
-    }
+    Progress::NextStage();
+    WriteStatus ();
 
     Progress::NextStage();
-    if(!SCR::Write(.scpm, nil))
+    WriteResourceGroups ();
+
+    Progress::NextStage();
+    if ((status_modified || resource_groups_modified) &&
+	!SCR::Write(.scpm, nil))
     {
         SetError();
 	// Error message, %1 is extra error text
         Report::Error(sformat(_("Cannot write SCPM database:\n%1"),scpm_error));
     }
 
-    if (!canceled) // only for proper finish
+    Progress::NextStage();
+    if (conf_modified && !WriteConfigFile())
     {
-	Progress::NextStage();
-        if(!WriteConfigFile())
-	    // Error message:
-	    Report::Error (_("Cannot write SCPM settings."));
+	// Error message:
+	Report::Error (_("Cannot write SCPM settings."));
+    }
 
-	Progress::NextStage();
-	if(!WriteUserSettings())
-	    // Error message:
-	    Report::Error (_("Cannot write user settings."));
+    if (users_modified)
+    {
+	WriteUsers ();
+	WriteUsersAllowed ();
     }
 
     Progress::NextStage();
+
     // progress stage
     Progress::Title (_("Finished"));
 
     return true;
-}
-
-/**
- * Reads the settings of the selected profile
- * (we already have description from ReadProfileDescriptions()).
- * @return true on success
- */
-global define boolean GetProfile() ``{
-
-    // the settings of not yet created profile
-    if (profile_action == "new") {
-        profile_settings = $[];
-        return true;
-    }
-
-    profile_settings ["name"] = selected_profile;
-    profile_settings ["description"] = profiles[selected_profile]:"";
-
-    foreach (string setting,["prestart", "poststart", "prestop", "poststop"],``{
-
-        string val = (string)
-	    SCR::Read(add(.scpm.profiles, setting), selected_profile);
-        if (val == nil)
-        {
-            ShowError();
-            val = "";
-        }
-        profile_settings = add (profile_settings, setting, val);
-    });
-
-    return true;
-}
-
-/**
- * Creates a new profile.
- * @param name Name of the new profile
- * @return true
- */
-global define boolean AddProfile(string name) ``{
-
-    SCR::Execute(.scpm.profiles.add, name, auto);
-    return true;
-}
-
-/**
- * Creates a new profile by copying old one.
- * @param source Name of the source profile
- * @param new Name of the new profile
- * @return true
- */
-global define boolean CopyProfile(string source, string new) ``{
-
-    SCR::Execute(.scpm.profiles.copy, source, new);
-    return true;
-}
-
-/**
- * Renames a profile.
- * @param old Name of the affected profile
- * @param new New name of the profile
- * @return true on success
- */
-global define boolean RenameProfile(string old, string new) ``{
-
-    boolean ret = (boolean) SCR::Execute(.scpm.profiles.rename, old, new);
-    if (ret)
-    {
-        string description = profiles[old]:"";
-        profiles = filter (string name, string desc, (map<string,string>)
-	    profiles, ``(name != old));
-        profiles = add (profiles, new, description);
-        if (active_profile == old)
-            active_profile = new;
-    }
-    else
-    {
-        SetError();
-    }
-    return ret;
-}
-
-
-/**
- * Sets the parameters of the profile.
- * Uses the global variable profile_settings.
- * @param name Name of the affected profile
- * @param settings The map of profile settings
- * @return true on success
- */
-global define boolean SetProfile(string name, map settings) ``{
-
-    string desc = settings ["description"]:"";
-
-    boolean ret = SCR::Write(.scpm.profiles.description, desc, name);
-
-    ret = ret &&
-	SCR::Write(.scpm.profiles.prestart, settings ["prestart"]:"", name) &&
-	SCR::Write(.scpm.profiles.poststart, settings ["poststart"]:"", name) &&
-	SCR::Write(.scpm.profiles.prestop, settings ["prestop"]:"", name) &&
-	SCR::Write(.scpm.profiles.poststop, settings ["poststop"]:"", name);
-
-    if (ret)
-        profiles = add (profiles, name, desc);
-    else
-        SetError();
-
-    return ret;
-}
-
-
-/**
- * Deletes the profile.
- * @param to_delete Name of the affected profile
- * @return true on success
- */
-global define boolean DeleteProfile(string to_delete) ``{
-
-    boolean ret = (boolean) SCR::Execute(.scpm.profiles.delete, to_delete);
-    if (ret)
-        profiles = filter (string name, any d, (map<string,any>) profiles,``(name != to_delete));
-    else
-        SetError();
-    return ret;
-}
-
-/**
- * Calls PrepareSwitch(), which drops switch_info map to file
- * @param profile Name of profile to switch to
- */
-global define void PrepareSwitch (string profile) ``{
-
-    SCR::Execute (.scpm.switch.prepare, profile);
-}
-
-/**
- * Saves modified resources of the profile
- */
-global define void Save () ``{
-
-    y2debug ("Saving...");
-    SCR::Execute(.scpm.save, switch_info);
-}
-
-/**
- * Switchs to the selected profile.
- */
-global define void Switch () ``{
-
-    y2milestone ("Switching from profile \"%1\" to profile \"%2\"...",
-        active_profile, selected_profile);
-    SCR::Execute (.scpm.switch, switch_info);
-}
-
-/**
- * Checks, what changes will be done to the selected resource after switch.
- * Uses global variable active_resource.
- * @return string The changes.
- */
-global define string ShowChanges() ``{
-
-    string changes = "";
-    list resources	= switch_info["modified_resources"]:[];
-    map resource	= resources[active_resource]:$[];
-
-    string rt		= resource["resource_type"]:"";
-    active_resource_name = resource["resource_name"]:"";
-
-    if (!(boolean)SCR::Execute(.scpm.profiles.changes, rt,active_resource_name))
-        ShowError();
-    else
-        changes = (string) SCR::Read(.target.string, changespath);
-
-    if (changes == "" || changes == nil)
-        changes = "";
-    else
-    {
-        list lines = splitstring (changes, "\n");
-        changes = mergestring ((list<string>)lines, "<br>");
-    }
-    return changes;
-}
-
-/**
- * Sets the "save" flag of selected resource to the opposite value.
- * @return true on success
- */
-global define boolean SetSaveFlag() ``{
-
-    boolean s = switch_info["modified_resources",active_resource,"save"]:false;
-    switch_info["modified_resources",active_resource,"save"] = !s;
-
-    return true;
-}
-
-/**
- * Creates the item list for the Table widget.
- * @return list of items
- */
-global define list GetProfilesAsItems() ``{
-
-    list items = [];
-    items = maplist (string name, string descr, (map<string,string>) profiles, ``{
-	// take 1st line from description
-	descr = substring (descr, 0, find (descr, "\n"));
-        if (name == active_profile)
-            return `item(`id(name),"---->",name,descr);
-        else
-            return `item(`id(name),"",name,descr);
-    });
-    return items;
 }
 
 /**
@@ -1552,238 +1111,5 @@ global define boolean CheckNameValidity(string name) ``{
     return true;
 }
 
-/**
- * Checks the existence of the scripts from
- * @param settings The map with paths to scripts
- * @return list of non-executable files (empty when all is OK)
- */
-global define list CheckFilesValidity(map settings) ``{
-
-    list not_executable = [];
-    foreach (string type, ["prestart", "poststart", "prestop", "poststop" ], ``{
-
-	string file = settings[type]:"";
-	if (file != "" && (SCR::Execute (.target.bash,
-	    sformat("/usr/bin/test -x %1 -a ! -d %1",file))) != 0)
-	    not_executable = union (not_executable, [ file ]);
-    });
-    return not_executable;
-}
-
-/**
- * Sets the file permitions of scripts from profile_settings to 700.
- * @param settings The map with paths to scripts
- * @return true on success
- */
-global define boolean SetFilePermissions (map settings) ``{
-
-    boolean ret = true;
-    foreach (string type, [ "prestart", "poststart", "prestop", "poststop" ],``{
-	string file = settings[type]:"";
-	if (file != "" && (SCR::Execute (.target.bash,
-	    sformat("/bin/chmod 700 %1", file))) != 0)
-	    ret = false;
-    });
-    return ret;
-}
-
-
-/**
- * Checks if the profile settings was modified.
- * @param new_settings The map of new profile settings.
- * @return true if modified
- */
-global define boolean ModifiedSettings(map new_settings) ``{
-
-    boolean ret = false;
-
-    foreach (string type, any value, (map<string,any>)profile_settings, ``{
-        if (type != "name")
-            if (value != new_settings[type]:"") ret = true;
-    });
-
-    return ret;
-}
-
-/**
- * Gets the hash marks (to show in ProgressPopup) from the hashfile
- * @return number of characters in hashfile
- */
-global define integer GetHashMarks() ``{
-
-    string all = (string) SCR::Read(.target.string, hashpath);
-    if (all == nil || all == "") return 0;
-    return (size(all) - (100 * hash_size));
-}
-
-/**
- * Reads the file with the progress informations.
- * @param everything if set to true, returns the entire rest of file
- * @return string the text to show in ProgressPopup (one line in normal case)
- */
-global define string GetProgressText(boolean everything) ``{
-
-    string ret = "";
-    string all = (string) SCR::Read(.target.string, progresspath);
-
-    // check for non-existent file
-    if (all == nil) return ret;
-
-    list all_l		= splitstring (all, "\n");
-    string current	= all_l[progress_size]:"";
-    string last		= all_l[progress_size - 1]:"";
-
-    if (!everything) // return only one line
-    {
-        // last line has been updated:
-        if (last_ret != "" && last_ret != last)
-        {
-            ret = substring (last, size(last_ret), size(last)-size(last_ret));
-            last_ret = all_l[progress_size - 1]:"";
-        }
-        // continue with the new line
-        else if (progress_size < size(all_l) && current !="" && current !="\n")
-        {
-            ret = current;
-            if (last_ret != "") {
-                last_ret = ret;
-                ret = "\n" + ret;
-            }
-            else last_ret = ret;
-            progress_size = progress_size + 1;
-        }
-    }
-    else // return everything to the end of file
-    {
-        if (last_ret != "" && last_ret != last)
-        {
-            ret = substring (last, size(last_ret), size(last)-size(last_ret));
-        }
-        while (progress_size < size(all_l) &&  current != "" && current != "\n")
-        {
-            ret = "\n" + current;
-            progress_size = progress_size + 1;
-            current = all_l[progress_size]:"";
-        }
-    }
-    return ret;
-}
-
-/**
- * Reads the switch info map,
- * which was dumped to file by agent's thread
- * @return boolean true on success
- */
-global define boolean ReadSwitchInfo() ``{
-
-    switch_info = $[];
-    switch_info = (map) SCR::Read(.target.ycp, tmppath);
-    if (switch_info == nil)
-    {
-        switch_info = $[];
-        return false;
-    }
-    y2debug("switch_info: %1",switch_info);
-    // compute helper structure:
-    GetModifiedGroups();
-    return true;
-}
-
-/**
- * Checks the return value of agent's thread
- * @return boolean true if thread finished succesfully
- */
-global define boolean Wait() ``{
-    boolean ret = (boolean) SCR::Read(.scpm.exit_status );
-    if (!ret)
-        SetError();
-    return ret;
-}
-
-/**
- * Popup for showing progress informations
- * @param position of this progress:
- *  (if "first", popup is not closed, for "last" popup is not created)
- * @param start start of progress (mainly 0)
- * @param end end of progress (mainly 100)
- * @return boolean true
- */
-global define boolean ProgressPopup (string position, integer start, integer end) {
-
-    if (position != "last")
-    {
-	UI::OpenDialog(`opt(`decorated), `HBox(`HSpacing(1.5), `VBox(
-            `VSpacing(1),
-			// LogView label:
-            `LogView(`id(`progress),_("Progress Information"), 10, 0),
-            `VSpacing(1),
-            `ProgressBar(`id(`pb), "", 100, 0),
-            `VSpacing(1),
-	    // checkbox label: ('SCPM Options' is another dialog name
-            `CheckBox(`id(`close_ch), `opt(`notify), _("Close Progress Pop-Ups &Automatically (reenable it in SCPM Options)"),close_popups),
-            `VSpacing(1),
-	        `HBox(
-	            `Right(`PushButton(`id(`close), `opt(`default, `key_F10),
-                    Label::CloseButton())),
-	            `HSpacing(1)
-	            ),
-            `VSpacing(1)),
-	`HSpacing(1.5)));
-
-	UI::ChangeWidget(`id(`close), `Enabled, false);
-    }
-
-    string progresstext = "";
-    integer hashmarks = start;
-    last_ret = "";
-
-    UI::BusyCursor();
-    do
-    {
-	// TODO check the process status here!!!
-        sleep(5);
-        hashmarks = GetHashMarks();
-        UI::ChangeWidget(`id(`pb), `Value, hashmarks);
-
-        progresstext = GetProgressText(false);
-        if (progresstext != "") {
-	    string recoded = (string)
-		UI::Recode(WFM::GetEnvironmentEncoding(),"UTF-8",progresstext);
-            UI::ChangeWidget(`id(`progress), `LastLine, recoded);
-        }
-    }
-    while (hashmarks < end);
-
-    // next hundred of hash marks
-    if (hashmarks >= 100)
-        hash_size = hash_size + 1;
-
-    // read to the end of file
-    progresstext = GetProgressText(true);
-    if (progresstext != "") {
-	string recoded = (string)
-	    UI::Recode (WFM::GetEnvironmentEncoding(),"UTF-8",progresstext);
-        UI::ChangeWidget(`id(`progress), `LastLine, recoded);
-    }
-    if (position == "first") // hack: missing newline
-        UI::ChangeWidget(`id(`progress), `LastLine, "\n");
-
-    UI::NormalCursor();
-    if (position != "first")
-    {
-        if (!close_popups)
-        {
-            UI::ChangeWidget(`id(`close), `Enabled, true);
-            any ret = nil;
-            while (ret != `close)
-            {
-                ret = UI::UserInput();
-            }
-        }
-        close_popups = (boolean) UI::QueryWidget(`id(`close_ch), `Value);
-        UI::CloseDialog();
-    }
-    return true;
-}
 /* EOF */
 }

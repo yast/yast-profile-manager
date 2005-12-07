@@ -20,835 +20,6 @@ import "Wizard";
 
 include "profile-manager/helps.ycp";
 
-/**
- * Profile settings dialog
- * @return any Returned value from UserInput() call
- */
-define any ProfileSettingsDialog () ``{
-
-    string edited = ProfileManager::selected_profile;
-    string action = ProfileManager::profile_action;
-    map profiles = ProfileManager::profiles;
-
-    // reading the profile settings
-    ProfileManager::GetProfile();
-
-    map settings = ProfileManager::profile_settings;
-
-    map string2symbol = $[
-	"prestart"	: `prestart,
-	"poststart"	: `poststart,
-	"prestop"	: `prestop,
-	"poststop"	: `poststop,
-    ];
-
-    // Dialog caption label
-    string caption = _("Special Profile Settings");
-    term contents = `HBox(`HSpacing(2.5),
-        `VBox (
-	    `VSpacing(1),
-                `VSpacing(0.2),
-                // Text entry label
-                `TextEntry(`id(`name),_("Pro&file Name")),
-                `VSpacing(0.2),
-                `HBox(
-                    `HSpacing(0.5),
-                    // Text entry label (profile description)
-                    `MultiLineEdit(`id(`desc),_("&Description"),
-			settings ["description"]:""),
-                    `HSpacing(0.5)
-                    ),
-                `VSpacing(0.2),
-		`HBox(
-		    // text entry
-		    `TextEntry(`id(`prestart),_("Pr&estart Script"),
-			settings ["prestart"]:""),
-		    `VBox(
-			`Label (""),
-			// button label
-			`PushButton(`id("prestart"), _("Bro&wse...")))
-		),
-                `VSpacing(0.2),
-		`HBox(
-		    // text entry
-                    `TextEntry(`id(`poststart),_("Po&ststart Script"),
-			settings ["poststart"]:""),
-		    `VBox(
-			`Label (""),
-			`PushButton(`id("poststart"), _("Bro&wse...")))
-		),
-                `VSpacing(0.2),
-		`HBox(
-		    // text entry
-		    `TextEntry(`id(`prestop),_("P&restop Script"),
-			settings ["prestop"]:""),
-		    `VBox(
-			`Label (""),
-			`PushButton(`id("prestop"), _("Bro&wse...")))
-		),
-                `VSpacing(0.2),
-		`HBox(
-		    // text entry
-		    `TextEntry(`id(`poststop), _("Pos&tstop Script"),
-			settings ["poststop"]:""),
-		    `VBox(
-			`Label (""),
-			`PushButton(`id("poststop"), _("Bro&wse...")))
-		),
-                `VSpacing(0.2),
-                `Left(`CheckBox(`id(`secure_ch),
-		    // checkbox label
-                    _("Set Secure File &Permissions (0700) for All Scripts"), true)),
-                `VSpacing(0.2),
-	    `VSpacing(1)),
-        `HSpacing(2.5)
-    );
-
-    Wizard::RestoreBackButton ();
-
-    Wizard::SetContentsButtons ( caption, contents, HELPS["profilesettings"]:"",
-	Label::CancelButton (), Label::OKButton () );
-
-    if (action == "edit")
-        UI::ChangeWidget(`id(`name), `Value, edited);
-    else
-        UI::SetFocus(`id(`name));
-
-    any ret = nil;
-    while (true)
-    {
-	ret = UI::UserInput ();
-	if (is (ret, string))
-	{
-	    symbol file_s = string2symbol [ret]:`nothing;
-	    if (file_s == nil)
-		continue;
-	    string file = (string) UI::QueryWidget(`id(file_s), `Value);
-	    string f = UI::AskForExistingFile ((file != "")? "/":file, "*", "");
-	    if (f != nil)
-		file = f;
-	    UI::ChangeWidget (`id(file_s), `Value, file);
-	}
-	else if (ret == `back || ret == `cancel)
-	{
-	    break;
-	}
-	else if (ret == `next)
-	{
-	    boolean secure = (boolean) UI::QueryWidget(`id(`secure_ch), `Value);
-	    string selected =(string) UI::QueryWidget(`id(`name), `Value);
-
-	    if (!ProfileManager::CheckNameValidity(selected))
-	    {
-		// Popup text (wrong data):
-		Popup::Message(_("Choose a valid name."));
-		continue;
-	    }
-
-	    map new_settings = $[];
-	    new_settings["prestart"] = UI::QueryWidget(`id(`prestart), `Value);
-	    new_settings["poststart"]= UI::QueryWidget(`id(`poststart), `Value);
-	    new_settings["prestop"] = UI::QueryWidget(`id(`prestop), `Value);
-	    new_settings["poststop"] = UI::QueryWidget(`id(`poststop), `Value);
-
-	    list files = ProfileManager::CheckFilesValidity(new_settings);
-	    if (files != [])
-	    {
-		// Popup text (file paths are wrong):
-		Popup::Error(sformat (_("These are not executable files:
-
-%1"), mergestring ((list<string>) files, "\n")));
-		continue;
-	    }
-
-	    new_settings ["name"] = selected;
-	    new_settings ["description"] = UI::QueryWidget(`id(`desc), `Value);
-
-	    if (action == "new")
-	    {
-		if (haskey (profiles, selected))
-		{
-		    // Popup text:
-		    Popup::Message(_("A profile with this name already exists."));
-		    continue;
-		}
-		ProfileManager::AddProfile(selected);
-		ProfileManager::ProgressPopup("", 0, 100);
-		if (!ProfileManager::Wait())
-		{
-		    // Error popup text, %1 is additional error message
-		    Popup::Error(sformat(_("Adding the new profile was not successful:
-%1
-"), ProfileManager::scpm_error));
-		    continue;
-		}
-		else
-		{
-		    ProfileManager::profiles = add (ProfileManager::profiles,
-                        selected, "");
-
-		    if (ProfileManager::auto)
-			ProfileManager::active_profile = selected;
-
-		    ProfileManager::profile_settings = new_settings;
-		    if (!ProfileManager::SetProfile (selected, new_settings))
-		    {
-			Popup::Error(sformat(
-			    // Error popup text, %1 is additional error message
-			    _("Writing profile settings was not successful:
-%1
-"),
-			    ProfileManager::scpm_error));
-		    }
-		}
-	    }
-	    else if (action == "copy")
-	    {
-		if (haskey (profiles, selected))
-		{
-		    // Popup text
-		    Popup::Message(_("A profile with this name already exists."));
-		    continue;
-		}
-		ProfileManager::CopyProfile(edited, selected);
-		ProfileManager::ProgressPopup("",0,100);
-		if (!ProfileManager::Wait())
-		{
-		    // Error popup text, %1 is additional error message
-		    Popup::Error(sformat(_("Copying profile was not successful:
- %1
-"), ProfileManager::scpm_error));
-		    continue;
-		}
-		else
-		{
-		    ProfileManager::profiles = add (ProfileManager::profiles,
-                        selected, "");
-
-		    ProfileManager::profile_settings = new_settings;
-		    if (!ProfileManager::SetProfile(selected, new_settings))
-		    {
-			Popup::Error(sformat(
-			    // Error popup text, %1 is additional error message
-			    _("Writing profile settings was not successful:
-%1
-"),
-			    ProfileManager::scpm_error));
-		    }
-		}
-	    }
-	    else if (action == "edit")
-	    {
-		if (selected != edited)
-		{
-
-		    if (haskey (profiles, selected))
-		    {
-			// Popup text
-			Popup::Message(_("A profile with this name already exists."));
-			continue;
-		    }
-		    if (!ProfileManager::RenameProfile(edited, selected))
-		    {
-			// Error popup text, %1 is additional error text
-			Popup::Error(sformat(_("Renaming profile was not successful:
-%1
-"),
-			    ProfileManager::scpm_error));
-			continue;
-		    }
-		}
-		if (ProfileManager::ModifiedSettings(new_settings))
-		{
-		    ProfileManager::profile_settings = new_settings;
-		    if (!ProfileManager::SetProfile (selected, new_settings))
-		    {
-			// Error popup text, %1 is additional error message
-			Popup::Error(sformat(
-			    _("Writing profile settings was not successful:
-%1
-"),
-			    ProfileManager::scpm_error));
-		    }
-		}
-	    }
-	    if (secure && !ProfileManager::SetFilePermissions (new_settings))
-		// Error popup text
-		Popup::Error(_("Setting file permissions was not successful."));
-	    break;
-	}
-    };
-
-    return ret;
-}
-
-/**
- * Popup which shows changes of selected resource
- * @return boolean true on success
- */
-define boolean ShowChangesPopup() ``{
-
-    string changes = ProfileManager::ShowChanges();
-    string recoded = (string)
-	UI::Recode (WFM::GetEnvironmentEncoding(),"UTF-8", changes);
-
-    UI::OpenDialog(`opt(`decorated), `HBox(`HSpacing(1.5),
-        `VSpacing(25),
-        `VBox(
-            `HSpacing(70),
-            `VSpacing(1),
-			// Popup text
-            `Label(_("Changes to the Resource")),
-            `Label(ProfileManager::active_resource_name),
-            `VSpacing(1),
-            `RichText(recoded),
-            `VSpacing(1),
-            `PushButton(`id(`ok), `opt(`default, `key_F10), Label::OKButton()),
-            `VSpacing(1)),
-        `HSpacing(1.5)
-        ));
-
-    any ret = UI::UserInput();
-    UI::CloseDialog();
-
-    return true;
-}
-
-
-/**
- * Switch dialog
- * @return any Returned value from UserInput() call
- */
-define any SwitchDialog () {
-
-    string active_group = "";
-
-    string active = ProfileManager::active_profile;
-    string selected = ProfileManager::selected_profile;
-
-    // Dialog caption label
-    string caption = _("Confirm Switch");
-
-    term contents = `HBox (`HSpacing(1.5),`VBox(
-	`VSpacing(1),
-        `HBox(
-            `HSpacing(1),
-            // Label text
-            `Left(`Label(_("Active Profile"))),
-            `Right(`Heading(active)),
-            `HSpacing(2)
-            ),
-        `VSpacing(0.2),
-        `HBox(
-            `HSpacing(1),
-            // Label text
-            `Left(`Label(_("New Profile"))),
-            `Right(`Heading(selected)),
-            `HSpacing(2)
-            ),
-        `VSpacing(1),
-	// frame label
-        `Frame(_("Modified Resource Groups of Active Profile"),
-	    `HBox(`HSpacing(1),
-            `VBox(
-                `VSpacing(0.2),
-		`Table(`id(`modified),`opt(`notify),
-                    `header(
-                            "",
-                            // Header of the table with modified resources 2/2
-                            _("Resource Group"),
-                            // Header of the table with modified resources 3/3
-                            _("Description")),
-                    []
-                    ),
-                `VSpacing(0.2),
-		`HBox(
-		    `PushButton (`id(`save_b), `opt(`key_F4),
-			// Push button label
-			_("&Save or Ignore")),
-                    `Right(`PushButton(`id (`details), `opt(`key_F2),
-                        // Push button label
-                        _("&Details")))
-		),
-                `VSpacing(0.2)
-            ),
-            `HSpacing(1)
-            )),
-        `VSpacing(1)
-	),
-    `HSpacing(1.5));
-
-
-    Wizard::RestoreBackButton ();
-
-    Wizard::SetContentsButtons ( caption, contents, HELPS["switch"]:"",
-				Label::CancelButton (), Label::OKButton () );
-
-    list res_groups_as_items = ProfileManager::GetGroupsAsItems();
-
-    UI::ChangeWidget(`id(`modified), `Items, res_groups_as_items);
-
-    if (size (res_groups_as_items) < 1)
-    {
-        UI::ChangeWidget(`id(`modified), `Enabled, false);
-	UI::ChangeWidget(`id(`save_b), `Enabled, false);
-	UI::ChangeWidget(`id(`details), `Enabled, false);
-    }
-    else
-    {
-	active_group = ProfileManager::current_resource_group;
-	if (active_group == "")
-	    active_group = res_groups_as_items[0,2]:"";
-	UI::ChangeWidget(`id(`modified), `CurrentItem, active_group);
-	UI::SetFocus(`id(`modified));
-    }
-
-    symbol ret = nil;
-    while (true)
-    {
-	ret = (symbol) UI::UserInput ();
-
-	any selected_res = UI::QueryWidget(`id(`modified), `CurrentItem);
-	if (ret == `back || ret == `cancel)
-	{
-            break;
-	}
-	// only for resource groups
-	else if (contains ([`save_b,`ignore_b, `modified], ret))
-	{
-	    boolean set =ProfileManager::SetGroupSaveFlag((string)selected_res);
-	    UI::ChangeWidget(`id(`modified), `Items,
-		ProfileManager::GetGroupsAsItems());
-//	    UI::ChangeWidget(`id(`modified), `Item (selected_res,0),
-//		set ? "X":"");
-	    UI::ChangeWidget(`id(`modified), `CurrentItem, selected_res);
-	}
-	// only for resource groups!
-	else if (ret == `details)
-	{
-	    ProfileManager::current_resource_group = (string) selected_res;
-	    break;
-	}
-        else if (ret == `next)
-	{
-            // saving changes: not necessary if "drop all" is checked
-            ProfileManager::Save();
-            ProfileManager::ProgressPopup("first",0,15);
-            if (!ProfileManager::Wait())
-            {
-                // Error popup text, %1 is additional translated error message
-                Popup::Error (sformat(_("Saving the profile was not successful:
-%1
-"),
-                    ProfileManager::scpm_error));
-                break;
-            }
-            ProfileManager::Switch();
-            ProfileManager::ProgressPopup("last",15,100);
-            if (!ProfileManager::Wait())
-                // Error popup text, %1 is additional translated error message
-                Popup::Error (sformat(_("Switching was not successful:
-%1
-"),
-                    ProfileManager::scpm_error));
-            else
-                ProfileManager::active_profile = selected;
-	    break;
-	}
-    };
-    return (any) ret;
-}
-
-/**
- * Dialog with switch details of one resource group
- * @return any Returned value from UserInput() call
- */
-define symbol DetailsSwitchDialog () ``{
-
-    string groupname	= ProfileManager::current_resource_group;
-    map resources	= ProfileManager::GetModifiedGroupResources(groupname);
-
-    /**
-     * helper function for building table items with modified resources
-     */
-    define list resources_items() ``{
-
-	list items = [];
-	foreach (any i, any res, resources, ``{
-	    if (!is(i, integer))
-		return;
-	    map resource	= $[];
-	    if (is (res,map))
-		resource	= (map) res;
-	    // flag for resource action
-	    string save = _("Save");
-	    if (resource["save_mode"]:"normal" == "normal")
-	    {
-		if (!resource["save"]:true)
-		    // flag for resource action
-		    save = _("Ignore");
-	    }
-	    else if (resource["save_mode"]:"normal" == "save_all")
-		// flag for resource action
-		save = _("All");
-	    else if (resource["save_mode"]:"normal" == "patch_all")
-		// flag for resource action
-		save = _("Patch");
-
-	    string flag = "";
-	    if (resource["is_new"]:false)
-		// flag
-		flag = _("New");
-	    else if (resource["is_deleted"]:false)
-		// flag
-		flag = _("Deleted");
-
-	    items = add (items, `item(
-		`id(i), save, resource["resource_name"]:"",
-		resource["resource_type"]:"", flag));
-	});
-	return items;
-    }
-
-    list actions_list = [
-	// button label
-	 `item(`id(`save), _("&Save Resource")),
-	// button label
-	 `item(`id(`ignore), _("&Ignore Resource")),
-	// button label
-	 `item(`id(`save_p), _("Save to &All Profiles")),
-	// button label
-	 `item(`id(`patch), _("&Patch All Profiles")),
-    ];
-    list all_actions_list = [
-	// button label
-	 `item(`id(`save_all), _("&Save All Resources")),//&r
-	// button label
-	 `item(`id(`ignore_all), _("&Ignore All Resources"))//&g
-    ];
-    list show_list = [
-	// button label
-	 `item(`id(`show_ch), _("Sho&w Changes")),
-	// button label
-	 `item(`id(`show_r), _("Show &Resource"))
-    ];
-
-    // Caption of the dialog:
-    string caption = _("Resource Group Details");
-
-    term contents = `HBox(
-	`HSpacing(1.5),
-	`VBox(
-        `VSpacing(1),
-        `HBox(
-            `HSpacing(1),
-            // Label text
-            `Left(`Label(_("Resource Group"))),
-            `Right(`Label(groupname)),
-            `HSpacing(2)
-            ),
-        `VSpacing(1),
-	// frame label:
-        `Frame(_("Modified Resources"), `HBox(`HSpacing(1),
-            `VBox(
-                `VSpacing(0.2),
-		`Table(`id(`resources), `opt (`notify),
-                    `header(
-                        // Header of the table with resources 1/4
-                        _("Action"),
-                        // Header of the table with resources 2/4
-                        _("Resource"),
-                        // Header of the table with resources 3/4
-                        _("Type"),
-                        // Header of the table with resources 4/4
-                        _("Flags")),
-                    []
-                ),
-                `VSpacing(0.2),
-		`HBox(
-		    `MenuButton(`id(`action_b), `opt(`key_F3),
-			// menubutton label
-			_("&Action"),
-			actions_list),
-		    `PushButton(`id(`all_action_b), `opt(`key_F4),
-			// button label
-			_("Save or Ignore A&ll")), // all_actions_list),
-		    `Right(
-			// button label
-			`PushButton(`id(`show_ch), `opt(`key_F2),
-			    _("&Show Changes"))
-		    )
-		),
-		`VSpacing(0.2)
-                ),
-            `HSpacing(1)
-        )),
-        `VSpacing(1)
-	),
-	`HSpacing(1.5)
-    );
-
-    Wizard::SetContentsButtons ( caption, contents, HELPS["switchdetails"]:"",
-        Label::CancelButton (), Label::OKButton () );
-
-    Wizard::HideAbortButton();
-
-    list items = resources_items();
-    UI::ChangeWidget(`id(`resources), `Items, items);
-
-    if (items != [])
-	UI::SetFocus(`id(`resources));
-
-    any ret = nil;
-    integer selected = 0;
-    while (true)
-    {
-	ret = UI::UserInput ();
-	selected = (integer) UI::QueryWidget(`id(`resources), `CurrentItem);
-
-	if (ret == `resources)
-	{
-	    if (resources[selected,"save_mode"]:"" == "normal")
-	    {
-		resources[selected,"save"] = !resources[selected, "save"]:false;
-		UI::ChangeWidget (`id(`resources), `Item (selected,0),
-		    resources[selected,"save"]:false ? _("Save"):_("Ignore"));
-	    }
-	    continue;
-	}
-	else if (ret ==`save)
-	{
-	    resources[selected,"save"] = true;
-	    resources[selected,"save_mode"] = "normal";
-	    UI::ChangeWidget (`id(`resources), `Item (selected,0),_("Save"));
-	}
-	else if (ret ==`ignore)
-	{
-	    resources[selected,"save"] = false;
-	    resources[selected,"save_mode"] = "normal";
-	    UI::ChangeWidget (`id(`resources), `Item (selected,0),_("Ignore"));
-	}
-	else if (ret ==`save_p)
-	{
-	    resources[selected,"save"] = true;
-	    resources[selected,"save_mode"] = "save_all";
-	    UI::ChangeWidget (`id(`resources), `Item (selected,0),_("All"));
-	}
-	else if (ret ==`patch)
-	{
-	    resources[selected,"save"] = true;
-	    resources[selected,"save_mode"] = "patch_all";
-	    UI::ChangeWidget (`id(`resources), `Item (selected,0),_("Patch"));
-	}
-	else if (ret == `all_action_b)
-	{
-	    foreach (any i, any resource, resources, ``{
-		if (!is(i, integer) || ! is(resource,map))
-		    return;
-		map r_map = (map)resource;
-		r_map["save"] = !(r_map["save"]:false);
-		r_map["save_mode"] = "normal";
-		UI::ChangeWidget (`id(`resources), `Item (i,0),
-		    // action to do with resource
-		    r_map["save"]:true ? _("Save") : _("Ignore"));
-	    });
-	}
-	else if (ret == `show_ch)
-	{
-	    ProfileManager::active_resource = selected;
-	    ShowChangesPopup();
-	}
-	else if (ret == `back || ret == `cancel)
-	{
-	    // throw away changes
-	    break;
-	}
-	else if (ret == `next)
-	{
-	    ProfileManager::CheckAndUpdateResources (groupname, resources);
-	    break;
-	}
-    };
-
-    return (symbol) ret;
-}
-
-/**
- * Popup for adding new profile
- * @return boolean true if user confirms action
- */
-define boolean AddProfilePopup() ``{
-
-    map profiles = ProfileManager::profiles;
-
-    UI::OpenDialog(`opt(`decorated), `HBox(`HSpacing(1.5),
-        `VBox(
-            `VSpacing(1),
-	    // Popup text, part 1/3
-	    `Left(`Label(_("Base New Profile On"))),
-            `VSpacing(1),
-            `RadioButtonGroup(`id(`rb),
-	        `VBox(
-		    `Left (
-			`RadioButton(`id(`new), `opt(`notify),
-			    // Popup text, part 2/3
-			    _("The C&urrent System Configuration"))
-		    ),
-                    `VSpacing(0.2),
-                    `HBox(
-			`HSpacing(4),
-			// Checkbox label, part 1/2
-			`Left (`CheckBox(`id(`auto), _("&Make the Added Profile Active")))
-		    ),
-                    `HBox(
-			`HSpacing(4.5),
-			// supplementary explanation for "Make the Added Profile Active"
-			`Label(`id(`autol),_("This does not save anything to the old active
-profile or start or stop services."))
-		    ),
-		    `VSpacing(1),
-		    `Left(
-			`RadioButton(`id(`copy), `opt(`notify),
-			    // Popup text, part 3/3
-			    _("An &Existing Profile"))
-		    )
-                )
-	    ),
-            `SelectionBox (`id(`profiles), "", maplist (
-		string name, any desc, (map<string,any>) profiles, ``(name))),
-            `VSpacing(1),
-	    `HBox (
-		`HSpacing (1),
-		`Left (`PushButton(`id(`ok), `opt(`default),Label::OKButton())),
-	        `Right (`PushButton(`id(`cancel), Label::CancelButton())),
-	        `HSpacing (1)
-	    ),
-            `VSpacing(1)),
-        `HSpacing(1.5)
-        ));
-
-    UI::ChangeWidget(`id(`rb), `CurrentButton, `new);
-
-    any ret = nil;
-    while (true)
-    {
-        ret = UI::UserInput();
-        if (ret == `new)
-        {
-            UI::ChangeWidget(`id(`profiles), `Enabled, false);
-            UI::ChangeWidget(`id(`auto), `Enabled, true);
-            UI::ChangeWidget(`id(`autol), `Enabled, true);
-        }
-        else if (ret == `copy)
-        {
-            UI::ChangeWidget(`id(`profiles), `Enabled, true);
-            UI::ChangeWidget(`id(`auto), `Enabled, false);
-            UI::ChangeWidget(`id(`autol), `Enabled, false);
-        }
-        else if (ret == `ok)
-        {
-            if (UI::QueryWidget(`id(`rb), `CurrentButton) == `copy)
-            {
-                string selected = (string)
-		    UI::QueryWidget(`id(`profiles), `CurrentItem);
-                if (selected == nil)
-                {
-					// Popup text
-                    Popup::Message(_("Select the profile to copy."));
-                    continue;
-                }
-                ProfileManager::profile_action = "copy";
-                ProfileManager::selected_profile = selected;
-            }
-            else
-            {
-                ProfileManager::profile_action = "new";
-//                ProfileManager::selected_profile = ProfileManager::active_profile;
-                ProfileManager::auto = (boolean)
-		    UI::QueryWidget(`id(`auto), `Value);
-            }
-            break;
-        }
-        if (ret == `cancel)
-            break;
-    }
-
-    UI::CloseDialog();
-
-	if (ret == `ok)
-		return true;
-	else
-		return false;
-}
-/**
- * Shows the text of scpm introduciton
- * @return boolean true on success
- */
-define boolean IntroductionTextPopup() ``{
-
-    UI::OpenDialog(`opt(`decorated), `HBox(`HSpacing(1.5),
-        `VSpacing(30),
-        `VBox(
-            `HSpacing(80),
-            `VSpacing(1),
-            `RichText(`id(`info),""),
-            `VSpacing(0.5),
-            `PushButton(`id(`ok), `opt(`default, `key_F10), Label::OKButton()),
-            `VSpacing(0.5)),
-        `HSpacing(1.5)
-        ));
-    UI::ChangeWidget(`id(`info), `Value, HELPS["intro"]:"");
-    any ret = UI::UserInput();
-    UI::CloseDialog();
-    return true;
-}
-
-
-/**
- * Introduction popup
- * @return boolean true on success
- */
-define boolean IntroductionPopup() ``{
-
-	// Inroduction text, part 1/2
-    string intro_text = _("<p>SCPM is currently disabled.
-To enable it, use <b>Options</b>.</p>
-") +
-
-	// Inroduction text, part 2/2
- _("<p>If you are new to SCPM, read the help texts (<b>Show Introduction</b>). It is better to read the information in the info pages. You should know what 'active profile' and 'current configuration' mean before using SCPM.</p>");
-
-    UI::OpenDialog(`opt(`decorated), `HBox(`HSpacing(1.5),
-        `VSpacing(15),
-        `VBox(
-            `HSpacing(50),
-            `VSpacing(1),
-            `RichText(intro_text),
-            `VSpacing(1),
-	      `HBox(
-		`HSpacing(1),
-		// Push button label (read the intrduction before starting)
-		`PushButton(`id(`intro),`opt(`default),_("Show &Introduction")),
-                // Push button label (start without reading the intrduction)
-	        `PushButton(`id(`cont), _("&Start")),
-	        `HSpacing(1)
-	      ),
-            `VSpacing(1)),
-        `HSpacing(1.5)
-        ));
-
-    any ret = nil;
-    ret = UI::UserInput();
-    UI::CloseDialog();
-
-    if (ret == `intro)
-    {
-        IntroductionTextPopup();
-    }
-
-    ProfileManager::first_time = false;
-    return true;
-}
 
 /**
  * popup for entering new service for resource group
@@ -1055,10 +226,10 @@ define map ResourceGroupPopup (map group, map resource_groups) ``{
 	),
         `VSpacing(0.5),
 	`HBox(
-	    `HSpacing(1.5),
+	    `HSpacing(),
 	    `Left (`PushButton (`id(`ok), `opt(`default),Label::OKButton())),
 	    `Right (`PushButton(`id(`cancel), Label::CancelButton())),
-	    `HSpacing(1.5)
+	    `HSpacing()
 	),
         `VSpacing(0.5)
 	),
@@ -1284,7 +455,7 @@ define symbol ConfigureResourcesDialog () {
 	`VBox(
         `VSpacing(1),
 	// frame label:
-        `Frame(_("Resource Group"), `HBox(`HSpacing(1),
+        `Frame(_("Resource Group"), `HBox(`HSpacing(0.5),
             `VBox(
                 `VSpacing(0.2),
 		    `Table(`id(`rgroups), `opt (`notify),
@@ -1311,7 +482,7 @@ define symbol ConfigureResourcesDialog () {
 		    ),
 		`VSpacing(0.2)
                 ),
-            `HSpacing(1)
+            `HSpacing(0.5)
         )),
         `VSpacing(1)
 	),
@@ -1380,7 +551,8 @@ define symbol ConfigureResourcesDialog () {
 	    UI::ChangeWidget (`id(`rgroups),`Item (selected, 0), active?"X":"");
 	    modified = true;
 	}
-	else if (ret == `back || ret == `cancel)
+	else if (ret == `back ||
+	    (ret == `cancel && Popup::ReallyAbort (ProfileManager::Modified())))
 	{
 	    // throw away changes
 	    break;
@@ -1399,9 +571,204 @@ define symbol ConfigureResourcesDialog () {
 	    break;
 	}
     };
-
     return (symbol) ret;
 }
+
+
+/**
+ * Popup for editing user permission
+ * @param user name (empty means we want to add new)
+ * @param permission ("switch" or "all")
+ * @param map with other user names already used (to prevent conflicts)
+ * @return
+ */
+define map EditUserPopup (string name, string permission, map conflicts) {
+
+    map user	= $[];
+
+    term name_entry	= `Left (`Label (`id(`name), name));
+    if (name == "")
+    {
+	name_entry	= `ComboBox (`id(`name),`opt(`editable,`hstretch),
+	    // combo box label
+	    _("Username"),
+	    filter (string n, ProfileManager::GetUsernames (),
+		``(!haskey (conflicts,n)))
+	);
+    }
+
+    term con = `HBox (`HSpacing(1.5), `VBox(
+	`HSpacing (35),
+	`VSpacing (),
+	name_entry,
+        `VSpacing(0.5),
+	// frame label (for radiobutton group)
+	`Frame (_("Permission"), `HBox (
+	    `HSpacing (0.5),
+	    `RadioButtonGroup (`id(`rb_perm), `VBox(
+		`VSpacing (0.5),
+		// radio button label
+		`Left (`RadioButton(`id("switch"), _("&Switch Only"),
+		    permission == "switch" || permission == "")),
+		// radio button label
+                `Left (`RadioButton(`id("all"), _("&Everything"),
+		    permission == "all")),
+		`VSpacing (0.5)
+            ))
+	)),
+        `VSpacing (0.5),
+	`HBox(
+	    `HSpacing(1),
+	    `Left (`PushButton (`id(`ok), `opt(`default), Label::OKButton())),
+	    `Right (`PushButton(`id(`cancel), Label::CancelButton())),
+	    `HSpacing(1)
+	),
+        `VSpacing(0.5)
+	),
+        `HSpacing(1.5)
+    );
+
+    UI::OpenDialog(`opt(`decorated), con);
+
+    any ret	= nil;
+    do
+    {
+        ret	= UI::UserInput ();
+
+	if (ret == `cancel)
+	{
+	    user	= $[];
+	}
+	if (ret == `ok)
+	{
+	    user["name"]	= UI::QueryWidget(`id(`name), `Value);
+	    if (user["name"]:"" == "" || issubstring (user["name"]:""," "))
+	    {
+		// error popup (empty user name)
+		Report::Error (_("Enter valid user name."));
+		ret = `not_ok;
+		continue;
+	    }
+	    user["permission"]	= UI::QueryWidget(`id(`rb_perm),`CurrentButton);
+	}
+    } while (ret != `ok && ret !=`cancel);
+
+    UI::CloseDialog();
+
+    return user;
+}
+
+/**
+ * Dialog for configuration of users able to run scpm
+ */
+define any UsersDialog () {
+
+    // Dialog caption label:
+    string caption = _("User Permissions Configuration");
+
+    any ret		= nil;
+    boolean modified	= false;
+
+    map<string,string> users	= ProfileManager::GetUsers ();
+
+    map trans	= $[
+	// radio button label (user permission)
+	"switch"	: _("Switch Only"),
+	// radio button label (user permission)
+	"all"		: _("Everything"),
+    ];
+    map names	= $[];//map with user names (to check conflicts)
+
+    /**
+     * helper for generating list of items
+     */
+    define list users_items () {
+	names	= $[];
+	return maplist (string name, string perm, users, {
+	    names[name]	= 1;
+	    return `item (`id (name), name, trans[perm]:"");
+	});
+    }
+
+    term contents = `HBox (`HSpacing(3), `VBox (
+        `VSpacing(1),
+	// frame label
+        `Frame(_("Users"), `HBox(`HSpacing (0.5),
+            `VBox(
+                `VSpacing(0.2),
+		`Table(`id(`users), `opt (`notify),
+                    `header(
+                        // Header of the table with users 1/2
+                        _("Username"),
+                        // Header of the table with users 2/2
+                        _("Permissions")),
+                    []
+                ),
+                `VSpacing(0.2),
+		`HBox(
+		    `PushButton(`id(`add), `opt(`key_F3), Label::AddButton()),
+		    `PushButton(`id(`edit),`opt(`key_F4), Label::EditButton ()),
+		    `Left(
+			// Push button label
+			`PushButton(`id(`delete),`opt(`key_F5),_("&Delete"))
+		    )
+		),
+		`VSpacing (0.2)
+            ),
+            `HSpacing (0.5)
+        )),
+        `VSpacing ()
+    ), `HSpacing (3));
+
+    Wizard::SetContentsButtons (caption, contents, HELPS["users"]:"",
+	Label::CancelButton (), Label::OKButton ());
+    Wizard::HideAbortButton();
+
+    list items	= users_items ();
+    UI::ChangeWidget(`id(`users), `Items, items);
+    if (items != [])
+	UI::SetFocus(`id(`users));
+
+    while (true)
+    {
+	ret		= UI::UserInput ();
+	string selected	= (string) UI::QueryWidget(`id(`users), `CurrentItem);
+
+	if (ret == `add || ret == `edit || ret == `users)
+	{
+	    map user = $[];
+	    if (ret == `add)
+		user	= EditUserPopup ("", "", names);
+	    else
+		user	= EditUserPopup (selected, users[selected]:"", $[]);
+	    if (user != $[])
+	    {
+		users[user["name"]:""]	= user["permission"]:"";
+		UI::ChangeWidget(`id(`users),`Items, users_items());
+		UI::ChangeWidget(`id(`users), `CurrentItem, user["name"]:"");
+	    }
+	    continue;
+	}
+	else if (ret == `delete)
+	{
+	    users = remove (users, selected);
+	    UI::ChangeWidget(`id(`users),`Items, users_items());
+	    continue;
+	}
+	else if (ret == `back ||
+	    (ret == `cancel && Popup::ReallyAbort (ProfileManager::Modified())))
+	{
+	    break;
+	}
+	else if (ret == `next)
+	{
+	    ProfileManager::SetUsers (users);
+	    break;
+	}
+    }
+    return (symbol) ret;
+}
+
 
 /* EOF */
 }

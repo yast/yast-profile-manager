@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Wed Nov 23 14:49:38 CET 2005 - jsuchome@suse.cz
+
+- changed to be only configation tool for scpm (F5360)
+- 2.13.0 
+
+-------------------------------------------------------------------
 Mon Jul 25 08:32:38 CEST 2005 - jsuchome@suse.cz
 
 - added scpm-devel to neededforbuild 

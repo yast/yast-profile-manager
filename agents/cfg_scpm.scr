@@ -23,5 +23,5 @@
 .sysconfig.scpm
 
 `ag_ini(
-  `SysConfigFile("/etc/scpm.conf")
+  `SysConfigFile("/etc/sysconfig/scpm")
 )

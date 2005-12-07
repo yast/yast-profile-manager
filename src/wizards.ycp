@@ -11,40 +11,21 @@
 
 textdomain "profile-manager";
 
-import "Label";
-import "Popup";
-import "ProfileManager";
-import "Report";
 import "Sequencer";
 import "Wizard";
 
 include "profile-manager/complex.ycp";
 
 /**
- * Finishing module after clicking windowmanager "close window" button
- * @return symbol next (-> write all)
- */
-define symbol Cancel() ``{
-
-    ProfileManager::canceled = true;
-    return `next; //FIXME cancel should really cancel!!
-}
-
-
-/**
  * Main sequence of profile-manager
  * @return sequence result
  */
-define any MainSequence (string switch_to) ``{
+define any MainSequence () {
     map aliases =
 	$[
 	    "main"	:	``( MainDialog () ),
-	    "options"	:	``( OptionsDialog () ),
-	    "switch"	:	``( SwitchDialog () ),
-	    "details"	:	``( DetailsSwitchDialog ()),
-	    "edit"	:	``( ProfileSettingsDialog () ),
-	    "cancel"	:	``( Cancel() ),
-	    "resources"	:	``( ConfigureResourcesDialog() )
+	    "resources"	:	``( ConfigureResourcesDialog() ),
+	    "users"	:	``( UsersDialog() )
 	];
 
     map sequence = $[
@@ -52,72 +33,26 @@ define any MainSequence (string switch_to) ``{
 	"main" :
 	$[
 	    `abort	: `abort,
-	    `cancel	: "cancel",
+	    `cancel	: `abort,
 	    `next	: `next,
-	    `switch_button : "switch",
-	    `options_button: "options",
-	    `edit_button: "edit",
-	],
-	"switch" :
-	$[
-	    `abort	: `abort,
-	    `cancel	: "cancel",
-	    `details	: "details",
-	    `next	: "main"
-	],
-	"details" :
-	$[
-	    `abort	: "cancel",
-	    `cancel	: "cancel",
-	    `next	: "switch"
-	],
-	"options" :
-	$[
-	    `abort	: `abort,
-	    `cancel	: "cancel",
-	    `next	: "main",
-	    `resources	: "resources"
-	],
-	"edit" :
-	$[
-	    `abort	: `abort,
-	    `cancel	: "cancel",
-	    `next	: "main"
+	    `resources	: "resources",
+	    `users	: "users",
 	],
 	"resources":
 	$[
-	    `abort	: "cancel",
-	    `cancel	: "cancel",
-	    `next	: "options"
+	    `abort	: `abort,
+	    `cancel	: `abort,
+	    `next	: "main",
 	],
-	"cancel" :
+	"users":
 	$[
-	    `next	: `next
-	]
+	    `abort	: `abort,
+	    `cancel	: `abort,
+	    `next	: "main",
+	],
     ];
 
-    if (switch_to != "")
-    {
-//TODO do not show ReadDialog???
-	if (haskey (ProfileManager::profiles, switch_to))
-	{
-	    sequence["ws_start"]	= "switch";
-	    sequence["switch", `next]	= `next;
-	    sequence["switch", `abort]	= "cancel";
-	    if (!PreparePopup (switch_to))
-		return `abort;
-	    Wizard::HideAbortButton();
-	}
-	else
-	{
-	    // error popup, %1 is profile name.
-	    Report::Error (sformat (_("Profile '%1' does not exist."), switch_to));
-	    return Cancel ();
-	}
-    }
     any ret = Sequencer::Run (aliases, sequence);
-    if (ret == `back && switch_to != "")
-	return Cancel ();
     return ret;
 }
 
@@ -125,11 +60,11 @@ define any MainSequence (string switch_to) ``{
  * Whole configuration of profile-manager
  * @return sequence result
  */
-define symbol ProfileManagerSequence (string switch_to) ``{
+define symbol ProfileManagerSequence () {
 
     map aliases = $[
 	"read"	: [ ``( ReadDialog() ), true ],
-	"main"	:   ``( MainSequence (switch_to) ),
+	"main"	:   ``( MainSequence () ),
 	"write"	: [ ``( WriteDialog() ), true ]
     ];
 
@@ -154,28 +89,6 @@ define symbol ProfileManagerSequence (string switch_to) ``{
     any ret = Sequencer::Run (aliases, sequence);
     UI::CloseDialog();
 
-    return (symbol) ret;
-}
-
-/**
- * Whole configuration of profile-manager but without reading and writing.
- * For use with autoinstallation.
- * @return sequence result
- */
-define symbol ProfileManagerAutoSequence() ``{
-    // Caption of the initialize process
-    string caption = _("Profile Manager Configuration");
-    // Lable of the initialize process
-    term contents = `Label(_("Initializing..."));
-
-    Wizard::CreateDialog();
-    Wizard::SetDesktopIcon("profile-manager");
-    Wizard::SetContentsButtons(caption, contents, "",
-	    Label::BackButton(), Label::NextButton());
-
-    any ret = MainSequence ("");
-
-    UI::CloseDialog();
     return (symbol) ret;
 }
 

@@ -1,7 +1,0 @@
-Dump	$["poststop":"/var/scpm/default/ps", "posttart":"", "prestart":"/tmp/default/p1", "prestop":""]
-Execute	.target.bash "/usr/bin/test -x /tmp/default/p1 -a ! -d /tmp/default/p1" 0
-Execute	.target.bash "/usr/bin/test -x /var/scpm/default/ps -a ! -d /var/scpm/default/ps" 0
-Return	[]
-Execute	.target.bash "/usr/bin/test -x /tmp/default/p1 -a ! -d /tmp/default/p1" 1
-Execute	.target.bash "/usr/bin/test -x /var/scpm/default/ps -a ! -d /var/scpm/default/ps" 1
-Return	["/tmp/default/p1", "/var/scpm/default/ps"]

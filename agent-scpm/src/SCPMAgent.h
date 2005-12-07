@@ -38,45 +38,15 @@ private:
     SCPM *scpm;
 
     int options;
-    bool auto_switch;
-    bool use_rg;
     ofstream output, hash;
     string changesfile, tmpfile, hashfile;
 
     pthread_t pt;
-    switch_info_t switch_info;
-    string profile, dest_profile;
 
     /**
      * Forbid any scpm calls, when not initialized (Execute(.scpm)).
      */
     bool initialized;
-
-    /**
-     * Call SCPM->PrepareSwitch (prepare the switch to profile profile)
-     * in the new thread
-     */
-    static void *call_prepare( SCPMAgent *);
-
-    /**
-     * Call SCPM->Switch (perform prepared switch) in the new thread
-     */
-    static void *call_switch( SCPMAgent *);
-
-    /**
-     * Call SCPM->Save (save modified resources) in the new thread
-     */
-    static void *call_save( SCPMAgent *);
-
-    /**
-     * Call SCPM->Add (add a new profile) in the new thread
-     */
-    static void *call_add( SCPMAgent *);
-
-    /**
-     * Call SCPM->Copy (add a new profile) in the new thread
-     */
-    static void *call_copy( SCPMAgent *);
 
     /**
      * Call SCPM->Enable in the new thread
@@ -94,45 +64,6 @@ private:
     static void *call_rollback (SCPMAgent *);
     // ----------------------
 	
-    /**
-     * Converts c++ resource_info_t to YCP map
-     */
-    YCPMap tomap_ri (resource_info_t ri);
-
-    /**
-     * Converts YCP map to c++ resource_info_t
-     */
-    resource_info_t frommap_ri(YCPMap map);
-
-    /**
-     * Converts c++ vector of resource_info_t structures to YCP list of maps
-     */
-    YCPList tolist_modified_resources (vector<resource_info_t> l);
-
-    /**
-     * Converts YCP list of maps to c++ vector of resource_info_t structures
-     */
-    vector<resource_info_t> fromlist_modified_resources(YCPList list);
-    
-    /**
-     * Converts switch_info_t structure to YCP map
-     */
-    YCPMap tomap_sw(switch_info_t sw);
-    /**
-     * Converts YCP map to switch_info_t structure
-     */
-    switch_info_t frommap_sw(YCPMap map);
-
-    /**
-     * Converts YCP list of maps to c++ vector of resource_group_t structures
-     */
-    vector<resource_group_t> fromlist_groups(YCPList list);
-
-    /**
-     * Converts c++ vector of resource_group_t structures to YCP list of maps
-     */
-    YCPList tolist_groups(vector<resource_group_t> l);
-
     /**
      * Converts YCP map to c++ structure of type resource_group_t 
      */
