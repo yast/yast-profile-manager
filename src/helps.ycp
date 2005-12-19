@@ -41,7 +41,7 @@ Please wait...<br></p>
     _("<p><b>Switch Mode</b> defines the behavior of SCPM when switching
 profiles. If set to <b>Normal</b> or <b>Save Changes</b>,
 modified resources are preset for saving before the switch.
-Setting it to <b>Drop Changes</b> results in presets for ignoring. he effect in the command line SCPM tool is more limited than in SUMF, so check the info page if you intend to use SCPM tool.</p>
+Setting it to <b>Drop Changes</b> results in presets for ignoring. The effect in the command line SCPM tool is more limited than in SUMF, so check the info page if you intend to use the SCPM tool.</p>
 ") +
 
     // main dialog help 5/8
@@ -52,11 +52,10 @@ Setting it to <b>Drop Changes</b> results in presets for ignoring. he effect in 
 
     // main dialog help 6/8
     _("<p><b>Verbose Messages</b> affects the detail level of progress messages
-in the progress pop-up. If <b>Log Debug Messages</b> is set, SCPM will write debug messages to its logfile (/var/log/scpm by default).</p>
-") +
+in the progress pop-up. If <b>Log Debug Messages</b> is set, SCPM writes debug messages to its log file (/var/log/scpm by default).</p>") +
 
     // main dialog help 7/8
-    _("<p>SCPM needs root privileges for operation, check <b>Allow Profile Management for Non-root Users</b> and use <b>Configure</b> to set up users you want to authorize to use SCPM.</p>") +
+    _("<p>SCPM needs root privileges for operation. Check <b>Allow Profile Management for Non-root Users</b> and use <b>Configure</b> to set up users to authorize to use SCPM.</p>") +
 
     // main dialog help - subsection heading
     _("<p><b>Resource Groups</b></p>") +
@@ -65,7 +64,7 @@ in the progress pop-up. If <b>Log Debug Messages</b> is set, SCPM will write deb
     _("<p>A configuration profile covers only the files and services to change
 when switching to another profile. In SCPM terminology, these files and
 services are called resources. Those resources are grouped into logical units,
-called <i>resource groups</i>. SCPM comes with a predefined set of
+called <b>resource groups</b>. SCPM comes with a predefined set of
 groups handled by default. This is sufficient for most systems. 
 For a more detailed resource setup, click <b>Configure Resources</b>.</p>
 "),
@@ -99,11 +98,11 @@ resources and add them to your groups.</p>
     // see "radio button label (user permission)" comments
     _("<p>If you want to allow users of your system to perform profile
 management operations, add them here. There are two levels of permission:
-<i>Switch Only</i> means the specified user may switch profiles, but nothing else. <i>Everything</i> means the user may perform any operation,
+<b>Switch Only</b> means the specified user may switch profiles, but nothing else. <b>Everything</b> means the user may perform any operation,
 including adding and removing profiles.</p>") +
 
     // users dialog help 3/3
-    _("<p>Use <b>Add</b>, <b>Edit</b>, and <b>Delete</b> to modify list of users with special permissions.</p>"),
+    _("<p>Use <b>Add</b>, <b>Edit</b>, and <b>Delete</b> to modify the list of users with special permissions.</p>"),
 
     /* Write dialog help 1/1 */
     "write" : _("<p><b><big>Writing Profile Manager Configuration</big></b><br>

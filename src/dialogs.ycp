@@ -645,7 +645,7 @@ define map EditUserPopup (string name, string permission, map conflicts) {
 	    if (user["name"]:"" == "" || issubstring (user["name"]:""," "))
 	    {
 		// error popup (empty user name)
-		Report::Error (_("Enter valid user name."));
+		Report::Error (_("Enter a valid username."));
 		ret = `not_ok;
 		continue;
 	    }
