@@ -19,6 +19,7 @@ import "Directory";
 import "FileUtils";
 import "Label";
 import "Mode";
+import "NetworkService";
 import "Package";
 import "Popup";
 import "Progress";
@@ -826,6 +827,12 @@ global define boolean Read() ``{
 	],
 	""
     );
+
+    if (! NetworkService::ConfirmNetworkManager())
+    {
+	return false;
+    }
+
     // initialize
     Progress::NextStage();
     if(!Initialize())

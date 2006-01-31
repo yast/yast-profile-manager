@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Tue Jan 31 15:06:41 CET 2006 - jsuchome@suse.cz
+
+- added warning when NetworkManager is enabled
+- 2.13.3
+
+-------------------------------------------------------------------
 Fri Jan 27 08:39:49 CET 2006 - jsuchome@suse.cz
 
 - merged texts from proofreading
