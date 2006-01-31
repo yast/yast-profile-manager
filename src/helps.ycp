@@ -64,7 +64,7 @@ in the progress pop-up. If <b>Log Debug Messages</b> is set, SCPM writes debug m
     _("<p>A configuration profile covers only the files and services to change
 when switching to another profile. In SCPM terminology, these files and
 services are called resources. Those resources are grouped into logical units,
-called <b>resource groups</b>. SCPM comes with a predefined set of
+called <i>resource groups</i>. SCPM comes with a predefined set of
 groups handled by default. This is sufficient for most systems. 
 For a more detailed resource setup, click <b>Configure Resources</b>.</p>
 "),
@@ -96,7 +96,7 @@ resources and add them to your groups.</p>
     // Users dialog help 2/3
     // "Switch Only" and "Everything" are values also used in dialogs.ycp (
     // see "radio button label (user permission)" comments
-    _("<p>If you want to allow users of your system to perform profile
+    _("<p>To allow users of your system to perform profile
 management operations, add them here. There are two levels of permission:
 <b>Switch Only</b> means the specified user may switch profiles, but nothing else. <b>Everything</b> means the user may perform any operation,
 including adding and removing profiles.</p>") +
