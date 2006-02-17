@@ -1,4 +1,12 @@
 -------------------------------------------------------------------
+Fri Feb 17 13:48:53 CET 2006 - jsuchome@suse.cz
+
+- enabled Close button after progress is finished (#151262)
+- correctly save the scpm status when disabling (#151265)
+- reduced BuildRequires
+- 2.13.4
+
+-------------------------------------------------------------------
 Tue Jan 31 15:06:41 CET 2006 - jsuchome@suse.cz
 
 - added warning when NetworkManager is enabled

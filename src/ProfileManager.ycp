@@ -56,6 +56,11 @@ global boolean status_modified	= false;
 global boolean resource_groups_modified	= false;
 
 /**
+ * if SCPM DB needs to be saved (-> SCPM object desctructor)
+ */
+boolean save_db	= false;
+
+/**
  * if SCPM configuration (stored in scpm_conf map) was modified
  */
 global boolean conf_modified	= false;
@@ -786,6 +791,7 @@ global define boolean ProgressPopup (string position, integer start, integer end
     UI::NormalCursor();
     if (position != "first")
     {
+	UI::ChangeWidget(`id(`close), `Enabled, true);
 	UI::UserInput();
         UI::CloseDialog();
     }
@@ -975,7 +981,10 @@ global define boolean WriteStatus () {
 %1"), scpm_error));
     }
     else
+    {
 	status_modified	= false;
+	save_db		= true;
+    }
     return ret;
 }
 
@@ -1007,6 +1016,7 @@ global define boolean WriteResourceGroups () {
 	{
 	    RebuildDB();
 	    resource_groups_modified	= false;
+	    save_db			= true;
 	}
 	else
 	{
@@ -1065,12 +1075,16 @@ global define boolean Write() ``{
     WriteResourceGroups ();
 
     Progress::NextStage();
-    if ((status_modified || resource_groups_modified) &&
-	!SCR::Write(.scpm, nil))
+    if (save_db)
     {
-        SetError();
-	// Error message, %1 is extra error text
-        Report::Error(sformat(_("Cannot write SCPM database:\n%1"),scpm_error));
+	if (!SCR::Write(.scpm, nil))
+	{
+	    SetError();
+	    // Error message, %1 is extra error text
+	    Report::Error(sformat(_("Cannot write SCPM database:\n%1"),scpm_error));
+	}
+	else
+	    save_db	= false;
     }
 
     Progress::NextStage();
