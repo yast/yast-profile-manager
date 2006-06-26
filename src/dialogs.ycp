@@ -320,7 +320,10 @@ define map ResourceGroupPopup (map group, map resource_groups) ``{
 	    if (!ProfileManager::CheckNameValidity (groupname))
 	    {
 		// Popup text (wrong data):
-		Popup::Message(_("The name is invalid."));
+		Popup::Message(_("The name of resource group may contain only 
+letters, digits, \"-\", \"_\", \".\", \"@\" and \"#\"
+and must begin with a letter or digit.
+Try again."));
 		continue;
 	    }
 	    // check possible name conflicts

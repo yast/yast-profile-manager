@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Mon Jun 26 16:36:42 CEST 2006 - jsuchome@suse.cz
+
+- enhanced help text about resources (#145450) and about
+  profile management tools (#181604)
+- 2.13.5
+
+-------------------------------------------------------------------
 Fri Feb 17 13:48:53 CET 2006 - jsuchome@suse.cz
 
 - enabled Close button after progress is finished (#151262)
