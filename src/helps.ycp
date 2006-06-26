@@ -21,46 +21,49 @@ map HELPS = $[
 Please wait...<br></p>
 "),
 
-    // Main dialog help 1/6
+    // Main dialog help 1/9
     "main" : _("<p><big><b>SCPM Configuration</b></big></p>
 <p>SCPM (System Configuration Profile Management) enables your system to save different configuration profiles and switch between them.</p>") +
+
+    // main dialog help 2/9
+    "<p>Activate and configure SCPM here.  Configure and switch SCPM profiles with the SUMF graphical interface or the <tt>scpm</tt> command.</p>" +
 
     // main dialog help - subsection heading
     _("<p><b>Status</b></p>") +
 
-    // main dialog help 2/8
+    // main dialog help 3/9
     _("First, set the SCPM status to <b>Enabled</b>. If disabled later, none of the configuration data in the profiles will be lost. It just continues in the current configuration of your system and you cannot switch to any other profile until you enable it again.</p>") +
 
     // main dialog help - subsection heading
     _("<p><b>Settings</b></p>") +
 
-    // main dialog help 3/8 (SCPM and SUMF are names of applications)
+    // main dialog help 4/9 (SCPM and SUMF are names of applications)
     _("<p>The settings apply to the command line interface as well as to the graphical SCPM front-end named SUMF.</p>") +
 
-    // main dialog help 4/8
+    // main dialog help 5/9
     _("<p><b>Switch Mode</b> defines the behavior of SCPM when switching
 profiles. If set to <b>Normal</b> or <b>Save Changes</b>,
 modified resources are preset for saving before the switch.
 Setting it to <b>Drop Changes</b> results in presets for ignoring. The effect in the command line SCPM tool is more limited than in SUMF, so check the info page if you intend to use the SCPM tool.</p>
 ") +
 
-    // main dialog help 5/8
+    // main dialog help 6/9
     _("<p><b>Boot Mode</b> defines the behavior of SCPM at system boot time.
 <b>Save Changes</b> applies all changes to the previous profile.
 <b>Drop Changes</b> discards them.</p>
 ") +
 
-    // main dialog help 6/8
+    // main dialog help 7/9
     _("<p><b>Verbose Messages</b> affects the detail level of progress messages
 in the progress pop-up. If <b>Log Debug Messages</b> is set, SCPM writes debug messages to its log file (/var/log/scpm by default).</p>") +
 
-    // main dialog help 7/8
+    // main dialog help 8/9
     _("<p>SCPM needs root privileges for operation. Check <b>Allow Profile Management for Non-root Users</b> and use <b>Configure</b> to set up users to authorize to use SCPM.</p>") +
 
     // main dialog help - subsection heading
     _("<p><b>Resource Groups</b></p>") +
 
-    // main dialog help 8/8, i marks special term, use something appropriate for your language
+    // main dialog help 9/9, i marks special term, use something appropriate for your language
     _("<p>A configuration profile covers only the files and services to change
 when switching to another profile. In SCPM terminology, these files and
 services are called resources. Those resources are grouped into logical units,
