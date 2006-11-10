@@ -26,7 +26,7 @@ Please wait...<br></p>
 <p>SCPM (System Configuration Profile Management) enables your system to save different configuration profiles and switch between them.</p>") +
 
     // main dialog help 2/9
-    "<p>Activate and configure SCPM here.  Configure and switch SCPM profiles with the SUMF graphical interface or the <tt>scpm</tt> command.</p>" +
+    _("<p>Activate and configure SCPM here.  Configure and switch SCPM profiles with the SUMF graphical interface or the <tt>scpm</tt> command.</p>") +
 
     // main dialog help - subsection heading
     _("<p><b>Status</b></p>") +
