@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Tue Jun 12 13:21:29 CEST 2007 - jsuchome@suse.cz
+
+- check if resource group is installed before selecting it (#143273)
+- translate "file"/"service"
+- 2.15.0 
+
+-------------------------------------------------------------------
 Fri May 25 13:30:04 CEST 2007 - jsrain@suse.cz
 
 - removed outdated translations from .desktop-files (#271209)

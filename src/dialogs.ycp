@@ -163,6 +163,13 @@ define map ResourceGroupPopup (map group, map resource_groups) ``{
     // map for saving user_defined flags of each resource
     map user_defined	= $[];
 
+    map type2string	= $[
+	// resource type (menu entry)
+	"file"		: _("File"),
+	// resource type (menu entry)
+	"service"	: _("Service"),
+    ];
+
     /**
      * Scan table items for presence of given resource
      */
@@ -178,11 +185,10 @@ define map ResourceGroupPopup (map group, map resource_groups) ``{
 
 	return maplist (map res, group["resources"]:[], ``{
 	    string name = res["name"]:"";
-	    user_defined [name] = res["user_defined"]:false; //TODO not needed?
 	    if (res["active"]:false)
-		return `item(`id(name), "X", name, res["type"]:"");
+		return `item(`id(name), "X", name, type2string[res["type"]:""]:"");
 	    else
-		return `item(`id(name), "", name, res["type"]:"");
+		return `item(`id(name), "", name, type2string[res["type"]:""]:"");
     });
 
     }
@@ -550,6 +556,34 @@ define symbol ConfigureResourcesDialog () {
 	}
 	else if (ret == `rgroups)
 	{
+	    map group	= resource_groups[selected]:$[];
+	    if (!group["active"]:false)
+	    {
+		// files from the resource group that are not available
+		list<string> missing_files	= [];
+		foreach (map res, group["resources"]:[], {
+		    string name = res["name"]:"";
+		    if (res["type"]:"" == "file" && !FileUtils::Exists (name))
+			missing_files	= add (missing_files, res["name"]:"");
+		});
+		if (missing_files != [] && !Popup::AnyQuestionRichText (Popup::NoHeadline (),
+		    // continue/cancel popup message, %1 is group name, %2 file(s)
+		    sformat (_("The file <b>%2</b> from resource group <i>%1</i>
+is not available on the system.<br>
+The resource group is probably not installed.<br>
+Really select this resource group?",
+"These files from resource group <i>%1</i> are not available on the system:<br>
+<b>%2</b><br>
+The resource group is probably not installed.<br>
+Really select this resource group?", size (missing_files)),
+		    selected, mergestring (missing_files, "<br>")),
+		    60, 9,
+		    Label::YesButton (), Label::NoButton (), `focus_no)
+		)
+		{
+		    continue;
+		}
+	    }
 	    boolean active = mark_group_active (selected);
 	    UI::ChangeWidget (`id(`rgroups),`Item (selected, 0), active?"X":"");
 	    modified = true;

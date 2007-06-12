@@ -737,8 +737,9 @@ global define boolean ProgressPopup (string position, integer start, integer end
     if (position != "last")
     {
 	UI::OpenDialog(`opt(`decorated), `HBox(`HSpacing(1.5), `VBox(
+	    `HSpacing (60),
             `VSpacing(1),
-			// LogView label:
+	    // LogView label:
             `LogView(`id(`progress),_("Progress Information"), 10, 0),
             `VSpacing(1),
             `ProgressBar(`id(`pb), "", 100, 0),
