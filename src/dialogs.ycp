@@ -163,20 +163,26 @@ define map ResourceGroupPopup (map group, map resource_groups) ``{
     // map for saving user_defined flags of each resource
     map user_defined	= $[];
 
+    // resource type (menu entry)
+    string filestring	= _("File");
+    // resource type (menu entry)
+    string servicestring= _("Service");
     map type2string	= $[
-	// resource type (menu entry)
-	"file"		: _("File"),
-	// resource type (menu entry)
-	"service"	: _("Service"),
+	"file"		: filestring,
+	"service"	: servicestring
+    ];
+    map string2type	= $[
+	filestring	: "file",
+	servicestring	: "service",
     ];
 
     /**
      * Scan table items for presence of given resource
      */
-    define boolean has_resource (string name, string type) ``{
-
-	return (contains (items, `item(`id(name), "X", name, type)) ||
-	    contains (items, `item(`id(name), "", name, type)));
+    define boolean has_resource (string name, string type) {
+	string translated	= type2string [type]:type;
+	return (contains (items, `item(`id(name), "X", name, translated)) ||
+	    contains (items, `item(`id(name), "", name, translated)));
     }
     /**
      * helper function for building table items of one resource group
@@ -207,7 +213,8 @@ define map ResourceGroupPopup (map group, map resource_groups) ``{
             `VSpacing(0.2),
 	    `Table(`id(`resources), `opt (`notify),
 		`header(
-		    " ",
+                    // Header of the table with resources of one group 1/3
+                    _("Active"),
                     // Header of the table with resources of one group 2/3
                     _("Name"),
                     // Header of the table with resources of one group 3/3
@@ -301,23 +308,45 @@ define map ResourceGroupPopup (map group, map resource_groups) ``{
 	if (ret == `adds_b)
 	{
 	    string service = GetService ();
-	    if (service != "" && !has_resource (service,"service"))
+	    if (service != "")
 	    {
-		y2debug ("new service %1 for group %2", service, groupname);
-		items = add (items, `item(`id(service), "", service,"service"));
-		user_defined [service] = true;
-		UI::ChangeWidget(`id(`resources), `Items, items);
+		if (has_resource (service,"service"))
+		{
+		    // message popup
+		    Popup::Message (sformat (_("Service
+%1
+is already present in this resource group."), service));
+		}
+		else
+		{
+		    y2debug ("new service %1 for group %2", service, groupname);
+		    items = add (items, `item(`id(service), "", service,
+			type2string["service"]:"service"));
+		    user_defined [service] = true;
+		    UI::ChangeWidget(`id(`resources), `Items, items);
+		}
 	    }
 	}
 	if (ret == `addf_b)
 	{
 	    string file = GetFile ();
-	    if (file != "" && !has_resource (file,"file"))
+	    if (file != "")
 	    {
-		y2debug ("new file %1 for group %2", file, groupname);
-		items = add (items, `item(`id(file), "", file, "file"));
-		user_defined [file] = true;
-		UI::ChangeWidget(`id(`resources), `Items, items);
+		if (has_resource (file, "file"))
+		{
+		    // message popup
+		    Popup::Message (sformat (_("File
+%1
+is already present in this resource group."), file));
+		}
+		else
+		{
+		    y2debug ("new file %1 for group %2", file, groupname);
+		    items = add (items, `item(`id(file), "", file,
+			type2string["file"]:"file"));
+		    user_defined [file] = true;
+		    UI::ChangeWidget(`id(`resources), `Items, items);
+		}
 	    }
 	}
 	if (ret == `ok)
@@ -358,7 +387,7 @@ Use another name."), groupname));
 		return $[
 		    "active"		: i[1]:"" == "X",
 		    "name"		: i[2]:"",
-		    "type"		: i[3]:"",
+		    "type"		: string2type[i[3]:""]:(i[3]:""),
 		    "user_defined"	: user_defined [ i[2]:""]:false
 		];
 	    });
@@ -469,7 +498,8 @@ define symbol ConfigureResourcesDialog () {
                 `VSpacing(0.2),
 		    `Table(`id(`rgroups), `opt (`notify),
                     `header(
-                        " ",
+                        // Header of the table with resource groups 1/3
+                        _("Active"),
                         // Header of the table with resource groups 2/3
                         _("Name"),
                         // Header of the table with resource groups 3/3
@@ -563,7 +593,8 @@ define symbol ConfigureResourcesDialog () {
 		list<string> missing_files	= [];
 		foreach (map res, group["resources"]:[], {
 		    string name = res["name"]:"";
-		    if (res["type"]:"" == "file" && !FileUtils::Exists (name))
+		    if (res["type"]:"" == "file" && res["active"]:false &&
+			!FileUtils::Exists (name))
 			missing_files	= add (missing_files, res["name"]:"");
 		});
 		if (missing_files != [] && !Popup::AnyQuestionRichText (Popup::NoHeadline (),
