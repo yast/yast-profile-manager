@@ -1,4 +1,11 @@
 -------------------------------------------------------------------
+Tue Nov  6 11:30:48 CET 2007 - jsuchome@suse.cz
+
+- read from correct config file (#337913)
+- do not write translated "file"/"service" into DB (#337913) 
+- 2.15.1
+
+-------------------------------------------------------------------
 Tue Jun 12 13:21:29 CEST 2007 - jsuchome@suse.cz
 
 - check if resource group is installed before selecting it (#143273)

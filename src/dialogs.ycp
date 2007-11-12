@@ -163,11 +163,17 @@ define map ResourceGroupPopup (map group, map resource_groups) ``{
     // map for saving user_defined flags of each resource
     map user_defined	= $[];
 
+    // resource type (menu entry)
+    string filestring	= _("File");
+    // resource type (menu entry)
+    string servicestring= _("Service");
     map type2string	= $[
-	// resource type (menu entry)
-	"file"		: _("File"),
-	// resource type (menu entry)
-	"service"	: _("Service"),
+	"file"		: filestring,
+	"service"	: servicestring
+    ];
+    map string2type	= $[
+	filestring	: "file",
+	servicestring	: "service",
     ];
 
     /**
@@ -304,7 +310,8 @@ define map ResourceGroupPopup (map group, map resource_groups) ``{
 	    if (service != "" && !has_resource (service,"service"))
 	    {
 		y2debug ("new service %1 for group %2", service, groupname);
-		items = add (items, `item(`id(service), "", service,"service"));
+		items = add (items, `item(`id(service), "", service,
+		    type2string["service"]:"service"));
 		user_defined [service] = true;
 		UI::ChangeWidget(`id(`resources), `Items, items);
 	    }
@@ -315,7 +322,8 @@ define map ResourceGroupPopup (map group, map resource_groups) ``{
 	    if (file != "" && !has_resource (file,"file"))
 	    {
 		y2debug ("new file %1 for group %2", file, groupname);
-		items = add (items, `item(`id(file), "", file, "file"));
+		items = add (items, `item(`id(file), "", file,
+		    type2string["file"]:"file"));
 		user_defined [file] = true;
 		UI::ChangeWidget(`id(`resources), `Items, items);
 	    }
@@ -358,7 +366,7 @@ Use another name."), groupname));
 		return $[
 		    "active"		: i[1]:"" == "X",
 		    "name"		: i[2]:"",
-		    "type"		: i[3]:"",
+		    "type"		: string2type[i[3]:""]:(i[3]:""),
 		    "user_defined"	: user_defined [ i[2]:""]:false
 		];
 	    });

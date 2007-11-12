@@ -511,7 +511,7 @@ global define boolean SaveResourceGroups () ``{
  */
 global define boolean ReadConfigFile () ``{
 
-    if (! FileUtils::Exists ("/etc/scpm.conf"))
+    if (! FileUtils::Exists ("/etc/sysconfig/scpm"))
 	return false;
 
     scpm_conf = $[
