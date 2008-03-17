@@ -22,3 +22,4 @@ Exec=/sbin/yast2 profile-manager
 Name=Profile Manager
 GenericName=Configure SCPM profiles
 X-KDE-SubstituteUID=true
+StartupNotify=true
