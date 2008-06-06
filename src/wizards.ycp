@@ -84,7 +84,8 @@ define symbol ProfileManagerSequence () {
 	]
     ];
 
-    Wizard::CreateDialog();
+    Wizard::OpenNextBackDialog();
+    Wizard::HideAbortButton ();
     Wizard::SetDesktopIcon("profile-manager");
     any ret = Sequencer::Run (aliases, sequence);
     UI::CloseDialog();

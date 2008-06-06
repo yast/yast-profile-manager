@@ -531,8 +531,6 @@ define symbol ConfigureResourcesDialog () {
     Wizard::SetContentsButtons (caption, contents, HELPS["resources"]:"",
                 Label::CancelButton (), Label::OKButton ());
 
-    Wizard::HideAbortButton();
-
     list items = resource_groups_items();
     UI::ChangeWidget(`id(`rgroups), `Items, items);
 
@@ -790,12 +788,14 @@ define any UsersDialog () {
 
     Wizard::SetContentsButtons (caption, contents, HELPS["users"]:"",
 	Label::CancelButton (), Label::OKButton ());
-    Wizard::HideAbortButton();
 
     list items	= users_items ();
     UI::ChangeWidget(`id(`users), `Items, items);
     if (items != [])
 	UI::SetFocus(`id(`users));
+
+    UI::ChangeWidget(`id (`edit), `Enabled, items != []);
+    UI::ChangeWidget(`id (`delete), `Enabled, items != []);
 
     while (true)
     {
@@ -812,23 +812,28 @@ define any UsersDialog () {
 	    if (user != $[])
 	    {
 		users[user["name"]:""]	= user["permission"]:"";
-		UI::ChangeWidget(`id(`users),`Items, users_items());
+		items	= users_items ();
+		UI::ChangeWidget(`id(`users),`Items, items);
 		UI::ChangeWidget(`id(`users), `CurrentItem, user["name"]:"");
 	    }
-	    continue;
 	}
 	else if (ret == `delete)
 	{
-	    users = remove (users, selected);
-	    UI::ChangeWidget(`id(`users),`Items, users_items());
-	    continue;
+	    users	= remove (users, selected);
+	    items	= users_items ();
+	    UI::ChangeWidget (`id (`users), `Items, items);
 	}
-	else if (ret == `back ||
+	if (ret == `add || ret == `delete)
+	{
+	    UI::ChangeWidget (`id (`edit), `Enabled, items != []);
+	    UI::ChangeWidget (`id (`delete), `Enabled, items != []);
+	}
+	if (ret == `back ||
 	    (ret == `cancel && Popup::ReallyAbort (ProfileManager::Modified())))
 	{
 	    break;
 	}
-	else if (ret == `next)
+	if (ret == `next)
 	{
 	    ProfileManager::SetUsers (users);
 	    break;

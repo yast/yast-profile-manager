@@ -26,9 +26,7 @@ include "profile-manager/dialogs.ycp";
  */
 define symbol ReadDialog() ``{
     Wizard::RestoreHelp(HELPS["read"]:"");
-    Wizard::DisableAbortButton ();
     boolean ret = ProfileManager::Read();
-    Wizard::EnableAbortButton ();
     return ret ? `next : `abort;
 }
 
@@ -38,7 +36,6 @@ define symbol ReadDialog() ``{
  */
 define symbol WriteDialog() ``{
     Wizard::RestoreHelp(HELPS["write"]:"");
-    Wizard::DisableAbortButton ();
     boolean ret = ProfileManager::Write();
     return ret ? `next : `abort;
 }
@@ -129,8 +126,7 @@ define any MainDialog () {
     `HSpacing(3));
 
     Wizard::SetContentsButtons (caption, contents, HELPS["main"]:"",
-	Label::BackButton (), Label::FinishButton ());
-    Wizard::RestoreAbortButton ();
+	Label::AbortButton (), Label::FinishButton ());
 
     if (ProfileManager::enabled)
     {
