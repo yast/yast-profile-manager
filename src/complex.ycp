@@ -126,7 +126,7 @@ define any MainDialog () {
     `HSpacing(3));
 
     Wizard::SetContentsButtons (caption, contents, HELPS["main"]:"",
-	Label::AbortButton (), Label::FinishButton ());
+	Label::CancelButton(), Label::OKButton());
 
     if (ProfileManager::enabled)
     {
