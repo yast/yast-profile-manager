@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Wed Jan 14 10:36:47 CET 2009 - jsuchome@suse.cz
+
+- no exit confirmation popup if no changes were made (bnc#458319)
+- 2.18.0
+
+-------------------------------------------------------------------
 Fri Aug  8 08:48:16 CEST 2008 - jsuchome@suse.cz
 
 - button labels adapted to current style guide (bnc#398500)

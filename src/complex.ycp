@@ -171,7 +171,9 @@ define any MainDialog () {
 	}
 	else if (ret == `back || ret == `cancel || ret == `abort)
 	{
-	    if (Popup::ReallyAbort (ProfileManager::Modified ()))
+	    if (!ProfileManager::Modified ())
+		break;
+	    if (Popup::ReallyAbort (true))
 		break;
 	}
 	else if (ret == `resources || ret == `next || ret == `users)
