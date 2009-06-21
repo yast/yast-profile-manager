@@ -8,7 +8,9 @@ Requires:	scpm >= 0.9.4
 Summary:	YaST2 - Profile Configuration
 
 %description
--
+This module is used to configure various settings for SCPM (System
+Configuration Profile Management), which allows you to store different
+profiles of your system configuration and switch between them.
 
 @PREP@
 
