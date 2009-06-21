@@ -5,7 +5,7 @@ BuildRequires:	gcc-c++ libxcrypt-devel scpm-devel doxygen perl-XML-Writer yast2-
 Requires:	yast2 yast2-users
 Requires:	scpm >= 0.9.4
 
-Summary:	Configuration of profile-manager
+Summary:	YaST2 - Profile Configuration
 
 %description
 -
