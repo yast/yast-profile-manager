@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Tue Jun 23 09:58:18 CEST 2009 - coolo@novell.com
+
+- fix build with automake 1.11
+- 2.18.1
+
+-------------------------------------------------------------------
 Wed Jan 14 10:36:47 CET 2009 - jsuchome@suse.cz
 
 - no exit confirmation popup if no changes were made (bnc#458319)
