@@ -18,9 +18,8 @@ X-SuSE-YaST-AutoInstResource=
 X-SuSE-YaST-Keywords=profile,scpm
 
 Icon=yast-profile-manager
-Exec=/sbin/yast2 profile-manager 
+Exec=xdg-su -c "/sbin/yast2 profile-manager"
 
 Name=Profile Manager
 GenericName=Configure SCPM profiles
-X-KDE-SubstituteUID=true
 StartupNotify=true
