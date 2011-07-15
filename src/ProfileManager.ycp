@@ -871,7 +871,7 @@ global define boolean Read() ``{
 	if (Popup::YesNo (_("SCPM is currently locked because your system
 installation has changed.
 This is usually caused by a system update. Therefore, the data saved in
-your profiles may be inconsistent, making it necessary to reininitialize
+your profiles may be inconsistent, making it necessary to reinitialize
 SCPM. This also means the saved profiles will be lost and need to be
 set up again from scratch.
 Perform the reinitialization now?

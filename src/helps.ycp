@@ -77,12 +77,12 @@ For a more detailed resource setup, click <b>Configure Resources</b>.</p>
 <p>This list contains all installed resource groups.
 A resource group usually represents a system service with all needed
 configuration files. Here, easily choose which services should be
-handled by the profile management. Activate or deactive the groups by
+handled by the profile management. Activate or deactivate the groups by
 double-clicking them.</p>
 ") +
 
     // Configure Resources Dialog help 2/3
-    _("<p>To achive an even more customized setup, create your own
+    _("<p>To achieve an even more customized setup, create your own
 resource groups or modify existing ones. With <b>Add</b> or <b>Edit</b>,
 enter the resource group editor. It allows activation and
 deactivation of resources and gives the possibility to create additional
