@@ -5,7 +5,7 @@ Group:	System/YaST
 License: GPL v2 or later
 BuildRequires:	gcc-c++ libxcrypt-devel scpm-devel doxygen perl-XML-Writer yast2-devtools yast2-core-devel yast2-users yast2-testsuite update-desktop-files
 # Wizard::SetDesktopTitleAndIcon
-Requires:	yast2 >=2.21.22
+Requires:	yast2 >= 2.21.22
 Requires:	 yast2-users
 Requires:	scpm >= 0.9.4
 
