@@ -1,4 +1,10 @@
 -------------------------------------------------------------------
+Thu Feb  9 14:22:36 CET 2012 - jsuchome@suse.cz
+
+- add libtool as buildrequire
+- 2.22.1 
+
+-------------------------------------------------------------------
 Thu Feb  9 08:27:44 CET 2012 - jsuchome@suse.cz
 
 - confirmed license
