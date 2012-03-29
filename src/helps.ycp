@@ -96,8 +96,8 @@ For a more detailed resource setup, click <b>Configure Resources</b>.</p>
     "resources": _("<p><big><b>Configuring Resources</b></big></p>
 <p>This list contains all installed resource groups.
 A resource group usually represents a system service with all needed
-configuration files. Here, easily choose which services should be
-handled by the profile management. Activate or deactivate the groups by
+configuration files. Select which services should be handled by the 
+profile management. Activate or deactivate the groups by
 double-clicking them.</p>
 ") +
 
