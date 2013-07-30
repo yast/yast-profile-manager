@@ -9,6 +9,8 @@ Requires:	yast2 >= 2.21.22
 Requires:	 yast2-users
 Requires:	scpm >= 0.9.4
 
+Requires:       yast2-ruby-bindings >= 1.0.0
+
 Summary:	YaST2 - Profile Configuration
 
 %description
@@ -28,10 +30,9 @@ profiles of your system configuration and switch between them.
 %defattr(-,root,root)
 %dir @yncludedir@/profile-manager
 @yncludedir@/profile-manager/*
-@clientdir@/profile-manager.ycp
-@clientdir@/profile_manager.ycp
-@moduledir@/ProfileManager.ycp
-@moduledir@/ProfileManager.ybc
+@clientdir@/profile-manager.rb
+@clientdir@/profile_manager.rb
+@moduledir@/ProfileManager.rb
 @desktopdir@/profile-manager.desktop
 @scrconfdir@/*.scr
 @plugindir@/libpy2ag_scpm.so.*
