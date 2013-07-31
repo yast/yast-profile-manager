@@ -1,25 +1,25 @@
-#
-# Makefile.am for yast2-profile-manager/src
-#
+# Sources for profile-manager
+
+module_DATA = \
+  modules/ProfileManager.rb
+
+client_DATA = \
+  clients/profile_manager.rb \
+  clients/profile-manager.rb
 
 yncludedir = @yncludedir@/profile-manager
+ynclude_DATA = \
+  include/profile-manager/wizards.rb \
+  include/profile-manager/dialogs.rb \
+  include/profile-manager/complex.rb \
+  include/profile-manager/helps.rb
 
-client_DATA =			\
-	profile-manager.ycp		\
-	profile_manager.ycp
+scrconf_DATA = \
+  scrconf/cfg_scpm.scr
 
-ynclude_DATA =			\
-	helps.ycp		\
-	wizards.ycp		\
-	dialogs.ycp		\
-	complex.ycp
+desktop_DATA = \
+  desktop/profile-manager.desktop
 
-desktop_DATA =			\
-	profile-manager.desktop
-
-module_DATA =			\
-	ProfileManager.ycp
-
-EXTRA_DIST = $(client_DATA) $(ynclude_DATA) $(module_DATA) $(desktop_DATA)
+EXTRA_DIST = $(module_DATA) $(client_DATA) $(ynclude_DATA) $(scrconf_DATA) $(desktop_DATA)
 
 include $(top_srcdir)/Makefile.am.common
