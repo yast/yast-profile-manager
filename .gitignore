@@ -11,7 +11,7 @@ config.log
 config.status
 config.sub
 configure
-configure.in
+configure.ac
 depcomp
 install-sh
 libtool
@@ -23,3 +23,5 @@ profile-manager.pot
 stamp-h
 stamp-h*
 Makefile.am.common
+*.ami
+*.m4
