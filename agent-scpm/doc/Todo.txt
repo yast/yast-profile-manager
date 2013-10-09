@@ -1,9 +1,0 @@
-This is a TODO file for the SCPM SCR agent.
-----------------------------------------------
-$Id$
-
-TODO:
------
-
-- Implement CopyResource, DeleteResource
-
